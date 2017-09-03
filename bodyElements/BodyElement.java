@@ -33,7 +33,6 @@ public class BodyElement {
 	}
 	
 	public BodyElement(ArrayList<String> attributes) {
-		System.out.println("BE SETTING ATTRIBS");
 		setAllVariables(attributes);
 	}
 

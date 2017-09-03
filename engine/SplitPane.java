@@ -3,6 +3,8 @@ package engine;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -159,16 +161,18 @@ public class SplitPane extends JFrame
 		editorPane.setEditable(false);
 		editor = new HTMLEditorKit();
 		setEditorPaneDocument(pageURL, cssURL, jsURL);
-
+		JScrollPane eScrollPane = new JScrollPane(editorPane);
+		
 		//HTML RAW TEXT VIEWER
 		textArea = new JTextArea(20, 200);
 		textArea.setEditable(false);
+		JScrollPane tScrollPane = new JScrollPane(textArea);
 		
 		JTabbedPane tabbedPane = new JTabbedPane();
-		JComponent panel1 = editorPane;
+		JComponent panel1 = eScrollPane;
 		tabbedPane.addTab("Preview", null, panel1, "Preview the page");
 		
-		JComponent panel2 = textArea;
+		JComponent panel2 = tScrollPane;
         tabbedPane.addTab("HTML", null, panel2,
                 "View HTML Document");
 		
@@ -191,6 +195,8 @@ public class SplitPane extends JFrame
 		tabbedPane.setPreferredSize(new Dimension(400, 200));
 		splitPane.setPreferredSize(new Dimension (400,200));
 		updateText(documentObjects[list.getSelectedIndex()]);
+		editorPane.setCaretPosition(0);
+		textArea.setCaretPosition(0);
 
 	}
 	
