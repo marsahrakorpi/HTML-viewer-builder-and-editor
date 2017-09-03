@@ -22,7 +22,9 @@ public class HTMLDocReader {
 	Boolean body = false;
 	Boolean footer = false;
 
+//	public LinkedList<HeaderElement> headerElement = new LinkedList<HeaderElement>();
 	public LinkedList<BodyElement> bodyElement = new LinkedList<BodyElement>();
+//	public LinkedList<FooterElement> footerElement = new LinkedList<FooterElement>();
 	
 	private String[] headElements = {"<title", "<base", "<link", "<meta", "<script", "<style"};
 	private String[] bodyElements = {"h","p","br","hr","div","blockquote","pre"};

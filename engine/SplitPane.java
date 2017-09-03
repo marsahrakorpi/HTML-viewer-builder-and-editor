@@ -70,7 +70,7 @@ public class SplitPane extends JFrame
 	public JTextPane textPane;
 	public JTextArea textArea;
 	public JLabel text;
-	public JPanel elementOptions;
+	public static JScrollPane elementOptions;
 	public JEditorPane editorPane;
 	public HTMLEditorKit editor;
 	public AbstractDocument doc;
@@ -99,7 +99,7 @@ public class SplitPane extends JFrame
 		 * 
 		 * 
 		 */
-		
+		reader = new HTMLDocReader(pageURL);
 		list = new JList<String>(documentObjects);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setSelectedIndex(0);
@@ -130,8 +130,8 @@ public class SplitPane extends JFrame
 		subList = new JList<String>(listModel);
 		subList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		subList.setSelectedIndex(0);
-		subList.addListSelectionListener(new ListListener());
-		
+		subList.addListSelectionListener(new ListListener(reader));
+
 		listScrollPane = new JScrollPane(list);
 		JSplitPane subListScrollPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, buttonPanel, subList);
 
@@ -149,7 +149,7 @@ public class SplitPane extends JFrame
 		//Create text pane and config
 		
 		//ELEMENT OPTIONS
-		elementOptions = new JPanel(new BorderLayout());
+		elementOptions = new JScrollPane();
 		
 		//PREVIEW SCROLL PANE
 		//TABBED PANE
@@ -159,7 +159,7 @@ public class SplitPane extends JFrame
 		editorPane.setEditable(false);
 		editor = new HTMLEditorKit();
 		setEditorPaneDocument(pageURL, cssURL, jsURL);
-		reader = new HTMLDocReader(pageURL);
+
 		//HTML RAW TEXT VIEWER
 		textArea = new JTextArea(20, 200);
 		textArea.setEditable(false);
@@ -289,12 +289,6 @@ public class SplitPane extends JFrame
 	
 	public void setListModelHeaderObjects() {
 		removeListModelObjects();
-		for(int i=0; i<HTMLDocReader.headings.size(); i++) {
-			listModel.addElement(HTMLDocReader.headings.get(i).getElementName()+(i+1)+", "+HTMLDocReader.headings.get(i).getId());
-		}
-		for(int i=0; i<HTMLDocReader.headings.size(); i++) {
-			listModel.addElement(HTMLDocReader.headings.get(i).getElementName()+(i+1)+", "+HTMLDocReader.headings.get(i).getId());
-		}
 		
 	}
 	
