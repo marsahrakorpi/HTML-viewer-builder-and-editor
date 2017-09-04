@@ -3,6 +3,7 @@ package engine;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -25,6 +26,8 @@ public class HTMLDocReader {
 //	public LinkedList<HeaderElement> headerElement = new LinkedList<HeaderElement>();
 	public LinkedList<BodyElement> bodyElement = new LinkedList<BodyElement>();
 //	public LinkedList<FooterElement> footerElement = new LinkedList<FooterElement>();
+
+	public ArrayList<String> html;
 	
 	private String[] headElements = {"<title", "<base", "<link", "<meta", "<script", "<style"};
 	private String[] bodyElements = {"h","p","br","hr","div","blockquote","pre"};
@@ -184,6 +187,7 @@ public class HTMLDocReader {
 		}
 		
 	}
+
 	
 	public void addBodyElement(BodyElement element) {
 		this.bodyElement.add(element);

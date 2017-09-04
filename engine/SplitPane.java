@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractButton;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -85,7 +86,7 @@ public class SplitPane extends JFrame
 	public String cssURL = "HTML/css/style.css";
 	public String jsURL ="HTML/js/script.js";
 	
-	private String[] documentObjects = {"All", "Header", "Body", "Footer"};
+	private String[] documentObjects = {"Header", "Body", "Footer"};
 	
 	private String headerText = "HEADER TEXT";
 	private String bodyText = "BODY TEXT";
@@ -93,11 +94,30 @@ public class SplitPane extends JFrame
 	
 	public SplitPane() {
 		super("SplitPane");
-		
-		/*
+		/**
 		 * 
 		 * 
-		 * 	LEFT SIDE PANEL
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * DEPRECATED
+		 * WILL BE DELETED SOON
+		 * USED ONLY AS CODE REFERENCE
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
 		 * 
 		 * 
 		 */
@@ -106,15 +126,13 @@ public class SplitPane extends JFrame
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setSelectedIndex(0);
 		list.addListSelectionListener(this);
-		
-		
+	
 		//add new element button
 		JButton b1 = new JButton("Add Element");
 		b1.setVerticalTextPosition(AbstractButton.CENTER);
 		b1.setHorizontalTextPosition(AbstractButton.CENTER);
-		
-
-		JPanel buttonPanel = new JPanel(new BorderLayout());
+	
+		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(b1);
 		
 		listModel = new DefaultListModel<String>();
@@ -122,23 +140,14 @@ public class SplitPane extends JFrame
 		buildHeaderMenu();
 		buildBodyMenu();
 		buildFooterMenu();
-/*
-		for(Object val : headerObjectsList) {
-			String valStr = val.toString();
-			listModel.addElement(valStr);
-			System.out.println(valStr);
-		}
-*/		
+
 		subList = new JList<String>(listModel);
 		subList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		subList.setSelectedIndex(0);
 		subList.addListSelectionListener(new ListListener(reader));
 
 		listScrollPane = new JScrollPane(list);
-		JSplitPane subListScrollPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, buttonPanel, subList);
 
-		//create left menu panes
-		leftSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScrollPane, subListScrollPane);
 		
 		/*
 		 * 
@@ -149,13 +158,9 @@ public class SplitPane extends JFrame
 		 */
 		
 		//Create text pane and config
-		
 		//ELEMENT OPTIONS
 		elementOptions = new JScrollPane();
-		
-		//PREVIEW SCROLL PANE
-		//TABBED PANE
-		
+
 		//HTML PAGE VIEWER
 		editorPane = new JEditorPane();
 		editorPane.setEditable(false);
@@ -175,25 +180,25 @@ public class SplitPane extends JFrame
 		JComponent panel2 = tScrollPane;
         tabbedPane.addTab("HTML", null, panel2,
                 "View HTML Document");
-		
+
+        //CREATE LEFT SIDE PANES
+		JSplitPane listSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, list, subList);
+		JSplitPane subListScrollPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, buttonPanel, listSplit);
 		//CREATE RIGHT SIDE SCROLL PANES
 		JScrollPane optionsScrollPane = new JScrollPane(elementOptions);
 		JScrollPane previewScrollPane = new JScrollPane(tabbedPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
-		//CREATE RIGHT SIDE SPLIT PANE
-		rightSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, optionsScrollPane, previewScrollPane); 
+		//CREATE LEDT AND RIGHT SIDE SPLIT PANE
+		leftSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane, subListScrollPane);
+		rightSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, previewScrollPane, optionsScrollPane); 
+
 		
 		//CREATE MAIN SPLIT PANE
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplitPane, rightSplitPane);
 		splitPane.setOneTouchExpandable(true);
-		splitPane.setDividerLocation(150);
+		splitPane.setDividerLocation(300);
 		
-		Dimension minimumSize = new Dimension(300, 20);
-		listScrollPane.setMinimumSize(minimumSize);
-		optionsScrollPane.setMinimumSize(new Dimension(300, 0));
-		
-		tabbedPane.setPreferredSize(new Dimension(400, 200));
-		splitPane.setPreferredSize(new Dimension (400,200));
+		//splitPane.setPreferredSize(new Dimension (400,200));
 		updateText(documentObjects[list.getSelectedIndex()]);
 		editorPane.setCaretPosition(0);
 		textArea.setCaretPosition(0);
@@ -234,14 +239,11 @@ public class SplitPane extends JFrame
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-
-		
-		
     }
     
 	
 	public String getHTMLFromURL(URL url){
-		
+		html.clear();
 		html = new ArrayList<String>();
 		
 		//read html file
@@ -313,7 +315,6 @@ public class SplitPane extends JFrame
 	public void removeListModelObjects() {
 		DefaultListModel<String> listModel = (DefaultListModel<String>) subList.getModel();
 		listModel.removeAllElements();
-		
 	}
 
 	
