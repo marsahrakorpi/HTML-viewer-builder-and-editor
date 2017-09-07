@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class Link extends HeadElement {
 
+	public static String[] linkAttributes = {"charset", "crossorigin", "href", "hreflang", "media", "rel", "rev", "sizes", "target", "type"};
 	public String charset = "";
 	public String crossorigin = "";
 	public String href = "";
@@ -19,7 +20,9 @@ public class Link extends HeadElement {
 	public Link(ArrayList<String> attributes) {
 		super();
 		this.elementName = "Link";
+//		System.out.println("Creating LINK with ATTRIBUTES "+attributes);
 		this.attributes = attributes;
 	}
 	
+
 }

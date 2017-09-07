@@ -1,24 +1,21 @@
 package headElements;
 
-public class Title {
+import java.util.ArrayList;
+
+public class Title extends HeadElement{
 	
-	public String elementName = "Title";
-	public String title;
-	public String id = "Title";
-	
+	String title;
 	
 	public Title(String title) {
-		
-		this.title = title;
-		
+		super();
+//		System.out.println("Creating TITLE named "+title);
+		//this.attributes.add(title="\""+title+"\"");
+		this.attributes = new ArrayList<String>();
+		this.attributes.add("title=\""+title+"\"");
+		this.elementName = "Title";
+		setHtml("<title>"+this.title+"</title>");
 	}
 	
-	public void setTitle(String title) {
-		this.title = title;
-	}
-	
-	public String getTitle(){
-		return this.title;
-	}
-	
+
+
 }

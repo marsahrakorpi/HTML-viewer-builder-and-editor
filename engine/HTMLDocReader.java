@@ -8,12 +8,18 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JComponent;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
 import bodyElements.BodyElement;
 import bodyElements.Div;
 import bodyElements.Heading;
 import bodyElements.P;
 import footerElements.FooterElement;
 import headElements.HeadElement;
+import headElements.Link;
+import headElements.Title;
 
 public class HTMLDocReader {
 
@@ -27,8 +33,9 @@ public class HTMLDocReader {
 	public LinkedList<FooterElement> footerElement = new LinkedList<FooterElement>();
 
 	public ArrayList<String> html;
-	private ArrayList<String> attributes = new ArrayList<String>();
-
+	private ArrayList<String> headAttributes = new ArrayList<String>();
+	private ArrayList<String> bodyAttributes = new ArrayList<String>();
+	private ArrayList<String> footerAttributes = new ArrayList<String>();
 	private String[] headElements = { "title", "base", "link", "meta", "script", "style" };
 	private String[] bodyElements = { "h", "p", "br", "hr", "div", "blockquote", "pre" };
 	private String[] footerElements = { "" };
@@ -52,17 +59,20 @@ public class HTMLDocReader {
 		super();
 		this.url = url;
 		System.out.println("HTMLDocReader reading page: " + url);
-		readDoc();
+		readDoc(this.url);
 	}
 
-	public void readDoc() {
-
+	public void readDoc(String docURL) {
+		headElement.clear();
+		bodyElement.clear();
+		footerElement.clear();
+		
 		// read html file
-		try (BufferedReader br = new BufferedReader(new FileReader(url))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(docURL))) {
 			String sCurrentLine;
 			while ((sCurrentLine = br.readLine()) != null) {
 				// html.add(sCurrentLine);
-				 //System.out.println(sCurrentLine);
+				// System.out.println(sCurrentLine);
 				if (sCurrentLine.equals("<head>")) {
 					head = true;
 				}
@@ -95,11 +105,6 @@ public class HTMLDocReader {
 
 	}
 
-	private String globalHTMLAttribute(int i) {
-
-		return null;
-	}
-
 	public void findAllLines(String line) {
 		// if the html spans multiple lines, this method will keep reading the file
 		// until the complete tag has been found.
@@ -123,21 +128,22 @@ public class HTMLDocReader {
 
 	public void findHeadElementsFromDoc(String line) {
 
-		if (line.equals("<head>") || line.equals("</head>") || line.equals("")){
+		if (line.equals("<head>") || line.equals("</head>") || line.equals("")) {
 			return;
 		} else {
-			//System.out.println(line);
+			// System.out.println(line);
 			try {
 				String element = line.substring(line.indexOf("<"));
 				element.substring(0, line.indexOf(">"));
-				for(int i=0; i<headElements.length; i++) {
-					if (Pattern.compile(Pattern.quote("<" + headElements[i]), Pattern.CASE_INSENSITIVE).matcher(element).find()) {
+				for (int i = 0; i < headElements.length; i++) {
+					if (Pattern.compile(Pattern.quote("<" + headElements[i]), Pattern.CASE_INSENSITIVE).matcher(element)
+							.find()) {
 						createHeadElementObject(headElements[i], line);
 					}
 				}
 
 			} catch (Exception e) {
-				
+
 			}
 		}
 	}
@@ -154,14 +160,15 @@ public class HTMLDocReader {
 				s = m.group(1);
 			}
 		}
-		//check if tags span more than one line
+		// check if tags span more than one line
 		if ((s.equals(null) || s.equals("") || s == null || s == "")
 				&& (!s.equals("<body>") || !s.equals("<head>") || !s.equals("<footer>"))) {
 			moreThanOneLine = true;
 			findAllLines(line);
 		} else {
 			for (int i = 0; i < bodyElements.length; i++) {
-				if (Pattern.compile(Pattern.quote("<" + bodyElements[i]), Pattern.CASE_INSENSITIVE).matcher(line).find()) {
+				if (Pattern.compile(Pattern.quote("<" + bodyElements[i]), Pattern.CASE_INSENSITIVE).matcher(line)
+						.find()) {
 					// System.out.println("Found "+bodyElements[i]+" at line: "+line);
 					if (!moreThanOneLine) {
 						createBodyElementObject(bodyElements[i], line);
@@ -175,27 +182,27 @@ public class HTMLDocReader {
 	public void findFooterElements(String line) {
 
 	}
-	
+
 	public void createHeadElementObject(String element, String line) {
-		System.out.println("Creating object from " + element);
-//		for(int i=0; i<headElements.length; i++) {
-//			System.out.println("case \""+headElements[i]+"\":\n\tbreak;");
-//		}
+//		System.out.println("Creating object from " + element);
+
 		switch (element) {
-			case "title":
-				break;
-			case "base":
-				break;
-			case "link":
-				break;
-			case "meta":
-				break;
-			case "script":
-				break;
-			case "style":
-				break;
-			default:
-				break;
+		case "title":
+			addHeadElement(new Title("title"));
+			break;
+		case "base":
+			break;
+		case "link":
+			addHeadElement(new Link(getHeadElementAttributes(line)));
+			break;
+		case "meta":
+			break;
+		case "script":
+			break;
+		case "style":
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -209,20 +216,20 @@ public class HTMLDocReader {
 			for (int size = 1; size < 7; size++) {
 				if (Pattern.compile(Pattern.quote("<h" + size), Pattern.CASE_INSENSITIVE).matcher(line).find()) {
 					tagContent = findElementContent(line);
-					addBodyElement(new Heading(size, getElementAttributes(line), tagContent));
+					addBodyElement(new Heading(size, getBodyElementAttributes(line), tagContent));
 				}
 			}
 			break;
 		case "p":
+			//check if a global html attribute exists in the tag
 			for (int i = 0; i < globalHTMLAttributes.length; i++) {
-				if (Pattern.compile(Pattern.quote(globalHTMLAttributes[i] + "="), Pattern.CASE_INSENSITIVE)
-						.matcher(line).find()) {
+				if (Pattern.compile(Pattern.quote(globalHTMLAttributes[i] + "="), Pattern.CASE_INSENSITIVE).matcher(line).find()) {
 					// System.out.println("FOUND P ATTRIBUTE: "+globalHTMLAttributes[i]);
 					// attributes.addAll(globalHtmlAttrivutes[i]+"=\""+m)
 					tagContent = findElementContent(line);
 				}
 			}
-			addBodyElement(new P(getElementAttributes(line), tagContent));
+			addBodyElement(new P(getBodyElementAttributes(line), tagContent));
 			break;
 
 		case "br":
@@ -259,26 +266,91 @@ public class HTMLDocReader {
 		return content;
 	}
 
-	public ArrayList<String> getElementAttributes(String line) {
-		attributes.clear();
-		// System.out.println(line);
+	public ArrayList<String> getHeadElementAttributes(String line) {
+		headAttributes.clear();
+//		 System.out.println(line);
 		Pattern p = Pattern.compile("\"([^\"]*)\"");
 		Matcher m = p.matcher(line);
-		for (int i = 0; i < globalHTMLAttributes.length; i++) {
+		
+		if(line.contains("link")) {
+			for (int i = Link.linkAttributes.length-1;i > -1; i--) {
+	//			System.out.println(Link.linkAttributes[i]);
+				if (Pattern.compile(Pattern.quote(Link.linkAttributes[i] + "="), Pattern.CASE_INSENSITIVE).matcher(line)
+						.find()) {
+					if (m.find()) {
+						System.out.println("LINK ATTRIBUTE: "+Link.linkAttributes[i]+"=\""+m.group(1)+"\"");
+						headAttributes.add(Link.linkAttributes[i] + "=\"" + m.group(1) + "\"");
+						String linkHref = m.group(1).substring( 0,m.group(1).indexOf("\"")+1);
+						System.out.println(linkHref);
+						if(m.group(1).contains("href")) {
+							
+							System.out.println(Main.rootFolder+"/"+linkHref);
+							JTextArea textArea = new JTextArea(20,200);
+							textArea.setEditable(false);
+							JScrollPane scrollPane = new JScrollPane(textArea);
+							JComponent panel = scrollPane;
+							Main.tabbedPane.addTab(linkHref, null, panel, "View linked document");
+						//value = value.substring(0,value.indexOf("\""));
+						}
+					}
+				}
+			}
+		}
+		
+		return headAttributes;
+	}
+	
+	public ArrayList<String> getBodyElementAttributes(String line) {
+		bodyAttributes.clear();
+//		 System.out.println(line);
+		Pattern p = Pattern.compile("\"([^\"]*)\"");
+		Matcher m = p.matcher(line);
+		for (int i =  globalHTMLAttributes.length-1; i > -1; i--) {
 			if (Pattern.compile(Pattern.quote(globalHTMLAttributes[i] + "="), Pattern.CASE_INSENSITIVE).matcher(line)
 					.find()) {
-				while (m.find()) {
-					// System.out.println(globalHTMLAttributes[i]+"=\""+m.group(1)+"\"");
-					attributes.add(globalHTMLAttributes[i] + "=\"" + m.group(1) + "\"");
+				if (m.find()) {
+//					 System.out.println(globalHTMLAttributes[i]+"=\""+m.group(1)+"\"");
+					bodyAttributes.add(globalHTMLAttributes[i] + "=\"" + m.group(1) + "\"");
 				}
 			}
 		}
 
-		return attributes;
+		return bodyAttributes;
 	}
 
+	public void addHeadElement(HeadElement element) {
+		this.headElement.add(element);
+	}
+	
 	public void addBodyElement(BodyElement element) {
 		this.bodyElement.add(element);
 	}
+	
+	public void addFooterElmeent(FooterElement element) {
+		this.footerElement.add(element);
+	}
+	
+	public String getElementType(String elementName) {
+		String type = "NOT FOUND";
+
+		System.out.println(elementName);
+		for(HeadElement h : headElement) {
+			if(h.getElementName().equals(elementName)) {
+				return type="Head";
+			}
+		}
+		for(BodyElement b : bodyElement) {
+			if(b.getElementName().equals(elementName)) {
+				return type="Body";
+			}
+		}
+		for(FooterElement f : footerElement) {
+			if(f.getElementName().equals(elementName)) {
+				return type="Footer";
+			}
+		}
+		return type;
+	}
+	
 
 }

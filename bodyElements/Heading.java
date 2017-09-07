@@ -15,6 +15,7 @@ public class Heading extends BodyElement {
 	
 	public Heading(int size, ArrayList<String> attributes, String text) {
 		this.elementName = "Heading";
+		this.elementTagName = "h";
 		this.size = size;
 		this.content = text;
 		this.attributes = attributes;

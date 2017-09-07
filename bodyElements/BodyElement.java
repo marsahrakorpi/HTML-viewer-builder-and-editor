@@ -6,8 +6,9 @@ public class BodyElement {
 
 	public String html;
 	public String content;
-
+	public String elementType = "Body";
 	public String elementName = "";
+	public String elementTagName = "";
 	public String position;
 	public String accesskey = " ";
 	public String htmlClass = " ";
@@ -184,6 +185,14 @@ public class BodyElement {
 		this.content = content;
 	}
 	
+
+	public String getElementType() {
+		return elementType;
+	}
+
+	public void setElementType(String elementType) {
+		this.elementType = elementType;
+	}
 
 	public ArrayList<String> getAttributes() {
 

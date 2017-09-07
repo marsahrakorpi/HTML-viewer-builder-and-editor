@@ -14,8 +14,8 @@ public class P extends BodyElement{
 	public P(ArrayList<String> attributes, String text) {
 		super();
 		this.elementName = "Paragraph";
-		System.out.println(text);
-		this.content = text;
+		this.elementTagName = "p";
+		this.content = text.trim(); //remove whitespaces before actual content
 		this.attributes = attributes;
 		attributesString = String.join(",", attributes);
 		this.html = "<p "+attributesString+">"+text+"</p>";

@@ -51,7 +51,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 	private HTMLDocReader reader;
 
-	private JTabbedPane tabbedPane;
+	public static JTabbedPane tabbedPane;
 	private JScrollPane elementList;
 	public static JScrollPane elementAttributes;
 	private JList<String> allElementsList, headerElementsList, bodyElementsList, footerElementsList;
@@ -64,7 +64,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	private DefaultListModel<String> allElementsModel, headerElementsModel, bodyElementsModel, footerElementsModel;
 
 
-	public String rootFolder = "D:/JavaDev/Frame/HTML";
+	public static String rootFolder = "D:/JavaDev/Frame/HTML";
 	public String pageURL = "D:/JavaDev/Frame/HTML/index.html";
 	public String cssURL = "HTML/css/style.css";
 	public String jsURL = "HTML/js/script.js";
@@ -166,6 +166,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		allElementsList = new JList<String>(allElementsModel);
 
 		for (HeadElement h : reader.headElement) {
+			System.out.println(h.getElementName());
 			allElementsModel.addElement(h.getElementName());
 		}
 
@@ -202,7 +203,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		// frame.setLocationByPlatform(true);
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
-		frame.dispose();
+//		frame.dispose();
 		CreateChildNodes ccn = new CreateChildNodes(fileRoot, root);
 		new Thread(ccn).start();
 	}
@@ -389,10 +390,11 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		for (int i = 1; i < file.size(); i++) {
 			filePath += file.get(i) + "/";
 		}
-		//System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
+		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
 
 		if (fileType.equals("html")) {
 			setEditorPaneDocument(filePath);
+			reader.readDoc(filePath);
 			textArea.setText(getHTMLFromArrayList(html));
 		}
 		if (fileType.equals("css")) {
