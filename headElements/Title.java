@@ -8,11 +8,10 @@ public class Title extends HeadElement{
 	
 	public Title(String title) {
 		super();
-//		System.out.println("Creating TITLE named "+title);
-		//this.attributes.add(title="\""+title+"\"");
-		this.attributes = new ArrayList<String>();
-		this.attributes.add("title=\""+title+"\"");
+		this.title = title;
 		this.elementName = "Title";
+		this.attributes = new ArrayList<String>();
+		this.attributes.add("Title=\""+title+"\"");
 		setHtml("<title>"+this.title+"</title>");
 	}
 	

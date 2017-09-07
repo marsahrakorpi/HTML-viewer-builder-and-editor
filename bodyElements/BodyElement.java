@@ -195,7 +195,6 @@ public class BodyElement {
 	}
 
 	public ArrayList<String> getAttributes() {
-
 		return attributes;
 	}
 
@@ -212,7 +211,7 @@ public class BodyElement {
 			parts = attributes.get(i).split("=\"");
 			s = parts[0];
 			v = parts[1].substring(0, parts[1].length() -1);
-			
+//			System.out.println("Setting variable "+s+" as " + v);
 			switch(s) {
 				case "accesskey":
 					setAccesskey(v);
