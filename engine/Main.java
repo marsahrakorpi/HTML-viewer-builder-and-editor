@@ -84,6 +84,27 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+
+		// MIDDLE
+		// editorPane
+		editorPane = new JEditorPane();
+		editorPane.setEditable(false);
+		editor = new HTMLEditorKit();
+		setEditorPaneDocument(pageURL);
+		JScrollPane eScrollPane = new JScrollPane(editorPane);
+
+		// HTML RAW TEXT VIEWER
+		textArea = new JTextArea(20, 200);
+		textArea.setEditable(false);
+		JScrollPane tScrollPane = new JScrollPane(textArea);
+		textArea.setText(getHTMLFromArrayList(html));
+
+		tabbedPane = new JTabbedPane();
+		JComponent panel1 = eScrollPane;
+		tabbedPane.addTab("Preview", null, panel1, "Preview the page");
+
+		JComponent panel2 = tScrollPane;
+		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
 		reader = new HTMLDocReader(pageURL);
 		JFrame frame = new JFrame("File Browser");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -131,35 +152,6 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		tree.setShowsRootHandles(true);
 		tree.addTreeSelectionListener(this);
 		JScrollPane scrollPane = new JScrollPane(tree);
-
-		// MIDDLE
-		// editorPane
-		editorPane = new JEditorPane();
-		editorPane.setEditable(false);
-		editor = new HTMLEditorKit();
-		setEditorPaneDocument(pageURL);
-		JScrollPane eScrollPane = new JScrollPane(editorPane);
-
-		// HTML RAW TEXT VIEWER
-		textArea = new JTextArea(20, 200);
-		textArea.setEditable(false);
-		JScrollPane tScrollPane = new JScrollPane(textArea);
-		textArea.setText(getHTMLFromArrayList(html));
-
-		// csseditorPane
-		cssTextArea = new JTextArea(20, 200);
-		JScrollPane cssScrollPane = new JScrollPane(cssTextArea);
-
-		// jseditorpane
-		jsTextArea = new JTextArea(20, 200);
-		JScrollPane jsScrollPane = new JScrollPane(jsTextArea);
-
-		tabbedPane = new JTabbedPane();
-		JComponent panel1 = eScrollPane;
-		tabbedPane.addTab("Preview", null, panel1, "Preview the page");
-
-		JComponent panel2 = tScrollPane;
-		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
 
 
 		allElementsModel = new DefaultListModel<String>();
@@ -390,8 +382,26 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		for (int i = 1; i < file.size(); i++) {
 			filePath += file.get(i) + "/";
 		}
-		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
+		//System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
+		
+		tabbedPane.removeAll();
+		
+		JScrollPane eScrollPane = new JScrollPane(editorPane);
 
+		// HTML RAW TEXT VIEWER
+		JScrollPane tScrollPane = new JScrollPane(textArea);
+		textArea.setText(getHTMLFromArrayList(html));
+
+		JComponent panel1 = eScrollPane;
+		tabbedPane.addTab("Preview", null, panel1, "Preview the page");
+
+		JComponent panel2 = tScrollPane;
+		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
+		
+	
+		//resetRightSide panes
+		
+		
 		if (fileType.equals("html")) {
 			setEditorPaneDocument(filePath);
 			reader.readDoc(filePath);
@@ -405,5 +415,8 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 			setEditorPaneDocument(filePath);
 			jsTextArea.setText(getHTMLFromArrayList(html));
 		}
+		//force refrest of elements list
+		allElementsList.setSelectedIndex(1);
+		allElementsList.setSelectedIndex(0);
 	}
 }

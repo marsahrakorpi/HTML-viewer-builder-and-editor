@@ -35,7 +35,6 @@ public class HeadElement {
 
 
 	public ArrayList<String> getAttributes() {
-
 		return attributes;
 	}
 
@@ -60,18 +59,22 @@ public class HeadElement {
 	}
 	
 	public static void createAttributeLabels(ArrayList<String> attribs) {
-//		System.out.println("CREATING ATTRIBUTE LABELS FROM ATTRIBUTES "+attribs);
+		System.out.println("CREATING ATTRIBUTE LABELS FROM ATTRIBUTES "+attribs);
 		String attrib, value;
 		
-		for(String a: attribs) {
+		try {
+			for(String a: attribs) {
 //			System.out.println(a);
-			attrib = a.substring(0, a.indexOf("="));
-			value = a.substring(a.indexOf("\""));
-			value = value.substring(value.indexOf("\"")+1);
-			value = value.substring(0,value.indexOf("\""));
-			
-			ListListener.label.add(new JLabel(attrib));
-			ListListener.field.add(new JTextField(value));
+				attrib = a.substring(0, a.indexOf("="));
+				value = a.substring(a.indexOf("\""));
+				value = value.substring(value.indexOf("\"")+1);
+				value = value.substring(0,value.indexOf("\""));
+				
+				ListListener.label.add(new JLabel(attrib));
+				ListListener.field.add(new JTextField(value));
+			}
+		} catch (Exception e) {
+
 		}
 	}
 

@@ -32,9 +32,6 @@ public class ListListener implements ListSelectionListener{
 		p = new JPanel();
 	}
 
-	public ListListener() {
-		p = new JPanel();
-	}
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		
@@ -50,7 +47,7 @@ public class ListListener implements ListSelectionListener{
 		
 		
 		if(list.getSelectedValue()!=null) {
-			//System.out.println(reader.bodyElement.get(list.getSelectedIndex()).getAttributes());
+//			System.out.println(reader.bodyElement.get(list.getSelectedIndex()).getAttributes());
 			//get type of element selected
 			String type;
 			try {
@@ -101,7 +98,8 @@ public class ListListener implements ListSelectionListener{
 		elementName.setBorder(BorderFactory.createEmptyBorder(0,10,10,0));
 		elementName.setFont(new Font("Arial", Font.BOLD, 25));
 		p.add(elementName);
-		
+		System.out.println("INDEX IS " + index);
+		System.out.println(reader.headElement.get(index));
 		HeadElement.createAttributeLabels(reader.headElement.get(index).getAttributes());
 		
 		for(int i=0; i<label.size(); i++) {
