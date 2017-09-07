@@ -1,11 +1,10 @@
-package bodyElements;
+package footerElements;
 
 import java.util.ArrayList;
 
-public class BodyElement {
+public class FooterElement {
 
 	public String html;
-	public String content;
 
 	public String elementName = "";
 	public String position;
@@ -29,11 +28,11 @@ public class BodyElement {
 	public ArrayList<String> allAttributes;
 	public String attributesString = "";
 	
-	public BodyElement() {
+	public FooterElement() {
 		
 	}
 	
-	public BodyElement(ArrayList<String> attributes) {
+	public FooterElement(ArrayList<String> attributes) {
 		setAllVariables(attributes);
 	}
 
@@ -173,17 +172,6 @@ public class BodyElement {
 		this.html = html;
 	}
 
-	public String getContent() {
-		return content;
-	}
-	
-	public void setContent(String content) {
-		
-		
-		
-		this.content = content;
-	}
-	
 
 	public ArrayList<String> getAttributes() {
 

@@ -1,11 +1,8 @@
 package actionListeners;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -14,11 +11,11 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SpringLayout;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import engine.HTMLDocReader;
+import engine.Main;
 import engine.SplitPane;
 
 public class ListListener implements ListSelectionListener{
@@ -61,9 +58,9 @@ public class ListListener implements ListSelectionListener{
 	}
 
 	public void setElementOptionsPane(int index) {
-		System.out.println(reader.bodyElement.get(index).getAttributes());
+		//System.out.println(reader.bodyElement.get(index).getAttributes()+reader.bodyElement.get(index).getContent());
 
-		Dimension d = new Dimension(350, 20);	
+		Dimension d = new Dimension(275, 20);	
 		p.setLayout(new BoxLayout(p, BoxLayout.PAGE_AXIS));
 		p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		p.add(Box.createHorizontalGlue());
@@ -71,11 +68,17 @@ public class ListListener implements ListSelectionListener{
 		label.clear();
 		field.clear();
 		elementName.setText(reader.bodyElement.get(index).getElementName()+"\n\n");
-		elementName.setBorder(BorderFactory.createEmptyBorder(0,0,30,0));
-		elementName.setFont(new Font("Arial", Font.BOLD, 35));
+		elementName.setBorder(BorderFactory.createEmptyBorder(0,10,10,0));
+		elementName.setFont(new Font("Arial", Font.BOLD, 25));
 		p.add(elementName);
+		label.add(new JLabel("Text"));
+		field.add(new JTextField(reader.bodyElement.get(index).getContent()));
+		label.add(new JLabel("Id"));
+		field.add(new JTextField(reader.bodyElement.get(index).getId()));
 		for(int i=0; i<globalHTMLAttributes.length; i++) {
+			if(!globalHTMLAttributes[i].equals("id")) {
 			label.add(new JLabel(globalHTMLAttributes[i]));
+			
 			switch(globalHTMLAttributes[i]) {
 			case "accesskey":
 				field.add(new JTextField(reader.bodyElement.get(index).getAccesskey()));
@@ -101,9 +104,6 @@ public class ListListener implements ListSelectionListener{
 			case "hidden":
 				field.add(new JTextField(reader.bodyElement.get(index).getHidden()));
 				break;
-			case "id":
-				field.add(new JTextField(reader.bodyElement.get(index).getId()));
-				break;
 			case "lang":
 				field.add(new JTextField(reader.bodyElement.get(index).getLang()));
 				break;
@@ -124,21 +124,20 @@ public class ListListener implements ListSelectionListener{
 				break;
 			default:
 				field.add(new JTextField(" "));
-		}
-			
-		}
+				}
+			}
+	}
 		
 
 		for(int i=0; i<label.size(); i++) {
 			p.add(label.get(i));
 			p.add(field.get(i));
-			label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 1000));
+			label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
 			field.get(i).setMaximumSize(d);
 			field.get(i).setHorizontalAlignment(JTextField.LEFT);
-			
 		}
 
-		SplitPane.elementOptions.setViewportView(p);
+		Main.elementAttributes.setViewportView(p);
 
 		
 //		for(int i=0; i<globalHTMLAttributes.length; i++) {
