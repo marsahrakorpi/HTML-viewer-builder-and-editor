@@ -64,10 +64,10 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	private DefaultListModel<String> allElementsModel, headerElementsModel, bodyElementsModel, footerElementsModel;
 
 
-	public static String rootFolder = "D:/JavaDev/Frame/HTML";
-	public String pageURL = "D:/JavaDev/Frame/HTML/index.html";
-	public String cssURL = "HTML/css/style.css";
-	public String jsURL = "HTML/js/script.js";
+	public static String rootFolder = System.getProperty("user.dir")+"/HTML";
+	public static String pageURL = rootFolder+"/index.html";
+	public static String cssURL = rootFolder+"/css/style.css";
+	public static String jsURL = rootFolder+"/js/script.js";
 
 	private String[] documentObjects = { "Header", "Body", "Footer" };
 
@@ -79,6 +79,8 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Main());
+		System.out.println("ROOT DIRECTORY: "+System.getProperty("user.dir"));
+		System.out.println("READING PAGE URL: "+pageURL);
 	}
 
 	@Override
