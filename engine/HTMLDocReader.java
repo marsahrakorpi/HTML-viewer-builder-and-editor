@@ -66,13 +66,13 @@ public class HTMLDocReader {
 		headElement.clear();
 		bodyElement.clear();
 		footerElement.clear();
-		
+		System.out.println("READING DOCUMENT" + docURL);
 		// read html file
 		try (BufferedReader br = new BufferedReader(new FileReader(docURL))) {
 			String sCurrentLine;
 			while ((sCurrentLine = br.readLine()) != null) {
 				// html.add(sCurrentLine);
-//				 System.out.println(sCurrentLine);
+				 System.out.println(sCurrentLine);
 				if (sCurrentLine.equals("<head>")) {
 					head = true;
 				}
@@ -106,7 +106,7 @@ public class HTMLDocReader {
 	}
 	
 	public String readDocToString(String docURL) {
-//		System.out.println("READING DOCUMENT "+docURL);
+		System.out.println("READING DOCUMENT "+docURL);
 		String documentAsString = "";
 		try (BufferedReader reader = new BufferedReader(new FileReader(docURL))) {
 			String sCurrentLine;
@@ -327,7 +327,8 @@ public class HTMLDocReader {
 					//read linked file
 					JTextArea textArea = new JTextArea(20, 200);
 					textArea.setEditable(false);
-					textArea.setText(readDocToString(Main.rootFolder+"/"+m.group(1)));
+//					System.out.println(Main.rootFolder+"/"+m.group(1));
+					//textArea.setText(readDocToString(Main.rootFolder+"/"+m.group(1)));
 					JScrollPane scrollPane = new JScrollPane(textArea);
 					JComponent panel = scrollPane;
 					Main.tabbedPane.addTab(m.group(1), null, panel, "View Linked File");
