@@ -11,7 +11,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.Box;
@@ -40,17 +39,11 @@ import javax.swing.text.Document;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import bodyElements.BodyElement;
-import bodyElements.BodyElementInfo;
-import footerElements.FooterElement;
-import headElements.HeadElement;
-import headElements.HeadElementInfo;
 import listeners.ListListener;
 
 public class Main implements TreeSelectionListener, ListSelectionListener, Runnable {
@@ -67,6 +60,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 	
 	private DefaultMutableTreeNode root;
+	private DefaultMutableTreeNode model;
 	private DefaultTreeModel treeModel;
 	
 	private JTree tree;
@@ -236,7 +230,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 			
 		}
 		top.add(parent);
-		
+
 	}
 	
 	private int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index, Element element) {
@@ -244,7 +238,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		int skipAmount = 0;
 		int secondSkipAmount = 0;
 		Elements divElements = element.getAllElements();
-		System.out.println(divElements);
+//		System.out.println(divElements);
 		child = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(0).nodeName(), i, reader));
 		parent.add(child);
 		for(int j=1; j<divElements.size(); j++) {
@@ -282,7 +276,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	
 	private void createTabs() {
 
-		Elements links = HTMLDocReader.headElements.select("link");
+		Elements links = reader.headElements.select("link");
 		for(int i=0; i<links.size(); i++) {
 			JTextArea jT;
 			try {
@@ -296,7 +290,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 				e1.printStackTrace();
 		}
 		}
-		Elements scripts = HTMLDocReader.headElements.select("script");
+		Elements scripts = reader.headElements.select("script");
 		for(int j=0; j<scripts.size(); j++) {
 				JTextArea jT;
 				try {
@@ -544,13 +538,13 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		model.reload();
 		createNodes(top);
 		DefaultMutableTreeNode currentNode = root.getNextNode();
+
 		do {
-//			System.out.println(currentNode);
+			System.out.println(currentNode.getLevel());
 			if(currentNode.getLevel()==1) {
-				elementTree.expandPath(new TreePath(currentNode.getPath()));
+				elementTree.expandPath(new TreePath(currentNode.getParent()));
 			}
 				currentNode = currentNode.getNextNode();
-			
 		} while (currentNode != null);
 	}
 }

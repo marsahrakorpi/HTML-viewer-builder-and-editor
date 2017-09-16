@@ -14,10 +14,10 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import bodyElements.BodyElementInfo;
+import engine.BodyElementInfo;
 import engine.HTMLDocReader;
+import engine.HeadElementInfo;
 import engine.Main;
-import headElements.HeadElementInfo;
 
 public class ListListener implements TreeSelectionListener{
 
