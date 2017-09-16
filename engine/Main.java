@@ -39,30 +39,39 @@ import javax.swing.text.Document;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
-import actionListeners.ListListener;
-import bodyElements.BodyElement;
-import footerElements.FooterElement;
-import headElements.HeadElement;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import listeners.ListListener;
 
 public class Main implements TreeSelectionListener, ListSelectionListener, Runnable {
 	public Main() {
+		
 	}
 
 	private HTMLDocReader reader;
 
 	public static JTabbedPane tabbedPane;
-	private JScrollPane elementList;
+	public JScrollPane elementList;
 	public static JScrollPane elementAttributes;
 	private JList<String> allElementsList, headerElementsList, bodyElementsList, footerElementsList;
 
-
+	
 	private DefaultMutableTreeNode root;
+	private DefaultMutableTreeNode model;
 	private DefaultTreeModel treeModel;
+	
 	private JTree tree;
-
+	private JTree elementTree;
+	
+	private int index = 0;
+	private DefaultMutableTreeNode parent = null;
+	private DefaultMutableTreeNode child = null;
+	private DefaultMutableTreeNode nextChild = null;
 	private DefaultListModel<String> allElementsModel, headerElementsModel, bodyElementsModel, footerElementsModel;
-
+	DefaultMutableTreeNode top;
 
 	public static String rootFolder = System.getProperty("user.dir")+"/HTML";
 	public static String pageURL = rootFolder+"/index.html";
@@ -107,8 +116,12 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 		JComponent panel2 = tScrollPane;
 		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
+		
 		reader = new HTMLDocReader(pageURL);
-		JFrame frame = new JFrame("File Browser");
+		
+		createTabs();
+		
+		JFrame frame = new JFrame("HTMLEdit");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// MENU
@@ -149,32 +162,21 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		root = new DefaultMutableTreeNode(new FileNode(fileRoot));
 		treeModel = new DefaultTreeModel(root);
 
-		// tree
+		// DIRECTORY TREE
 		tree = new JTree(treeModel);
 		tree.setShowsRootHandles(true);
 		tree.addTreeSelectionListener(this);
 		JScrollPane scrollPane = new JScrollPane(tree);
 
 
-		allElementsModel = new DefaultListModel<String>();
-		allElementsList = new JList<String>(allElementsModel);
-
-		for (HeadElement h : reader.headElement) {
-			System.out.println(h.getElementName());
-			allElementsModel.addElement(h.getElementName());
-		}
-
-		for (BodyElement b : reader.bodyElement) {
-			allElementsModel.addElement(b.getElementName() + ", " + b.getId());
-		}
-		for (FooterElement f : reader.footerElement) {
-			allElementsModel.addElement(f.getElementName());
-		}
-
-		allElementsList.addListSelectionListener(new ListListener(reader));
-
+		//ELEMENTS TREE
+		top = new DefaultMutableTreeNode("Document");
+		createNodes(top);
+		elementTree = new JTree(top);
+		elementTree.addTreeSelectionListener(new ListListener(reader));
+		
 		// RIGHT
-		elementList = new JScrollPane(allElementsList);
+		elementList = new JScrollPane(elementTree);
 		elementAttributes = new JScrollPane();
 
 		JSplitPane elementSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, elementList, elementAttributes);
@@ -201,7 +203,109 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		CreateChildNodes ccn = new CreateChildNodes(fileRoot, root);
 		new Thread(ccn).start();
 	}
+	
+	private void createNodes(DefaultMutableTreeNode top) {
+		index = 0;
 
+		List<DefaultMutableTreeNode> secondChild = new ArrayList<DefaultMutableTreeNode>();
+		
+		parent = new DefaultMutableTreeNode("Head");
+		top.add(parent);
+		
+		for(int i=1; i<reader.headElements.size(); i++) {
+			child = new DefaultMutableTreeNode(new HeadElementInfo(reader.headElements.get(i).nodeName(), i));
+			parent.add(child);
+		}
+		
+		parent = new DefaultMutableTreeNode("Body");
+		for(int i=1; i<reader.bodyElements.size(); i++) {
+			
+			if(reader.bodyElements.get(i).nodeName().equals("div")) {
+				Element element = reader.bodyElements.get(i);
+				i+=createDivTree(parent, child, i, element);
+			} else {
+				child = new DefaultMutableTreeNode(new BodyElementInfo(reader.bodyElements.get(i).nodeName(), i, reader));
+				parent.add(child);
+			}
+			
+		}
+		top.add(parent);
+
+	}
+	
+	private int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index, Element element) {
+		int i = index;
+		int skipAmount = 0;
+		int secondSkipAmount = 0;
+		Elements divElements = element.getAllElements();
+//		System.out.println(divElements);
+		child = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(0).nodeName(), i, reader));
+		parent.add(child);
+		for(int j=1; j<divElements.size(); j++) {
+			if(divElements.get(j).nodeName().equals("div")) {
+				nextChild = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), j, reader));
+				secondSkipAmount+=getDivContent(child, nextChild, divElements.get(j));
+				skipAmount+=secondSkipAmount;
+				j+=secondSkipAmount;
+				child.add(nextChild);
+			} else {
+				child.add(new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), i, reader)));
+			}
+			skipAmount +=1;
+		}
+		return skipAmount;
+	}
+	
+	private int getDivContent(DefaultMutableTreeNode child, DefaultMutableTreeNode nextChild, Element div) {
+		int skipAmount = 0;
+		int secondSkipAmount = 0;
+		Elements divElements = div.getAllElements();
+		for(int i=1; i<divElements.size(); i++) {
+			if(divElements.get(i).nodeName().equals("div")) {
+				DefaultMutableTreeNode whatAmIDoingWithMyLife = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(i).nodeName(), i, reader));
+				secondSkipAmount+=getDivContent(nextChild, whatAmIDoingWithMyLife, divElements.get(i));
+				i+=secondSkipAmount;
+				nextChild.add(whatAmIDoingWithMyLife);
+			} else {
+				nextChild.add(new DefaultMutableTreeNode(divElements.get(i).nodeName()));
+			}
+			skipAmount+=1;
+		}
+		return skipAmount+secondSkipAmount;
+	}
+	
+	private void createTabs() {
+
+		Elements links = reader.headElements.select("link");
+		for(int i=0; i<links.size(); i++) {
+			JTextArea jT;
+			try {
+				jT = new JTextArea(reader.readLinkDoc(links.get(i).attr("href")));
+				JScrollPane scrollPane = new JScrollPane(jT);
+				JComponent c = scrollPane;
+				tabbedPane.addTab(links.get(i).attr("href"), null, c, "CSS");
+			}
+			catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+		}
+		}
+		Elements scripts = reader.headElements.select("script");
+		for(int j=0; j<scripts.size(); j++) {
+				JTextArea jT;
+				try {
+					jT = new JTextArea(reader.readLinkDoc(links.get(j).attr("src")));
+					JScrollPane scrollPane = new JScrollPane(jT);
+					JComponent c = scrollPane;
+					tabbedPane.addTab("Script", null, c, "Script");
+				}
+				catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+			}
+		}
+	}
+	
 	@SuppressWarnings("unused")
 	public void setEditorPaneDocument(String pageURL) {
 		try {
@@ -270,7 +374,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		JList<?> list = (JList<?>) e.getSource();
-		updateText(documentObjects[list.getSelectedIndex()]);
+//		updateText(documentObjects[list.getSelectedIndex()]);
 	}
 
 	public class CreateChildNodes implements Runnable {
@@ -308,11 +412,11 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	public class FileNode {
 
 		private File file;
-
+	
 		public FileNode(File file) {
 			this.file = file;
 		}
-
+	
 		@Override
 		public String toString() {
 			String name = file.getName();
@@ -322,51 +426,52 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 				return name;
 			}
 		}
-	}
-
-	protected void updateText(String name) {
-
-		switch (name) {
-		case "All":
-			textArea.setText(getHTMLFromArrayList(html));
-			removeListModelObjects();
-			break;
-		case "Header":
-
-			break;
-		case "Body":
-
-			break;
-		case "Footer":
-
-			break;
-		default:
-			break;
+	
+		protected void updateText(String name) {
+	
+			switch (name) {
+			case "All":
+				textArea.setText(getHTMLFromArrayList(html));
+				removeListModelObjects();
+				break;
+			case "Header":
+	
+				break;
+			case "Body":
+	
+				break;
+			case "Footer":
+	
+				break;
+			default:
+				break;
+			}
 		}
+	
+		public void removeListModelObjects() {
+			DefaultListModel<String> listModel = (DefaultListModel<String>) allElementsList.getModel();
+			listModel.removeAllElements();
+		}
+	
+		public void setListModelObjects() {
+	
+		}
+	
+		public void getListModelObjects() {
+	
+		}
+	
+		protected JComponent makeTextPanel(String text) {
+			JPanel panel = new JPanel(false);
+			JLabel filler = new JLabel(text);
+			filler.setHorizontalAlignment(JLabel.CENTER);
+			panel.setLayout(new GridLayout(1, 1));
+			panel.add(filler);
+			return panel;
+		}
+	
 	}
-
-	public void removeListModelObjects() {
-		DefaultListModel<String> listModel = (DefaultListModel<String>) allElementsList.getModel();
-		listModel.removeAllElements();
-	}
-
-	public void setListModelObjects() {
-
-	}
-
-	public void getListModelObjects() {
-
-	}
-
-	protected JComponent makeTextPanel(String text) {
-		JPanel panel = new JPanel(false);
-		JLabel filler = new JLabel(text);
-		filler.setHorizontalAlignment(JLabel.CENTER);
-		panel.setLayout(new GridLayout(1, 1));
-		panel.add(filler);
-		return panel;
-	}
-
+	
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
 		String p = e.getPath().toString();
@@ -379,12 +484,12 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 		String fileName = file.get(file.size() - 1);
 		String filePath = rootFolder + "/";
-		String fileType = fileName.substring(fileName.indexOf(".") + 1);
+		String fileType = "."+fileName.substring(fileName.indexOf(".") + 1);
 
 		for (int i = 1; i < file.size(); i++) {
 			filePath += file.get(i) + "/";
 		}
-		//System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
+//		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
 		
 		tabbedPane.removeAll();
 		
@@ -400,25 +505,46 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		JComponent panel2 = tScrollPane;
 		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
 		
-	
+		createTabs();
 		//resetRightSide panes
-		
-		
-		if (fileType.equals("html")) {
+
+		if (fileType.equals(".html")) {
 			setEditorPaneDocument(filePath);
-			reader.readDoc(filePath);
+			try {
+				reader.readDoc(filePath);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			textArea.setText(getHTMLFromArrayList(html));
 		}
-		if (fileType.equals("css")) {
+		if (fileType.equals(".css")) {
 			setEditorPaneDocument(filePath);
-			cssTextArea.setText(getHTMLFromArrayList(html));
+			try {
+				cssTextArea.setText(getHTMLFromArrayList(html));
+			} catch (NullPointerException e1) {
+			
+			}
 		}
-		if (fileType.equals("js")) {
+		if (fileType.equals(".js")) {
 			setEditorPaneDocument(filePath);
 			jsTextArea.setText(getHTMLFromArrayList(html));
 		}
-		//force refrest of elements list
-		allElementsList.setSelectedIndex(1);
-		allElementsList.setSelectedIndex(0);
+
+		//RESET ELEMENTS TREE
+		DefaultTreeModel model = (DefaultTreeModel)elementTree.getModel();
+		DefaultMutableTreeNode root = (DefaultMutableTreeNode)model.getRoot();
+		root.removeAllChildren();
+		model.reload();
+		createNodes(top);
+		DefaultMutableTreeNode currentNode = root.getNextNode();
+
+		do {
+			System.out.println(currentNode.getLevel());
+			if(currentNode.getLevel()==1) {
+				elementTree.expandPath(new TreePath(currentNode.getParent()));
+			}
+				currentNode = currentNode.getNextNode();
+		} while (currentNode != null);
 	}
 }
