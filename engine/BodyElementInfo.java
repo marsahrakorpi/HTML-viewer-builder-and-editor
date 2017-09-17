@@ -8,15 +8,16 @@ import org.jsoup.nodes.Element;
 
 public class BodyElementInfo {
 	public String elementName;
-	public double index;
+	public int index;
 	private HTMLDocReader reader;
 	private Element element;
 	
-	public BodyElementInfo(String elementName, double index, HTMLDocReader reader) {		
+	public BodyElementInfo(String elementName, int index, HTMLDocReader reader) {		
 		this.reader = reader;
 		this.elementName = elementName;
 		this.index = index;
 		this.element = reader.bodyElements.get((int)index);
+//		System.out.println("creating element "+elementName+"with index of "+index);
 	}
 	
 	public List<Attribute> getAttributes() {
@@ -35,7 +36,9 @@ public class BodyElementInfo {
 		return HTML;
 	}
 	
-	
+	public String getId() {
+		return element.id();
+	}
 	
 	public String toString() {
 		return elementName;

@@ -18,15 +18,15 @@ public class HTMLDocReader {
 	Boolean footer = false;
 
 	private File input;
-	private Document doc;
+	public Document doc;
 
 	private String[] globalHTMLAttributes = { "accesskey", "class", "contenteditable", "contextmenu", "dir",
 			"draggable", "dropzone", "hidden", "id", "lang", "spellcheck", "style", "tabindex", "title", "translate" };
 
 
-	public Elements headElements;
-	public Elements bodyElements;
-	public Elements footerElements;
+	public static Elements headElements;
+	public static Elements bodyElements;
+	public static Elements footerElements;
 
 	public HTMLDocReader() {
 
@@ -67,9 +67,9 @@ public class HTMLDocReader {
 			}
 			br.close();
 		} catch (IOException e){
-//			System.out.println("Document "+url+" Not found.");
+			System.out.println("Document "+url+" Not found.");
 			url = Main.rootFolder+"/"+url;
-//			System.out.println("Trying with document "+url);
+			System.out.println("Trying with document "+url);
 			try (BufferedReader br = new BufferedReader(new FileReader(url))) {
 				String sCurrentLine;
 				while ((sCurrentLine = br.readLine()) != null) {
@@ -77,7 +77,7 @@ public class HTMLDocReader {
 				}
 				br.close();
 			} catch (IOException e1) {
-				doc = "IOException. No document found.";
+				return doc = "IOException. No document found.";
 			}
 		}
 		return doc;
