@@ -1,8 +1,11 @@
 package listeners;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -12,6 +15,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import engine.BodyElementInfo;
@@ -23,10 +29,16 @@ public class ListListener implements TreeSelectionListener{
 
 	private HTMLDocReader reader;
 	public DefaultMutableTreeNode elementTree;
-	private String[] globalHTMLAttributes = {"accesskey","class","contenteditable","contextmenu","dir","draggable","dropzone","hidden","id","lang","spellcheck","style","tabindex","title","translate"};
+	
+	String[] styleAttributes = {"color", "text-align", "font-size", "font-style", "height", "width", "margin", "margin-bottom", "margin-top", "margin-left", "margin-right", "padding", "padding-top", "padding-bottom", "padding-left", "padding-right", "position", "visibility"}; 
+	
+	String[] globalHTMLAttributes = { "id", "accesskey", "class", "contenteditable", "contextmenu", "dir", "draggable", "dropzone", "hidden", "lang", "spellcheck", "tabindex", "title", "translate" };
 	JLabel elementName = new JLabel("INIT",JLabel.CENTER);
+	Highlighter.HighlightPainter painter;
 	public static ArrayList<JLabel> label = new ArrayList<JLabel>();
 	public static ArrayList<JTextField> field = new ArrayList<JTextField>();
+	public static ArrayList<JLabel> styleLabel = new ArrayList<JLabel>();
+	public static ArrayList<JTextField> styleField = new ArrayList<JTextField>();
 	public JPanel p;
 	private Dimension d;
 	
@@ -37,11 +49,13 @@ public class ListListener implements TreeSelectionListener{
 		p.setLayout(new BoxLayout(p, BoxLayout.PAGE_AXIS));
 		p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		p.add(Box.createHorizontalGlue());
-		p.add(Box.createRigidArea(new Dimension(10, 10)));
+		p.add(Box.createRigidArea(new Dimension(5, 5)));
+		painter = new DefaultHighlighter.DefaultHighlightPainter(Color.CYAN);
 	}
 	
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
+		Main.textArea.getHighlighter().removeAllHighlights();
 		try{
 			p.removeAll();
 			Main.elementAttributes.setViewportView(p);
@@ -51,7 +65,7 @@ public class ListListener implements TreeSelectionListener{
 		label.clear();
 		field.clear();
 
-//		System.out.println(e.getPath().getPathCount());
+		
 		if( e.getPath().getPathCount() > 2) {	
 		//HEAD
 			if(e.getPath().getPathComponent(1).toString().equals("Head")) {
@@ -64,14 +78,12 @@ public class ListListener implements TreeSelectionListener{
 				Object nodeInfo = node.getUserObject();		
 				if(node.isLeaf()) {
 					HeadElementInfo hElement = (HeadElementInfo)nodeInfo;
-					
-	
+
 					elementName.setText(hElement.elementName.toUpperCase()+"\n\n");
-					elementName.setBorder(BorderFactory.createEmptyBorder(0,10,10,0));
-					elementName.setFont(new Font("Arial", Font.BOLD, 25));
+					elementName.setBorder(BorderFactory.createEmptyBorder(0,5,5,0));
+					elementName.setFont(new Font("Arial", Font.BOLD, 15));
 					p.add(elementName);
-								
-					
+
 				}
 			}
 	
@@ -83,41 +95,125 @@ public class ListListener implements TreeSelectionListener{
 					return;
 				}
 		
-				Object nodeInfo = node.getUserObject();		
-				if(node.isLeaf()) {
-					BodyElementInfo bElement = (BodyElementInfo)nodeInfo;
-					
-					label.clear();
-					field.clear();
-					
-					elementName.setText(bElement.elementName.toUpperCase()+"\n\n");
-					elementName.setBorder(BorderFactory.createEmptyBorder(0,10,10,0));
-					elementName.setFont(new Font("Arial", Font.BOLD, 25));
-					p.add(elementName);
-					for(int i=0; i<bElement.getAttributes().size(); i++) {
-						//System.out.println(bElement.getAttributes().get(i).getKey()+"::"+bElement.getAttributes().get(i).getValue());
-						label.add(new JLabel(bElement.getAttributes().get(i).getKey()));
-						field.add(new JTextField(bElement.getAttributes().get(i).getValue()));
+				Object nodeInfo = node.getUserObject();	
+				BodyElementInfo bElement = (BodyElementInfo)nodeInfo;
+//				System.out.println(bElement.elementName+reader.bodyElements.get(bElement.index).nodeName());
+				styleLabel.clear();
+				label.clear();
+				styleField.clear();
+				field.clear();
+				
+				elementName.setText(bElement.elementName.toUpperCase()+"\n\n");
+				elementName.setBorder(BorderFactory.createEmptyBorder(0,5,5,0));
+				elementName.setFont(new Font("Arial", Font.BOLD, 20));
+				p.add(elementName);
+				
+				//STYLE FIELDS
+				JLabel s = new JLabel("Style");
+				s.setBorder(BorderFactory.createEmptyBorder(0,0,5,0));
+				s.setFont(new Font("Arial", Font.BOLD, 15));
+				p.add(s);
+				
+			
+				for(int i=0; i<styleAttributes.length; i++) {
+					styleLabel.add(new JLabel(styleAttributes[i]));
+					if(reader.bodyElements.get(bElement.index).attr("style").contains(styleAttributes[i])){
+						String style = reader.bodyElements.get(bElement.index).attr("style");
+						Pattern p = Pattern.compile("(?<="+styleAttributes[i]+":)(.*);{0,1}");
+						Matcher m = p.matcher(style);
+						while(m.find()) {
+							if(m.group(1).contains(";")) {
+								String str = m.group(1);
+								String[] parts = str.split(";");
+								System.out.println(parts[0]);
+								System.out.println("Adding trimmed m.group()"+styleField.size());
+								styleField.add(new JTextField(parts[0]));
+							}
+							else {
+								System.out.println("Adding untrimmed m.group()");
+								styleField.add(new JTextField(m.group(1)));
+							}
+						}
+
+					} else {
+						System.out.println("Adding empty field"+styleField.size());
+						styleField.add(new JTextField(" "));
 					}
-					//System.out.println(bElement.getAttributes().get(0).getKey());		
+
 				}
+				System.out.println("STYLE LABELS SIZE:" +styleLabel.size());
+				System.out.println("STYLE FIELDS SIZE:" +styleField.size());
+				
+				for(int i=0; i<styleLabel.size(); i++) {
+					p.add(styleLabel.get(i));
+					p.add(styleField.get(i));
+					styleLabel.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+					styleField.get(i).setMaximumSize(d);
+					styleField.get(i).setHorizontalAlignment(JTextField.LEFT);
+				}
+				
+				//GLOBAL HTML ATTRIBUTE FIELDS
+				JLabel l = new JLabel("Global HTML Attributes");
+				l.setBorder(BorderFactory.createEmptyBorder(0,0,5,0));
+				l.setFont(new Font("Arial", Font.BOLD, 15));
+				p.add(l);
+				
+				for(int i=0; i<globalHTMLAttributes.length; i++) {
+					label.add(new JLabel(globalHTMLAttributes[i]));
+					//find the correct html element in the HTMLReader by refering to the bodyElementInfo index
+					if(reader.bodyElements.get(bElement.index).hasAttr(globalHTMLAttributes[i])) {
+						field.add(new JTextField(reader.bodyElements.get(bElement.index).attr(globalHTMLAttributes[i])));
+					} else {
+						field.add(new JTextField(""));
+
+					}
+					//Add listeners to text fields
+					field.get(i).getDocument().addDocumentListener(new FieldDocumentListener(i, bElement.index, reader));
+					field.get(i).addKeyListener(new FieldKeyListener(i));
+				}
+				
+				
+				for(int i=0; i<label.size(); i++) {
+					p.add(label.get(i));
+					p.add(field.get(i));
+					label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+					field.get(i).setMaximumSize(d);
+					field.get(i).setHorizontalAlignment(JTextField.LEFT);
+				}
+
+
+				int offset = reader.doc.toString().indexOf(reader.bodyElements.get(bElement.index).outerHtml());
+				int length = HTMLDocReader.bodyElements.get(bElement.index).toString().length();
+				
+				/*
+				 * 
+				 *  TO DO:
+				 *  FIX DIV HIGHLIGHTING
+				 *  CURRENTL ONLY SINGULAR ELEMENTS ARE HIGHLIGHTED
+				 * 
+				 */
+				
+				while(offset != -1) {
+					try {
+						Main.textArea.getHighlighter().addHighlight(offset, offset+length, painter);
+						offset = reader.doc.toString().indexOf(HTMLDocReader.bodyElements.get(bElement.index).toString(), offset+1);
+					} catch (BadLocationException ble) {
+						// TODO Auto-generated catch block
+						ble.printStackTrace();
+					}
+
+				}
+				
 			}
 		}
 		
 		//set labels and fields
-		
-		for(int i=0; i<label.size(); i++) {
-			p.add(label.get(i));
-			p.add(field.get(i));
-			label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-			field.get(i).setMaximumSize(d);
-			field.get(i).setHorizontalAlignment(JTextField.LEFT);
-		}
+
 		
 		Main.elementAttributes.setViewportView(p);
+
 		
 	}
-	
 
 
 	public void setHeadElementOptionsPane(int index) {

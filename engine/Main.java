@@ -47,9 +47,6 @@ import org.jsoup.select.Elements;
 import listeners.ListListener;
 
 public class Main implements TreeSelectionListener, ListSelectionListener, Runnable {
-	public Main() {
-		
-	}
 
 	private HTMLDocReader reader;
 
@@ -82,10 +79,16 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 	public ArrayList<String> html;
 
-	private JEditorPane editorPane;
-	private HTMLEditorKit editor;
-	private JTextArea textArea, cssTextArea, jsTextArea;
+	public static JEditorPane editorPane;
+	public static HTMLEditorKit editor;
+	public static JTextArea textArea;
+	private JTextArea cssTextArea, jsTextArea;
 
+	public Main() {
+		
+	}
+
+	
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Main());
 		System.out.println("ROOT DIRECTORY: "+System.getProperty("user.dir"));
@@ -96,6 +99,11 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	public void run() {
 		// TODO Auto-generated method stub
 
+		
+		JFrame frame = new JFrame("HTMLEdit");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		reader = new HTMLDocReader(pageURL);
+		
 		// MIDDLE
 		// editorPane
 		editorPane = new JEditorPane();
@@ -108,7 +116,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		textArea = new JTextArea(20, 200);
 		textArea.setEditable(false);
 		JScrollPane tScrollPane = new JScrollPane(textArea);
-		textArea.setText(getHTMLFromArrayList(html));
+		textArea.setText(reader.doc.toString());
 
 		tabbedPane = new JTabbedPane();
 		JComponent panel1 = eScrollPane;
@@ -117,12 +125,9 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		JComponent panel2 = tScrollPane;
 		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
 		
-		reader = new HTMLDocReader(pageURL);
-		
+
 		createTabs();
-		
-		JFrame frame = new JFrame("HTMLEdit");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
 
 		// MENU
 		JMenuBar menuBar;
@@ -204,10 +209,10 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		new Thread(ccn).start();
 	}
 	
+	
+	//For creating nodes, the variable int index will number the elements in order. This is used to later direct commands to the correct html element. 
 	private void createNodes(DefaultMutableTreeNode top) {
 		index = 0;
-
-		List<DefaultMutableTreeNode> secondChild = new ArrayList<DefaultMutableTreeNode>();
 		
 		parent = new DefaultMutableTreeNode("Head");
 		top.add(parent);
@@ -224,7 +229,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 				Element element = reader.bodyElements.get(i);
 				i+=createDivTree(parent, child, i, element);
 			} else {
-				child = new DefaultMutableTreeNode(new BodyElementInfo(reader.bodyElements.get(i).nodeName(), i, reader));
+				child = new DefaultMutableTreeNode(new BodyElementInfo(reader.bodyElements.get(i).nodeName()+" "+reader.bodyElements.get(i).id(), i, reader));
 				parent.add(child);
 			}
 			
@@ -234,40 +239,45 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	}
 	
 	private int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index, Element element) {
-		int i = index;
+//		int i = index;
 		int skipAmount = 0;
 		int secondSkipAmount = 0;
 		Elements divElements = element.getAllElements();
-//		System.out.println(divElements);
-		child = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(0).nodeName(), i, reader));
+		child = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(0).nodeName()+" "+divElements.get(0).id(), index, reader));
+		index++;
 		parent.add(child);
 		for(int j=1; j<divElements.size(); j++) {
 			if(divElements.get(j).nodeName().equals("div")) {
-				nextChild = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), j, reader));
-				secondSkipAmount+=getDivContent(child, nextChild, divElements.get(j));
+				nextChild = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName()+" "+divElements.get(j).id(), index, reader));
+				secondSkipAmount+=getDivContent(child, nextChild, index, divElements.get(j));
 				skipAmount+=secondSkipAmount;
 				j+=secondSkipAmount;
+				index+=secondSkipAmount;
 				child.add(nextChild);
 			} else {
-				child.add(new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), i, reader)));
+				child.add(new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), index, reader)));
+				index++;
 			}
 			skipAmount +=1;
 		}
 		return skipAmount;
 	}
 	
-	private int getDivContent(DefaultMutableTreeNode child, DefaultMutableTreeNode nextChild, Element div) {
+	private int getDivContent(DefaultMutableTreeNode child, DefaultMutableTreeNode nextChild, int index, Element div) {
 		int skipAmount = 0;
 		int secondSkipAmount = 0;
 		Elements divElements = div.getAllElements();
+		index++;
 		for(int i=1; i<divElements.size(); i++) {
 			if(divElements.get(i).nodeName().equals("div")) {
-				DefaultMutableTreeNode whatAmIDoingWithMyLife = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(i).nodeName(), i, reader));
-				secondSkipAmount+=getDivContent(nextChild, whatAmIDoingWithMyLife, divElements.get(i));
+				DefaultMutableTreeNode whatAmIDoingWithMyLife = new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(i).nodeName()+" "+divElements.get(i).id(), index, reader));
+				secondSkipAmount+=getDivContent(nextChild, whatAmIDoingWithMyLife, index, divElements.get(i));
 				i+=secondSkipAmount;
+				index+=secondSkipAmount;
 				nextChild.add(whatAmIDoingWithMyLife);
 			} else {
-				nextChild.add(new DefaultMutableTreeNode(divElements.get(i).nodeName()));
+				nextChild.add(new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(i).nodeName(), index, reader)));
+				index++;
 			}
 			skipAmount+=1;
 		}
@@ -306,7 +316,6 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		}
 	}
 	
-	@SuppressWarnings("unused")
 	public void setEditorPaneDocument(String pageURL) {
 		try {
 			// URL url = new File(pageURL).toURI().toURL();
@@ -324,9 +333,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 				editorPane.setText(getHTMLFromURL(file.toURL()));
 				// editorPane.setPage(url);
 
-			} else {
-				System.err.println("Couldn't find file: " + file);
-			}
+			} 
 		} catch (MalformedURLException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -358,18 +365,18 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		return sb.toString();
 	}
 
-	public String getHTMLFromArrayList(ArrayList<String> al) {
-		// convert arraylist to string
-		StringBuilder sb = new StringBuilder();
-		sb.append(" ");
-		for (String str : al) {
-			sb.append(str);
-			sb.append("\n");
-		}
-
-		// System.out.println(sb.toString());
-		return sb.toString();
-	}
+//	public String getHTMLFromArrayList(ArrayList<String> al) {
+//		// convert arraylist to string
+//		StringBuilder sb = new StringBuilder();
+//		sb.append(" ");
+//		for (String str : al) {
+//			sb.append(str);
+//			sb.append("\n");
+//		}
+//
+//		// System.out.println(sb.toString());
+//		return sb.toString();
+//	}
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
@@ -427,26 +434,26 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 			}
 		}
 	
-		protected void updateText(String name) {
-	
-			switch (name) {
-			case "All":
-				textArea.setText(getHTMLFromArrayList(html));
-				removeListModelObjects();
-				break;
-			case "Header":
-	
-				break;
-			case "Body":
-	
-				break;
-			case "Footer":
-	
-				break;
-			default:
-				break;
-			}
-		}
+//		protected void updateText(String name) {
+//	
+//			switch (name) {
+//			case "All":
+//				textArea.setText(getHTMLFromArrayList(html));
+//				removeListModelObjects();
+//				break;
+//			case "Header":
+//	
+//				break;
+//			case "Body":
+//	
+//				break;
+//			case "Footer":
+//	
+//				break;
+//			default:
+//				break;
+//			}
+//		}
 	
 		public void removeListModelObjects() {
 			DefaultListModel<String> listModel = (DefaultListModel<String>) allElementsList.getModel();
@@ -474,6 +481,12 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 	
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
+		DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
+		Object nodeInfo = node.getUserObject();		
+		if(!node.isLeaf()) {
+			System.out.println("ignoring valueChanged from directory tree");
+			return;
+		}
 		String p = e.getPath().toString();
 		p = p.substring(p.indexOf("[") + 1);
 		p = p.substring(0, p.indexOf("]"));
@@ -489,7 +502,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		for (int i = 1; i < file.size(); i++) {
 			filePath += file.get(i) + "/";
 		}
-//		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
+		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
 		
 		tabbedPane.removeAll();
 		
@@ -497,7 +510,7 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 
 		// HTML RAW TEXT VIEWER
 		JScrollPane tScrollPane = new JScrollPane(textArea);
-		textArea.setText(getHTMLFromArrayList(html));
+		textArea.setText(reader.doc.toString());
 
 		JComponent panel1 = eScrollPane;
 		tabbedPane.addTab("Preview", null, panel1, "Preview the page");
@@ -516,19 +529,24 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			textArea.setText(getHTMLFromArrayList(html));
+			textArea.setText(reader.doc.toString());
 		}
 		if (fileType.equals(".css")) {
 			setEditorPaneDocument(filePath);
 			try {
-				cssTextArea.setText(getHTMLFromArrayList(html));
-			} catch (NullPointerException e1) {
+				textArea.setText(reader.readLinkDoc(filePath));
+			} catch (IOException e1) {
 			
 			}
 		}
 		if (fileType.equals(".js")) {
 			setEditorPaneDocument(filePath);
-			jsTextArea.setText(getHTMLFromArrayList(html));
+			try {
+				textArea.setText(reader.readLinkDoc(filePath));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 		//RESET ELEMENTS TREE
@@ -540,7 +558,6 @@ public class Main implements TreeSelectionListener, ListSelectionListener, Runna
 		DefaultMutableTreeNode currentNode = root.getNextNode();
 
 		do {
-			System.out.println(currentNode.getLevel());
 			if(currentNode.getLevel()==1) {
 				elementTree.expandPath(new TreePath(currentNode.getParent()));
 			}
