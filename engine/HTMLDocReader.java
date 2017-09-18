@@ -9,7 +9,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-
 public class HTMLDocReader {
 
 	String url;
@@ -20,17 +19,9 @@ public class HTMLDocReader {
 	private File input;
 	public Document doc;
 
-	private String[] globalHTMLAttributes = { "accesskey", "class", "contenteditable", "contextmenu", "dir",
-			"draggable", "dropzone", "hidden", "id", "lang", "spellcheck", "style", "tabindex", "title", "translate" };
-
-
 	public static Elements headElements;
 	public static Elements bodyElements;
 	public static Elements footerElements;
-
-	public HTMLDocReader() {
-
-	}
 
 	public HTMLDocReader(String url) {
 
@@ -45,35 +36,35 @@ public class HTMLDocReader {
 		}
 	}
 
-	public void readDoc(String url) throws IOException{
+	public void readDoc(String url) throws IOException {
 
-//		System.out.println("URL"+url);
+		// System.out.println("URL"+url);
 		input = new File(url);
 		doc = Jsoup.parse(input, "UTF-8", url);
-//		System.out.println(doc);
+		// System.out.println(doc);
 		headElements = doc.head().select("*");
 		bodyElements = doc.body().select("*");
 		footerElements = doc.body().select("footer");
-	
+
 	}
 
-	public String readLinkDoc(String url) throws IOException{
+	public String readLinkDoc(String url) throws IOException {
 
 		String doc = "";
 		try (BufferedReader br = new BufferedReader(new FileReader(url))) {
 			String sCurrentLine;
 			while ((sCurrentLine = br.readLine()) != null) {
-				doc+=sCurrentLine+"\n";
+				doc += sCurrentLine + "\n";
 			}
 			br.close();
-		} catch (IOException e){
-			System.out.println("Document "+url+" Not found.");
-			url = Main.rootFolder+"/"+url;
-			System.out.println("Trying with document "+url);
+		} catch (IOException e) {
+			// System.out.println("Document "+url+" Not found.");
+			url = Main.rootFolder + "/" + url;
+			// System.out.println("Trying with document "+url);
 			try (BufferedReader br = new BufferedReader(new FileReader(url))) {
 				String sCurrentLine;
 				while ((sCurrentLine = br.readLine()) != null) {
-					doc+=sCurrentLine+"\n";
+					doc += sCurrentLine + "\n";
 				}
 				br.close();
 			} catch (IOException e1) {
@@ -82,7 +73,5 @@ public class HTMLDocReader {
 		}
 		return doc;
 	}
-
-	
 
 }
