@@ -9,14 +9,12 @@ import org.jsoup.nodes.Element;
 public class BodyElementInfo {
 	public String elementName;
 	public int index;
-	private HTMLDocReader reader;
 	private Element element;
 	
-	public BodyElementInfo(String elementName, int index, HTMLDocReader reader) {		
-		this.reader = reader;
+	public BodyElementInfo(String elementName, int index) {		
 		this.elementName = elementName;
 		this.index = index;
-		this.element = reader.bodyElements.get((int)index);
+		this.element = HTMLDocReader.bodyElements.get((int)index);
 //		System.out.println("creating element "+elementName+"with index of "+index);
 	}
 	

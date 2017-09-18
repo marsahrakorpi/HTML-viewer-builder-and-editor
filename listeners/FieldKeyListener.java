@@ -6,10 +6,11 @@ import java.awt.event.KeyListener;
 public class FieldKeyListener implements KeyListener {
 
 	int index;
+
 	public FieldKeyListener(int index) {
 		this.index = index;
 	}
-	
+
 	@Override
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
@@ -18,7 +19,7 @@ public class FieldKeyListener implements KeyListener {
 	@Override
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
-		if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 			updateElement();
 		}
 	}
@@ -30,9 +31,7 @@ public class FieldKeyListener implements KeyListener {
 	}
 
 	public void updateElement() {
-		
-		
-		
+
 	}
-	
+
 }
