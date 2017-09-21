@@ -3,14 +3,22 @@ package engine;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -39,6 +47,8 @@ import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import listeners.ListListener;
+import listeners.OpenFileListener;
+import listeners.OpenFolderListener;
 
 public class Main implements TreeSelectionListener, Runnable {
 
@@ -47,15 +57,16 @@ public class Main implements TreeSelectionListener, Runnable {
 	public static JTabbedPane tabbedPane;
 	public JScrollPane elementList;
 	public static JScrollPane elementAttributes;
-	private static WebView webView;
+	public static WebView webView;
 	private static WebEngine webEngine;
 	private final JFXPanel fxPanel = new JFXPanel();
 
-	private DefaultMutableTreeNode root;
+	public static File fileRoot;
+	public static DefaultMutableTreeNode root;
 	// private DefaultMutableTreeNode model;
 	private DefaultTreeModel treeModel;
 
-	private JTree tree;
+	public static JTree tree;
 	private JTree elementTree;
 
 	private DefaultMutableTreeNode parent = null;
@@ -63,21 +74,120 @@ public class Main implements TreeSelectionListener, Runnable {
 	private DefaultMutableTreeNode nextChild = null;
 	private DefaultMutableTreeNode top;
 
-	public static String rootFolder = System.getProperty("user.dir") + "/HTML";
-	public static String pageURL = rootFolder + "/index.html";
-	public static String cssURL = rootFolder + "/css/style.css";
-	public static String jsURL = rootFolder + "/js/script.js";
 
-	static String fileName = "";
-	static String filePath = "";
-	static String fileType = "";
+//	public static String rootFolder = System.getProperty("user.dir");
+	public static String rootFolder;
+	public static String pageURL;
+//	public static String cssURL = rootFolder + "";
+//	public static String jsURL = rootFolder + "";
+//	public static String rootFolder = System.getProperty("user.dir") + "/HTML";
+//	public static String pageURL = rootFolder + "/index.html";
+//	public static String cssURL = rootFolder + "/css/style.css";
+//	public static String jsURL = rootFolder + "/js/script.js";
+
+	public static String fileName = "";
+	public static String filePath = "";
+	public static String fileType = "";
 
 	public static JTextArea textArea;
 
 	public static void main(String[] args) {
+		loadWorkDirectories();
 		SwingUtilities.invokeLater(new Main());
 		System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
 		System.out.println("READING PAGE URL: " + pageURL);
+	}
+	
+	public static void loadWorkDirectories() {
+		//LOAD PROGRAM PROPERTIES.
+		Properties prop = new Properties();
+		InputStream input = null;
+		
+		try {
+
+			input = new FileInputStream("config.properties");
+			// load a properties file
+			prop.load(input);
+			// get the property value and print it out
+			rootFolder = prop.getProperty("rootFolder");
+
+		} catch (IOException ex) {
+			//IF NO PROPERTIES FOUND, MAKE USER SELECT A HOME FOLDER
+			//THEN WRITES A PROPERTIES FILE TO SAVE PROPERTIES
+			final JFileChooser fc = new JFileChooser();
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fc.setCurrentDirectory(new File( System.getProperty("user.dir")));
+			int returnVal = fc.showOpenDialog(fc);
+			if(returnVal == JFileChooser.APPROVE_OPTION) {
+				rootFolder = fc.getSelectedFile().toString();
+				System.out.println("RF"+rootFolder);
+				Properties outProp = new Properties();
+				OutputStream output = null;
+				try {
+					output = new FileOutputStream("config.properties");
+					// set the properties value
+					outProp.setProperty("rootFolder", fc.getSelectedFile().toString());
+					// save properties to project root folder
+					outProp.store(output, null);
+				} catch (IOException io) {
+					io.printStackTrace();
+				} finally {
+					if (output != null) {
+						try {
+							output.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		//scan for index.html or equivalent in root folder
+		File folder = new File(rootFolder);
+		File[] listOfFiles = folder.listFiles();
+		
+		for(int i=0; i<listOfFiles.length; i++) {
+		      if (listOfFiles[i].isFile()) {
+		          System.out.println("File " + listOfFiles[i].getName());
+		          if(listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html") || listOfFiles[i].getName().equals("start.html")) {
+		        	  pageURL = rootFolder+"\\"+listOfFiles[i].getName();
+		          }
+		        } else if (listOfFiles[i].isDirectory()) {
+		          System.out.println("Directory " + listOfFiles[i].getName());
+		        }
+		}
+	}
+	
+	public static void setWorkDirectories(String root) {
+
+		System.out.println(root);
+		rootFolder = root;
+		System.out.println("RootFolder is now "+rootFolder);
+		//scan for index.html or equivalent in root folder
+		File folder = new File(rootFolder);
+		File[] listOfFiles = folder.listFiles();
+		
+		for(int i=0; i<listOfFiles.length; i++) {
+		      if (listOfFiles[i].isFile()) {
+		          System.out.println("File " + listOfFiles[i].getName());
+		          if(listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html") || listOfFiles[i].getName().equals("start.html")) {
+		        	  pageURL = rootFolder+"\\"+listOfFiles[i].getName();
+		        	  
+		          }
+		        } else if (listOfFiles[i].isDirectory()) {
+		          System.out.println("Directory " + listOfFiles[i].getName());
+		        }
+		}
+		
 	}
 
 	@Override
@@ -86,7 +196,13 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		JFrame frame = new JFrame("HTMLEdit");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		reader = new HTMLDocReader(pageURL);
+		try {
+			reader = new HTMLDocReader(pageURL);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//File was not found.
+			System.out.println("PageURL to read was not found or has not been set");
+		}
 
 		// MIDDLE
 
@@ -94,14 +210,25 @@ public class Main implements TreeSelectionListener, Runnable {
 		textArea = new JTextArea(20, 200);
 		textArea.setEditable(false);
 		JScrollPane tScrollPane = new JScrollPane(textArea);
-		textArea.setText(reader.doc.toString());
+		try {
+			textArea.setText(reader.doc.toString());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//File was not found.
+
+		}
 
 		tabbedPane = new JTabbedPane();
 
 		JComponent panel1 = tScrollPane;
 		tabbedPane.addTab("HTML", null, panel1, "View HTML Document");
 
-		createTabs();
+		try {
+			createTabs();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			
+		}
 
 		// MENU
 		JMenuBar menuBar;
@@ -119,7 +246,11 @@ public class Main implements TreeSelectionListener, Runnable {
 		menuItem = new JMenuItem("Project");
 		submenu.add(menuItem);
 		menu.add(submenu);
-		menuItem = new JMenuItem("Open");
+		menuItem = new JMenuItem("Open File");
+		menuItem.addActionListener(new OpenFileListener(reader));
+		menu.add(menuItem);
+		menuItem = new JMenuItem("Open Folder");
+		menuItem.addActionListener(new OpenFolderListener(reader));
 		menu.add(menuItem);
 
 		// Window Menu
@@ -137,7 +268,7 @@ public class Main implements TreeSelectionListener, Runnable {
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		buttonPanel.setPreferredSize(new Dimension(0, 50));
 		// LEFT
-		File fileRoot = new File(rootFolder);
+		fileRoot = new File(rootFolder);
 		root = new DefaultMutableTreeNode(new FileNode(fileRoot));
 		treeModel = new DefaultTreeModel(root);
 
@@ -149,9 +280,14 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		// ELEMENTS TREE
 		top = new DefaultMutableTreeNode("Document");
-		createNodes(top);
+		try {
+			createNodes(top);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+		}
 		elementTree = new JTree(top);
 		elementTree.addTreeSelectionListener(new ListListener(reader));
+		elementTree.addTreeSelectionListener(new ElementHighlightingListener(reader));
 
 		// RIGHT
 		elementList = new JScrollPane(elementTree);
@@ -193,6 +329,39 @@ public class Main implements TreeSelectionListener, Runnable {
 		// frame.dispose();
 		CreateChildNodes ccn = new CreateChildNodes(fileRoot, root);
 		new Thread(ccn).start();
+
+		frame.addComponentListener(new ComponentListener() {
+
+			@Override
+			public void componentHidden(ComponentEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void componentMoved(ComponentEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void componentResized(ComponentEvent arg0) {
+				// TODO Auto-generated method stub
+				try {
+					webView.setPrefSize(tabbedPane.getSize().width, tabbedPane.getSize().height);
+				} catch (NullPointerException e) {
+
+				}
+
+			}
+
+			@Override
+			public void componentShown(ComponentEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+		});
 	}
 
 	private static void initFX(final JFXPanel fxPanel, String url) {
@@ -206,15 +375,32 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		// Obtain the webEngine to navigate
 		Main.webEngine = webView.getEngine();
-		File f = new File(url);
-		webEngine.load(f.toURI().toString());
+		try {
+			File f = new File(url);
+			webEngine.load(f.toURI().toString());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			
+		}
 	}
 
-	private static void updateFX(String url) {
-		System.out.println(url);
-		File f = new File(url);
-		Main.webEngine.load(f.toURI().toString());
-		webView.setPrefSize(tabbedPane.getSize().width, tabbedPane.getSize().height);
+	public static void updateFX(String url) {
+		File f;
+		if(url == null || url.equals("") || url.equals(null)) {
+			System.out.println("UPDATE FX URL"+url);
+			Main.webEngine.load("");
+		} else {	
+			f = new File(url);
+			
+			try {
+				Main.webEngine.load(f.toURI().toString());
+			} catch (NullPointerException e) {
+				// TODO Auto-generated catch block
+				return;
+			}
+		}
+
+
 	}
 
 	// For creating nodes, the variable int index will number the elements in order.
@@ -247,6 +433,7 @@ public class Main implements TreeSelectionListener, Runnable {
 
 	}
 
+	// Creates tabbedPane tabs based on link and script elements found in doc
 	private void createTabs() {
 
 		Elements links = HTMLDocReader.headElements.select("link");
@@ -277,6 +464,8 @@ public class Main implements TreeSelectionListener, Runnable {
 		}
 	}
 
+	// if the doc cotains a dic, this will start mapping it our and creating nodes
+	// for the element tree
 	private int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index, Element element) {
 		// int i = index;
 		int skipAmount = 0;
@@ -326,66 +515,7 @@ public class Main implements TreeSelectionListener, Runnable {
 		return skipAmount + secondSkipAmount;
 	}
 
-	public class CreateChildNodes implements Runnable {
 
-		private DefaultMutableTreeNode root;
-
-		private File fileRoot;
-
-		public CreateChildNodes(File fileRoot, DefaultMutableTreeNode root) {
-			this.fileRoot = fileRoot;
-			this.root = root;
-		}
-
-		@Override
-		public void run() {
-			createChildren(fileRoot, root);
-		}
-
-		private void createChildren(File fileRoot, DefaultMutableTreeNode node) {
-			File[] files = fileRoot.listFiles();
-			if (files == null)
-				return;
-
-			for (File file : files) {
-				DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(new FileNode(file));
-				node.add(childNode);
-				if (file.isDirectory()) {
-					createChildren(file, childNode);
-				}
-			}
-		}
-
-	}
-
-	public class FileNode {
-
-		private File file;
-
-		public FileNode(File file) {
-			this.file = file;
-		}
-
-		@Override
-		public String toString() {
-			String name = file.getName();
-			if (name.equals("")) {
-				return file.getAbsolutePath();
-			} else {
-				return name;
-			}
-		}
-
-		protected JComponent makeTextPanel(String text) {
-			JPanel panel = new JPanel(false);
-			JLabel filler = new JLabel(text);
-			filler.setHorizontalAlignment(JLabel.CENTER);
-			panel.setLayout(new GridLayout(1, 1));
-			panel.add(filler);
-			return panel;
-		}
-
-	}
 
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
@@ -406,31 +536,46 @@ public class Main implements TreeSelectionListener, Runnable {
 		fileType = "." + fileName.substring(fileName.indexOf(".") + 1);
 
 		for (int i = 1; i < file.size(); i++) {
-			filePath += file.get(i) + "/";
+			filePath += file.get(i);
 		}
-		// System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
-		// fileType);
+		 System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
+		 fileType);
 
 		while (tabbedPane.getTabCount() > 1) {
 			tabbedPane.removeTabAt(1);
 		}
-		// HTML RAW TEXT VIEWER
-		JScrollPane tScrollPane = new JScrollPane(textArea);
-		// textArea.setText(reader.doc.toString());
+		
+		System.out.println(filePath);
+		if(reader == null) {
+			reader = new HTMLDocReader(filePath);
+		}
+		else {
+			try {
+				reader.readDoc(filePath);
+			} catch (IOException e1) {
 
-		JComponent panel2 = tScrollPane;
-		tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
+			}
+		}
+
+		// HTML RAW TEXT VIEWER
+
+		try {
+			JScrollPane tScrollPane = new JScrollPane(textArea);
+			textArea.setText(reader.doc.toString());
+			JComponent panel2 = tScrollPane;
+			tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
+		} catch (Exception e2) {
+
+		}
+
+
 
 		createTabs();
 
-		try {
-			reader.readDoc(filePath);
-		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
+
 		if (fileType.equals(".html")) {
 			textArea.setText(reader.doc.toString());
+			pageURL = filePath;
 		}
 		if (fileType.equals(".css")) {
 			try {

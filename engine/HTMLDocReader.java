@@ -9,7 +9,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-public class HTMLDocReader {
+public class HTMLDocReader extends Thread {
 
 	String url;
 	Boolean head = false;
@@ -18,7 +18,7 @@ public class HTMLDocReader {
 
 	private File input;
 	public Document doc;
-
+	private String docStr;
 	public static Elements headElements;
 	public static Elements bodyElements;
 	public static Elements footerElements;
@@ -31,17 +31,16 @@ public class HTMLDocReader {
 		try {
 			readDoc(this.url);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
 		}
 	}
 
 	public void readDoc(String url) throws IOException {
 
-		// System.out.println("URL"+url);
+		 System.out.println("doc Reader reading URL"+url);
 		input = new File(url);
 		doc = Jsoup.parse(input, "UTF-8", url);
-		// System.out.println(doc);
+//		 System.out.println(doc);
 		headElements = doc.head().select("*");
 		bodyElements = doc.body().select("*");
 		footerElements = doc.body().select("footer");
@@ -49,29 +48,33 @@ public class HTMLDocReader {
 	}
 
 	public String readLinkDoc(String url) throws IOException {
-
-		String doc = "";
-		try (BufferedReader br = new BufferedReader(new FileReader(url))) {
-			String sCurrentLine;
-			while ((sCurrentLine = br.readLine()) != null) {
-				doc += sCurrentLine + "\n";
-			}
-			br.close();
-		} catch (IOException e) {
-			// System.out.println("Document "+url+" Not found.");
-			url = Main.rootFolder + "/" + url;
-			// System.out.println("Trying with document "+url);
-			try (BufferedReader br = new BufferedReader(new FileReader(url))) {
-				String sCurrentLine;
-				while ((sCurrentLine = br.readLine()) != null) {
-					doc += sCurrentLine + "\n";
+		// System.out.println("URL"+url);
+		docStr = "";
+		this.url = url;
+		Thread t = new Thread() {
+			public void start() {
+				try (BufferedReader br = new BufferedReader(new FileReader(url))) {
+					String sCurrentLine;
+					while ((sCurrentLine = br.readLine()) != null) {
+						docStr += sCurrentLine + "\n";
+					}
+					br.close();
+				} catch (IOException e) {
+					String furl = Main.rootFolder + "/" + url;
+					try (BufferedReader br = new BufferedReader(new FileReader(furl))) {
+						String sCurrentLine;
+						while ((sCurrentLine = br.readLine()) != null) {
+							docStr += sCurrentLine + "\n";
+						}
+						br.close();
+					} catch (IOException e1) {
+						docStr = "IOException. No document found.";
+					}
 				}
-				br.close();
-			} catch (IOException e1) {
-				return doc = "IOException. No document found.";
 			}
-		}
-		return doc;
+		};
+		t.start();
+		return docStr;
 	}
 
 }

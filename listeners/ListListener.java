@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -33,7 +34,7 @@ public class ListListener implements TreeSelectionListener {
 			"padding-left", "padding-right", "position", "visibility" };
 
 	String[] globalHTMLAttributes = { "id", "accesskey", "class", "contenteditable", "contextmenu", "dir", "draggable",
-			"dropzone", "hidden", "lang", "spellcheck", "tabindex", "title", "translate" };
+			"dropzone", "lang", "spellcheck", "tabindex", "title", "translate" };
 
 	String[] fonts = { "Arial", "Helvetica", "Times New Roman", "Times", "Courier New", "Courier", "Veradana",
 			"Georgia", "Palatino", "Garamond", "Bookman", "Comic Sans MS", "Trebuchet MS", "Arial Black", "Impact" };
@@ -61,6 +62,7 @@ public class ListListener implements TreeSelectionListener {
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
 		Main.textArea.getHighlighter().removeAllHighlights();
+		
 		try {
 			p.removeAll();
 			Main.elementAttributes.setViewportView(p);
@@ -112,30 +114,6 @@ public class ListListener implements TreeSelectionListener {
 				elementName.setFont(new Font("Arial", Font.BOLD, 20));
 				p.add(elementName);
 
-				// for(int i=0; i<styleAttributes.length; i++) {
-				// styleLabel.add(new JLabel(styleAttributes[i]));
-				// if(reader.bodyElements.get(bElement.index).attr("style").contains(styleAttributes[i])){
-				// String style = reader.bodyElements.get(bElement.index).attr("style");
-				// Pattern p = Pattern.compile("(?<="+styleAttributes[i]+":)(.*);{0,1}");
-				// Matcher m = p.matcher(style);
-				// while(m.find()) {
-				// if(m.group(1).contains(";")) {
-				// String str = m.group(1);
-				// String[] parts = str.split(";");
-				// styleField.add(new JTextField(parts[0]));
-				// }
-				// else {
-				// styleField.add(new JTextField(m.group(1)));
-				// }
-				// }
-				//
-				// } else {
-				// styleField.add(new JTextField(" "));
-				// }
-				// styleField.get(i).getDocument().addDocumentListener(new
-				// StyleFieldDocumentListener(i, bElement.index, reader));
-				// }
-
 				for (int i = 0; i < styleLabel.size(); i++) {
 					p.add(styleLabel.get(i));
 					p.add(styleField.get(i));
@@ -155,8 +133,8 @@ public class ListListener implements TreeSelectionListener {
 					// find the correct html element in the HTMLReader by refering to the
 					// bodyElementInfo index
 					if (HTMLDocReader.bodyElements.get(bElement.index).hasAttr(globalHTMLAttributes[i])) {
-						field.add(
-								new JTextField(HTMLDocReader.bodyElements.get(bElement.index).attr(globalHTMLAttributes[i])));
+						field.add(new JTextField(
+								HTMLDocReader.bodyElements.get(bElement.index).attr(globalHTMLAttributes[i])));
 					} else {
 						field.add(new JTextField(""));
 
@@ -174,6 +152,10 @@ public class ListListener implements TreeSelectionListener {
 					field.get(i).setMaximumSize(d);
 					field.get(i).setHorizontalAlignment(JTextField.LEFT);
 				}
+
+				JCheckBox hiddenCheck = new JCheckBox("hidden");
+				hiddenCheck.addItemListener(new CheckListener(bElement.index, reader, hiddenCheck));
+				p.add(hiddenCheck);
 
 				int offset = reader.doc.toString().indexOf(HTMLDocReader.bodyElements.get(bElement.index).outerHtml());
 				int length = HTMLDocReader.bodyElements.get(bElement.index).toString().length();
@@ -202,14 +184,6 @@ public class ListListener implements TreeSelectionListener {
 		// set labels and fields
 
 		Main.elementAttributes.setViewportView(p);
-
-	}
-
-	public void setHeadElementOptionsPane(int index) {
-
-	}
-
-	public void setBodyElementOptionsPane() {
 
 	}
 

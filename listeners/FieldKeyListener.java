@@ -22,6 +22,7 @@ public class FieldKeyListener implements KeyListener {
 		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 			updateElement();
 		}
+
 	}
 
 	@Override
