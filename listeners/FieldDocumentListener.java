@@ -1,8 +1,5 @@
 package listeners;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.List;
 
 import javax.swing.event.DocumentEvent;
@@ -14,9 +11,10 @@ import org.jsoup.nodes.Element;
 
 import engine.HTMLDocReader;
 import engine.Main;
+import engine.TempFileSaver;
 import javafx.application.Platform;
 
-public class FieldDocumentListener extends Thread implements DocumentListener {
+public class FieldDocumentListener implements DocumentListener {
 
 	int fieldIndex, elementIndex;
 	String tempFile;
@@ -43,92 +41,39 @@ public class FieldDocumentListener extends Thread implements DocumentListener {
 
 	@Override
 	public void removeUpdate(DocumentEvent e) {
-		removeUpdate();
-
+		updateElement();
 	}
 
-	public void removeUpdate() {
 
-		element = HTMLDocReader.bodyElements.get(elementIndex);
+	public void updateElement() {
+		TempFileSaver.unsavedChanges = true;
+		String attrib = ListListener.label.get(fieldIndex).getText();
+
+		element = reader.tempDoc.body().select("*").get(elementIndex);
 		String attributeToRemove = ListListener.label.get(fieldIndex).getText();
 		if (ListListener.field.get(fieldIndex).getText().equals("")
 				|| ListListener.field.get(fieldIndex).getText() == null) {
-
+			System.out.println("removing");
 			// remove attribute from element
 			Attributes a = element.attributes();
+			System.out.println(a);
 			List<Attribute> b = a.asList();
 			for (int i = 0; i < b.size(); i++) {
+				
 				if (b.get(i).getKey().equals(attributeToRemove)) {
+					System.out.println("Removing attribute "+b.get(i).getKey());
 					element.removeAttr(b.get(i).getKey());
 				}
 			}
-
-			Thread t = new Thread() {
-				public void run() {
-
-					File file = new File(Main.pageURL);
-					try {
-						BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-						bw.write("\n<html>");
-						bw.write("\n" + HTMLDocReader.headElements.get(0));
-						bw.write("\n" + HTMLDocReader.bodyElements.get(0));
-						bw.write("\n</html>");
-						bw.close();
-
-						reader.readDoc(Main.pageURL);
-						reader.readLinkDoc(Main.pageURL);
-						Main.textArea.setText(reader.doc.toString());
-						Platform.runLater(new Runnable() {
-							public void run() {
-								Main.updateFX(Main.pageURL);
-							}
-						});
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-
-				}
-			};
-			t.start();
+		} else {
+			element.attr(attrib, ListListener.field.get(fieldIndex).getText());
 		}
-
-	}
-
-	public void updateElement() {
-
-		Thread t = new Thread() {
+		Main.textArea.setText(reader.tempDoc.toString());
+		Platform.runLater(new Runnable() {
 			public void run() {
-				String attrib = ListListener.label.get(fieldIndex).getText();
-
-				element = HTMLDocReader.bodyElements.get(elementIndex);
-				element.attr(attrib, ListListener.field.get(fieldIndex).getText());
-
-				File file = new File(Main.pageURL);
-				try {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-					bw.write("\n<html>");
-					bw.write("\n" + HTMLDocReader.headElements.get(0));
-					bw.write("\n" + HTMLDocReader.bodyElements.get(0));
-					bw.write("\n</html>");
-					bw.close();
-
-					reader.readDoc(Main.pageURL);
-					reader.readLinkDoc(Main.pageURL);
-					Main.textArea.setText(reader.doc.toString());
-					Platform.runLater(new Runnable() {
-						public void run() {
-							Main.updateFX(Main.pageURL);
-						}
-					});
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
+				Main.updateFX(Main.tempPageURL);
 			}
-		};
-		t.start();
+		});
 
 	}
 

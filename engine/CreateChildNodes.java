@@ -4,6 +4,8 @@ import java.io.File;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.apache.commons.io.FilenameUtils;
+
 public class CreateChildNodes implements Runnable {
 
 	private DefaultMutableTreeNode root;
@@ -26,8 +28,13 @@ public class CreateChildNodes implements Runnable {
 			return;
 
 		for (File file : files) {
+
 			DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(new FileNode(file));
-			node.add(childNode);
+			//do not add to directory tree if the file is a temp file
+			if(FilenameUtils.getExtension(file.getAbsolutePath()).equals("tmp")) {
+			} else {
+				node.add(childNode);
+			}
 			if (file.isDirectory()) {
 				createChildren(file, childNode);
 			}

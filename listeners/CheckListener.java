@@ -2,9 +2,6 @@ package listeners;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.List;
 
 import javax.swing.JCheckBox;
@@ -38,16 +35,16 @@ public class CheckListener extends Thread implements ItemListener {
 
 	@Override
 	public void itemStateChanged(ItemEvent e) {
-		element = HTMLDocReader.bodyElements.get(elementIndex);
+		element = reader.tempDoc.body().select("*").get(elementIndex);
 		String attribute = checkBox.getText();
 		if (checkBox.isSelected()) {
-			System.out.println("SETTING TO HIDDEN");
+//			System.out.println("SETTING TO HIDDEN");
 			// Add atribute to element
 			element.attr(checkBox.getText(), "");
-			System.out.println("ELEMENT ATTRIBUTES: " + element.outerHtml());
+//			System.out.println("ELEMENT ATTRIBUTES: " + element.outerHtml());
 		} else if(!checkBox.isSelected()){
 			// remove attribute from element
-			System.out.println("REMOVING HIDDEN");
+//			System.out.println("REMOVING HIDDEN");
 			Attributes a = element.attributes();
 			List<Attribute> b = a.asList();
 			for (int i = 0; i < b.size(); i++) {
@@ -56,35 +53,44 @@ public class CheckListener extends Thread implements ItemListener {
 				}
 			}
 		}
-
-		System.out.println(element.outerHtml());
-		Thread t = new Thread() {
+		
+		Main.textArea.setText(reader.doc.toString());
+		Platform.runLater(new Runnable() {
 			public void run() {
-				System.out.println("Running CheckListener Thread");
-				File file = new File(Main.pageURL);
-				try {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-					bw.write("\n<html>");
-					bw.write("\n" + HTMLDocReader.headElements.get(0));
-					bw.write("\n" + HTMLDocReader.bodyElements.get(0));
-					bw.write("\n</html>");
-					bw.close();
-
-					reader.readDoc(Main.pageURL);
-					reader.readLinkDoc(Main.pageURL);
-					Main.textArea.setText(reader.doc.toString());
-					Platform.runLater(new Runnable() {
-						public void run() {
-							Main.updateFX(Main.pageURL);
-						}
-					});
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
+				Main.updateFX(Main.tempPageURL);
 			}
-		};
-		t.start();
+		});
+
+//		System.out.println(element.outerHtml());
+//		Thread t = new Thread() {
+//			public void run() {
+//				TempFileSaver.unsavedChanges = true;
+////				System.out.println("Running CheckListener Thread");
+//				File file = new File(Main.tempPageURL);
+//				try {
+//					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+//					bw.write(reader.tempDoc.toString());
+////					bw.write("\n<html>");
+////					bw.write("\n" + HTMLDocReader.headElements.get(0));
+////					bw.write("\n" + HTMLDocReader.bodyElements.get(0));
+////					bw.write("\n</html>");
+//					bw.close();
+//
+//					reader.readDoc(Main.tempPageURL);
+//					reader.readLinkDoc(Main.tempPageURL);
+//					Main.textArea.setText(reader.doc.toString());
+//					Platform.runLater(new Runnable() {
+//						public void run() {
+//							Main.updateFX(Main.tempPageURL);
+//						}
+//					});
+//
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//
+//			}
+//		};
+//		t.start();
 	}
 }

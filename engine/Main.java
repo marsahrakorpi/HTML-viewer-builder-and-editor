@@ -2,9 +2,10 @@ package engine;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.InputEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,21 +16,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -37,8 +41,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import org.apache.commons.io.FileUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import com.sun.glass.events.KeyEvent;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -46,6 +53,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import listeners.ElementHighlightingListener;
 import listeners.ListListener;
 import listeners.OpenFileListener;
 import listeners.OpenFolderListener;
@@ -53,7 +61,7 @@ import listeners.OpenFolderListener;
 public class Main implements TreeSelectionListener, Runnable {
 
 	private HTMLDocReader reader;
-
+	private TempFileSaver tempFileSaver;
 	public static JTabbedPane tabbedPane;
 	public JScrollPane elementList;
 	public static JScrollPane elementAttributes;
@@ -74,16 +82,19 @@ public class Main implements TreeSelectionListener, Runnable {
 	private DefaultMutableTreeNode nextChild = null;
 	private DefaultMutableTreeNode top;
 
-
-//	public static String rootFolder = System.getProperty("user.dir");
+	// public static String rootFolder = System.getProperty("user.dir");
+	public static String tempDir;
 	public static String rootFolder;
 	public static String pageURL;
-//	public static String cssURL = rootFolder + "";
-//	public static String jsURL = rootFolder + "";
-//	public static String rootFolder = System.getProperty("user.dir") + "/HTML";
-//	public static String pageURL = rootFolder + "/index.html";
-//	public static String cssURL = rootFolder + "/css/style.css";
-//	public static String jsURL = rootFolder + "/js/script.js";
+	public static String tempPageURL;
+	public static String tempCSSURL;
+	public static String tempCSSURLAbsolute;
+	// public static String cssURL = rootFolder + "";
+	// public static String jsURL = rootFolder + "";
+	// public static String rootFolder = System.getProperty("user.dir") + "/HTML";
+	// public static String pageURL = rootFolder + "/index.html";
+	// public static String cssURL = rootFolder + "/css/style.css";
+	// public static String jsURL = rootFolder + "/js/script.js";
 
 	public static String fileName = "";
 	public static String filePath = "";
@@ -97,12 +108,12 @@ public class Main implements TreeSelectionListener, Runnable {
 		System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
 		System.out.println("READING PAGE URL: " + pageURL);
 	}
-	
+
 	public static void loadWorkDirectories() {
-		//LOAD PROGRAM PROPERTIES.
+		// LOAD PROGRAM PROPERTIES.
 		Properties prop = new Properties();
 		InputStream input = null;
-		
+
 		try {
 
 			input = new FileInputStream("config.properties");
@@ -112,15 +123,14 @@ public class Main implements TreeSelectionListener, Runnable {
 			rootFolder = prop.getProperty("rootFolder");
 
 		} catch (IOException ex) {
-			//IF NO PROPERTIES FOUND, MAKE USER SELECT A HOME FOLDER
-			//THEN WRITES A PROPERTIES FILE TO SAVE PROPERTIES
+			// IF NO PROPERTIES FOUND, MAKE USER SELECT A HOME FOLDER
+			// THEN WRITES A PROPERTIES FILE TO SAVE PROPERTIES
 			final JFileChooser fc = new JFileChooser();
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			fc.setCurrentDirectory(new File( System.getProperty("user.dir")));
+			fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
 			int returnVal = fc.showOpenDialog(fc);
-			if(returnVal == JFileChooser.APPROVE_OPTION) {
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				rootFolder = fc.getSelectedFile().toString();
-				System.out.println("RF"+rootFolder);
 				Properties outProp = new Properties();
 				OutputStream output = null;
 				try {
@@ -150,44 +160,42 @@ public class Main implements TreeSelectionListener, Runnable {
 				}
 			}
 		}
-		
-		//scan for index.html or equivalent in root folder
+
+		// scan for index.html or equivalent in root folder
 		File folder = new File(rootFolder);
 		File[] listOfFiles = folder.listFiles();
-		
-		for(int i=0; i<listOfFiles.length; i++) {
-		      if (listOfFiles[i].isFile()) {
-		          System.out.println("File " + listOfFiles[i].getName());
-		          if(listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html") || listOfFiles[i].getName().equals("start.html")) {
-		        	  pageURL = rootFolder+"\\"+listOfFiles[i].getName();
-		          }
-		        } else if (listOfFiles[i].isDirectory()) {
-		          System.out.println("Directory " + listOfFiles[i].getName());
-		        }
+
+		for (int i = 0; i < listOfFiles.length; i++) {
+			if (listOfFiles[i].isFile()) {
+				if (listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html")
+						|| listOfFiles[i].getName().equals("start.html")) {
+					pageURL = rootFolder + "\\" + listOfFiles[i].getName();
+				}
+			} else if (listOfFiles[i].isDirectory()) {
+
+			}
 		}
 	}
-	
+
 	public static void setWorkDirectories(String root) {
 
-		System.out.println(root);
 		rootFolder = root;
-		System.out.println("RootFolder is now "+rootFolder);
-		//scan for index.html or equivalent in root folder
+
+		// scan for index.html or equivalent in root folder
 		File folder = new File(rootFolder);
 		File[] listOfFiles = folder.listFiles();
-		
-		for(int i=0; i<listOfFiles.length; i++) {
-		      if (listOfFiles[i].isFile()) {
-		          System.out.println("File " + listOfFiles[i].getName());
-		          if(listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html") || listOfFiles[i].getName().equals("start.html")) {
-		        	  pageURL = rootFolder+"\\"+listOfFiles[i].getName();
-		        	  
-		          }
-		        } else if (listOfFiles[i].isDirectory()) {
-		          System.out.println("Directory " + listOfFiles[i].getName());
-		        }
+
+		for (int i = 0; i < listOfFiles.length; i++) {
+			if (listOfFiles[i].isFile()) {
+				if (listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html")
+						|| listOfFiles[i].getName().equals("start.html")) {
+					pageURL = rootFolder + "\\" + listOfFiles[i].getName();
+
+				}
+			} else if (listOfFiles[i].isDirectory()) {
+			}
 		}
-		
+
 	}
 
 	@Override
@@ -195,13 +203,12 @@ public class Main implements TreeSelectionListener, Runnable {
 		// TODO Auto-generated method stub
 
 		JFrame frame = new JFrame("HTMLEdit");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		try {
 			reader = new HTMLDocReader(pageURL);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			//File was not found.
-			System.out.println("PageURL to read was not found or has not been set");
+			// File was not found.
 		}
 
 		// MIDDLE
@@ -214,7 +221,7 @@ public class Main implements TreeSelectionListener, Runnable {
 			textArea.setText(reader.doc.toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			//File was not found.
+			// File was not found.
 
 		}
 
@@ -227,7 +234,7 @@ public class Main implements TreeSelectionListener, Runnable {
 			createTabs();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			
+
 		}
 
 		// MENU
@@ -268,7 +275,7 @@ public class Main implements TreeSelectionListener, Runnable {
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		buttonPanel.setPreferredSize(new Dimension(0, 50));
 		// LEFT
-		fileRoot = new File(rootFolder);
+		fileRoot = new File(tempDir);
 		root = new DefaultMutableTreeNode(new FileNode(fileRoot));
 		treeModel = new DefaultTreeModel(root);
 
@@ -362,6 +369,67 @@ public class Main implements TreeSelectionListener, Runnable {
 			}
 
 		});
+		tempFileSaver = new TempFileSaver(reader);
+		Object[] options = { "Save & exit", "Do Not Save", "Cancel" };
+		frame.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+				if (TempFileSaver.unsavedChanges) {
+					int result = JOptionPane.showOptionDialog(frame,
+							"You have unsaved changes. Are you sure you want to exit?", "Unsaved Changes",
+							JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+					if(result == JOptionPane.YES_OPTION) {
+						tempFileSaver.save();
+						try {
+							FileUtils.forceDelete(new File(tempDir));
+						} catch (IOException e) {
+
+						}
+						System.exit(0);
+					}
+					if(result == JOptionPane.NO_OPTION) {
+						try {
+							FileUtils.forceDelete(new File(tempDir));
+						} catch (IOException e) {
+
+						}
+						System.exit(0);
+					}
+					if(result == JOptionPane.CANCEL_OPTION) {
+						
+					}
+				} else {
+					try {
+						FileUtils.forceDelete(new File(tempDir));
+					} catch (IOException e) {
+
+					}
+					System.exit(0);
+				}
+			}
+		});
+
+		Action saveAction = new AbstractAction("Save") {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 5997018196165864216L;
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				tempFileSaver.save();
+			}
+
+		};
+
+		// ctrl+s keybind
+		KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK);
+		// register action in ActionMap
+		mainPane.getActionMap().put("Save", saveAction);
+		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, "Save");
+
 	}
 
 	private static void initFX(final JFXPanel fxPanel, String url) {
@@ -380,18 +448,16 @@ public class Main implements TreeSelectionListener, Runnable {
 			webEngine.load(f.toURI().toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			
+
 		}
 	}
 
 	public static void updateFX(String url) {
 		File f;
-		if(url == null || url.equals("") || url.equals(null)) {
-			System.out.println("UPDATE FX URL"+url);
+		if (url == null || url.equals("") || url.equals(null)) {
 			Main.webEngine.load("");
-		} else {	
+		} else {
 			f = new File(url);
-			
 			try {
 				Main.webEngine.load(f.toURI().toString());
 			} catch (NullPointerException e) {
@@ -399,7 +465,6 @@ public class Main implements TreeSelectionListener, Runnable {
 				return;
 			}
 		}
-
 
 	}
 
@@ -440,10 +505,16 @@ public class Main implements TreeSelectionListener, Runnable {
 		for (int i = 0; i < links.size(); i++) {
 			JTextArea jT;
 			try {
-				jT = new JTextArea(reader.readLinkDoc(links.get(i).attr("href")));
-				JScrollPane scrollPane = new JScrollPane(jT);
-				JComponent c = scrollPane;
-				tabbedPane.addTab(links.get(i).attr("href"), null, c, "CSS");
+				// DO NOT ADD THE TEMP CSS FILE TO THE TABS
+				if (links.get(i).attr("href").equals(tempCSSURL)) {
+
+				} else {
+					jT = new JTextArea(reader.readLinkDoc(links.get(i).attr("href")));
+					JScrollPane scrollPane = new JScrollPane(jT);
+					JComponent c = scrollPane;
+					tabbedPane.addTab(links.get(i).attr("href"), null, c, "CSS");
+				}
+
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -515,14 +586,11 @@ public class Main implements TreeSelectionListener, Runnable {
 		return skipAmount + secondSkipAmount;
 	}
 
-
-
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
 		// Object nodeInfo = node.getUserObject();
 		if (!node.isLeaf()) {
-			System.out.println("ignoring valueChanged from directory tree");
 			return;
 		}
 		String p = e.getPath().toString();
@@ -532,24 +600,21 @@ public class Main implements TreeSelectionListener, Runnable {
 		List<String> file = Arrays.asList(p.split("\\s*,\\s*"));
 
 		fileName = file.get(file.size() - 1);
-		filePath = rootFolder + "/";
+		filePath = tempDir + "/";
 		fileType = "." + fileName.substring(fileName.indexOf(".") + 1);
 
 		for (int i = 1; i < file.size(); i++) {
 			filePath += file.get(i);
 		}
-		 System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
-		 fileType);
+		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
 
 		while (tabbedPane.getTabCount() > 1) {
 			tabbedPane.removeTabAt(1);
 		}
-		
-		System.out.println(filePath);
-		if(reader == null) {
+
+		if (reader == null) {
 			reader = new HTMLDocReader(filePath);
-		}
-		else {
+		} else {
 			try {
 				reader.readDoc(filePath);
 			} catch (IOException e1) {
@@ -568,10 +633,7 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		}
 
-
-
 		createTabs();
-
 
 		if (fileType.equals(".html")) {
 			textArea.setText(reader.doc.toString());
@@ -595,7 +657,7 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		Platform.runLater(new Runnable() {
 			public void run() {
-				updateFX(filePath);
+				updateFX(tempPageURL);
 			}
 		});
 

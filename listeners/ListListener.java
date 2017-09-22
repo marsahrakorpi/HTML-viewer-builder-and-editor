@@ -14,7 +14,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -132,9 +131,9 @@ public class ListListener implements TreeSelectionListener {
 					label.add(new JLabel(globalHTMLAttributes[i]));
 					// find the correct html element in the HTMLReader by refering to the
 					// bodyElementInfo index
-					if (HTMLDocReader.bodyElements.get(bElement.index).hasAttr(globalHTMLAttributes[i])) {
+					if (reader.tempDoc.body().select("*").get(bElement.index).hasAttr(globalHTMLAttributes[i])) {
 						field.add(new JTextField(
-								HTMLDocReader.bodyElements.get(bElement.index).attr(globalHTMLAttributes[i])));
+								reader.tempDoc.body().select("*").get(bElement.index).attr(globalHTMLAttributes[i])));
 					} else {
 						field.add(new JTextField(""));
 
@@ -157,26 +156,26 @@ public class ListListener implements TreeSelectionListener {
 				hiddenCheck.addItemListener(new CheckListener(bElement.index, reader, hiddenCheck));
 				p.add(hiddenCheck);
 
-				int offset = reader.doc.toString().indexOf(HTMLDocReader.bodyElements.get(bElement.index).outerHtml());
-				int length = HTMLDocReader.bodyElements.get(bElement.index).toString().length();
-
-				/*
-				 * 
-				 * TO DO: FIX DIV HIGHLIGHTING CURRENTL ONLY SINGULAR ELEMENTS ARE HIGHLIGHTED
-				 * 
-				 */
-
-				while (offset != -1) {
-					try {
-						Main.textArea.getHighlighter().addHighlight(offset, offset + length, painter);
-						offset = reader.doc.toString()
-								.indexOf(HTMLDocReader.bodyElements.get(bElement.index).toString(), offset + 1);
-					} catch (BadLocationException ble) {
-						// TODO Auto-generated catch block
-						ble.printStackTrace();
-					}
-
-				}
+//				int offset = reader.doc.toString().indexOf(HTMLDocReader.bodyElements.get(bElement.index).outerHtml());
+//				int length = HTMLDocReader.bodyElements.get(bElement.index).toString().length();
+//
+//				/*
+//				 * 
+//				 * TO DO: FIX DIV HIGHLIGHTING CURRENTL ONLY SINGULAR ELEMENTS ARE HIGHLIGHTED
+//				 * 
+//				 */
+//
+//				while (offset != -1) {
+//					try {
+//						Main.textArea.getHighlighter().addHighlight(offset, offset + length, painter);
+//						offset = reader.doc.toString()
+//								.indexOf(HTMLDocReader.bodyElements.get(bElement.index).toString(), offset + 1);
+//					} catch (BadLocationException ble) {
+//						// TODO Auto-generated catch block
+//						ble.printStackTrace();
+//					}
+//
+//				}
 
 			}
 		}
