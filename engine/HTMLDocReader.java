@@ -6,20 +6,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
+import java.util.Comparator;
 
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import javafx.application.Platform;
 
@@ -44,7 +40,7 @@ public class HTMLDocReader extends Thread {
 
 		try {
 			readDoc(this.url);
-			copyToTempFile(this.url);
+			copyToTempFile();
 		} catch (IOException e) {
 
 		}
@@ -129,16 +125,34 @@ public class HTMLDocReader extends Thread {
 	    file.deleteOnExit();
 	}
 	
-	public void copyToTempFile(String url){
+	public void copyToTempFile(){
 		System.out.println("Copying");
+		System.out.println(Main.rootFolder);
+		//copy to temp
 		File sDir = new File(Main.rootFolder);
 		try {
 			Path tempDir = Files.createTempDirectory("HTMLEdit");
 			Main.tempDir = tempDir.toString();
 			FileUtils.copyDirectory(sDir, tempDir.toFile());
-			
-			System.out.println();
-			
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		//copy program css files to temp
+		try {
+			FileUtils.copyDirectoryToDirectory(new File(System.getProperty("user.dir")+"\\webViewCSS"), new File(Main.tempDir));
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		//set temp dir to delete on exit
+		Path rootPath = Paths.get(Main.tempDir);
+		try {
+			Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
+				.sorted(Comparator.reverseOrder())
+				.map(Path::toFile)
+				.forEach(File::deleteOnExit);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -159,15 +173,21 @@ public class HTMLDocReader extends Thread {
 			}
 		}
 		
-		System.out.println(Main.tempPageURL);
+		//parse tempDoc
 		input = new File(Main.tempPageURL);
 		try {
-			doc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
+			tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+
 		}
 		
+		Elements webCSS = tempDoc.select("[href*=\"webViewCSS/webViewHighlighter\"]");
+		System.out.println(webCSS);
+		if(webCSS.size()==0) {
+			tempDoc.select("head").append("<link rel=\"stylesheet\" href=\"webViewCSS/webViewHighlighter.css\">");
+		}
+
 		Platform.runLater(new Runnable() {
 			public void run() {
 				Main.updateFX(Main.tempPageURL);

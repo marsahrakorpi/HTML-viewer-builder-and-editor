@@ -11,7 +11,7 @@ import org.jsoup.nodes.Element;
 
 import engine.HTMLDocReader;
 import engine.Main;
-import engine.TempFileSaver;
+import engine.FileSaver;
 import javafx.application.Platform;
 
 public class FieldDocumentListener implements DocumentListener {
@@ -46,7 +46,7 @@ public class FieldDocumentListener implements DocumentListener {
 
 
 	public void updateElement() {
-		TempFileSaver.unsavedChanges = true;
+		FileSaver.unsavedChanges = true;
 		String attrib = ListListener.label.get(fieldIndex).getText();
 
 		element = reader.tempDoc.body().select("*").get(elementIndex);

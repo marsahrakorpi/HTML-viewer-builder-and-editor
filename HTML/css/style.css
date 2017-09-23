@@ -7,10 +7,3 @@ h1{
 .blue{
 	background-color: blue;
 }
-
-.java-highlighted-element{
-	background-color: rgb(145, 184, 247);
-	background-color: rgba(145, 184, 247, .5);
-	border: 1px solid red;
-	
-}	

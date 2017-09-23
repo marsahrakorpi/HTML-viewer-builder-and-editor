@@ -13,13 +13,17 @@ public class CreateChildNodes implements Runnable {
 	private File fileRoot;
 
 	public CreateChildNodes(File fileRoot, DefaultMutableTreeNode root) {
-		this.fileRoot = fileRoot; 
+		this.fileRoot = fileRoot;
 		this.root = root;
 	}
 
 	@Override
 	public void run() {
-		createChildren(fileRoot, root);
+		try {
+			createChildren(fileRoot, root);
+		} catch (Exception e) {
+			return;
+		}
 	}
 
 	private void createChildren(File fileRoot, DefaultMutableTreeNode node) {
@@ -28,18 +32,21 @@ public class CreateChildNodes implements Runnable {
 			return;
 
 		for (File file : files) {
+			if (file.getName().equals("webViewCSS")) {
 
-			DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(new FileNode(file));
-			//do not add to directory tree if the file is a temp file
-			if(FilenameUtils.getExtension(file.getAbsolutePath()).equals("tmp")) {
 			} else {
-				node.add(childNode);
-			}
-			if (file.isDirectory()) {
-				createChildren(file, childNode);
+
+				DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(new FileNode(file));
+				// do not add to directory tree if the file is a temp file
+				if (FilenameUtils.getExtension(file.getAbsolutePath()).equals("tmp")) {
+				} else {
+					node.add(childNode);
+				}
+				if (file.isDirectory()) {
+					createChildren(file, childNode);
+				}
 			}
 		}
 	}
 
 }
-

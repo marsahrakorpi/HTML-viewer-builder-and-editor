@@ -9,7 +9,6 @@ import org.jsoup.select.Elements;
 
 import engine.BodyElementInfo;
 import engine.HTMLDocReader;
-import engine.HeadElementInfo;
 import engine.Main;
 
 public class ElementHighlightingListener extends Thread implements TreeSelectionListener {
@@ -39,9 +38,9 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 					return;
 				}
 
-				Object nodeInfo = node.getUserObject();
+//				Object nodeInfo = node.getUserObject();
 				if (node.isLeaf()) {
-					HeadElementInfo hElement = (HeadElementInfo) nodeInfo;
+//					HeadElementInfo hElement = (HeadElementInfo) nodeInfo;
 
 				}
 			}
@@ -65,14 +64,12 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 	private void highlightElement(Element element) {
 		removeAllHighlights();
 		element.addClass("java-highlighted-element");
-		System.out.println(element);
 		Main.textArea.setText(reader.tempDoc.toString());
 		reader.updateTempDoc();
 
 	}
 
 	private void removeAllHighlights() {
-		System.out.println("Removing highlight CSS");
 		Elements elements = reader.tempDoc.body().select("*");
 		for (Element e : elements) {
 			// removes the highlight css class
