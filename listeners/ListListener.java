@@ -18,6 +18,8 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.jsoup.nodes.Element;
+
 import engine.BodyElementInfo;
 import engine.HTMLDocReader;
 import engine.HeadElementInfo;
@@ -32,7 +34,7 @@ public class ListListener implements TreeSelectionListener {
 			"margin-bottom", "margin-top", "margin-left", "margin-right", "padding", "padding-top", "padding-bottom",
 			"padding-left", "padding-right", "position", "visibility" };
 
-	String[] globalHTMLAttributes = { "id", "accesskey", "class", "contenteditable", "contextmenu", "dir", "draggable",
+	String[] globalHTMLAttributes = { "id", "accesskey", "contenteditable", "contextmenu", "dir", "draggable",
 			"dropzone", "lang", "spellcheck", "tabindex", "title", "translate" };
 
 	String[] fonts = { "Arial", "Helvetica", "Times New Roman", "Times", "Courier New", "Courier", "Veradana",
@@ -131,9 +133,9 @@ public class ListListener implements TreeSelectionListener {
 					label.add(new JLabel(globalHTMLAttributes[i]));
 					// find the correct html element in the HTMLReader by refering to the
 					// bodyElementInfo index
-					if (reader.tempDoc.body().select("*").get(bElement.index).hasAttr(globalHTMLAttributes[i])) {
-						field.add(new JTextField(
-								reader.tempDoc.body().select("*").get(bElement.index).attr(globalHTMLAttributes[i])));
+					Element element = reader.tempDoc.body().select("*").get(bElement.index);
+					if (element.hasAttr(globalHTMLAttributes[i])) {
+							field.add(new JTextField(element.attr(globalHTMLAttributes[i])));
 					} else {
 						field.add(new JTextField(""));
 

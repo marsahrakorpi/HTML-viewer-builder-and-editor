@@ -2,6 +2,9 @@ package listeners;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
 import javax.swing.JCheckBox;
@@ -12,6 +15,7 @@ import org.jsoup.nodes.Element;
 
 import engine.HTMLDocReader;
 import engine.Main;
+import engine.FileSaver;
 import javafx.application.Platform;
 
 public class CheckListener extends Thread implements ItemListener {
@@ -54,43 +58,39 @@ public class CheckListener extends Thread implements ItemListener {
 			}
 		}
 		
-		Main.textArea.setText(reader.doc.toString());
-		Platform.runLater(new Runnable() {
-			public void run() {
-				Main.updateFX(Main.tempPageURL);
-			}
-		});
-
-//		System.out.println(element.outerHtml());
-//		Thread t = new Thread() {
+//		Main.textArea.setText(reader.tempDoc.toString());
+//		Platform.runLater(new Runnable() {
 //			public void run() {
-//				TempFileSaver.unsavedChanges = true;
-////				System.out.println("Running CheckListener Thread");
-//				File file = new File(Main.tempPageURL);
-//				try {
-//					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-//					bw.write(reader.tempDoc.toString());
-////					bw.write("\n<html>");
-////					bw.write("\n" + HTMLDocReader.headElements.get(0));
-////					bw.write("\n" + HTMLDocReader.bodyElements.get(0));
-////					bw.write("\n</html>");
-//					bw.close();
-//
-//					reader.readDoc(Main.tempPageURL);
-//					reader.readLinkDoc(Main.tempPageURL);
-//					Main.textArea.setText(reader.doc.toString());
-//					Platform.runLater(new Runnable() {
-//						public void run() {
-//							Main.updateFX(Main.tempPageURL);
-//						}
-//					});
-//
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//
+//				Main.updateFX(Main.tempPageURL);
 //			}
-//		};
-//		t.start();
+//		});
+
+		System.out.println(element.outerHtml());
+		Thread t = new Thread() {
+			public void run() {
+				FileSaver.unsavedChanges = true;
+//				System.out.println("Running CheckListener Thread");
+				File file = new File(Main.tempPageURL);
+				try {
+					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+					bw.write(reader.tempDoc.toString());
+					bw.close();
+
+					reader.readDoc(Main.tempPageURL);
+					reader.readLinkDoc(Main.tempPageURL);
+					Main.textArea.setText(reader.doc.toString());
+					Platform.runLater(new Runnable() {
+						public void run() {
+							Main.updateFX(Main.tempPageURL);
+						}
+					});
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+			}
+		};
+		t.start();
 	}
 }

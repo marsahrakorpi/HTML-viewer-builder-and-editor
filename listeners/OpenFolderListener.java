@@ -6,6 +6,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Properties;
 
 import javax.swing.JFileChooser;
@@ -33,19 +38,24 @@ public class OpenFolderListener implements ActionListener {
 		fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
 		int returnVal = fc.showOpenDialog(fc);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			System.out.println(fc.getSelectedFile().toString());
+			if(Main.tempDir == null) {
+				System.out.print("Main.tempDir is Null");
+			} else {
+				Path rootPath = Paths.get(Main.tempDir);
+				try {
+					
+					Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
+						.sorted(Comparator.reverseOrder())
+						.map(Path::toFile)
+						.peek(System.out::println)
+						.forEach(File::delete);
+				} catch (IOException e1) {
+		
+				}
+			}
 			
-			Main.pageURL = fc.getSelectedFile().toString();
-			
-			DefaultTreeModel model = (DefaultTreeModel) Main.tree.getModel();
-			DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-			
-			root.removeAllChildren();
-			root.setUserObject(fc.getSelectedFile().getName());
-			model.reload();
-			
-			Main.setWorkDirectories(fc.getSelectedFile().toString());
-			CreateChildNodes ccn = new CreateChildNodes(fc.getSelectedFile(), root);
-			new Thread(ccn).start();
+			Main.rootFolder = fc.getSelectedFile().toString();
 			
 			File folder = new File(fc.getSelectedFile().toString());
 			File[] listOfFiles = folder.listFiles();
@@ -54,28 +64,39 @@ public class OpenFolderListener implements ActionListener {
 				if (listOfFiles[i].isFile()) {
 					if (listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html")
 							|| listOfFiles[i].getName().equals("start.html")) {
-						pageURL = fc.getSelectedFile().toString() + "\\" + listOfFiles[i].getName();
+						Main.tempPageURL = fc.getSelectedFile().toString() + "\\" + listOfFiles[i].getName();
+						System.out.print("FOUND MAIN PAGE OF"+Main.tempPageURL);
+						reader.copyToTempFile();
 						if (reader == null) {
-							reader = new HTMLDocReader(pageURL);
+							reader = new HTMLDocReader(Main.tempPageURL);
 						} else {
-							try {
-								reader.readDoc(pageURL);
-							} catch (IOException e1) {
-
-							}
+							reader.copyToTempFile();
 						}
 					} else {
-						pageURL = "";
+						
 					}
 				} else if (listOfFiles[i].isDirectory()) {
 				}
-				
-				Platform.runLater(new Runnable() {
-					public void run() {
-						Main.updateFX(pageURL);
-					}
-				});
+
 			}
+
+//			Main.pageURL = fc.getSelectedFile().toString();
+//			
+			DefaultTreeModel model = (DefaultTreeModel) Main.tree.getModel();
+			DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+			
+			root.removeAllChildren();
+			root.setUserObject("Root");
+			model.reload();
+
+			CreateChildNodes ccn = new CreateChildNodes(new File(Main.tempDir), root);
+			new Thread(ccn).start();
+
+			Platform.runLater(new Runnable() {
+				public void run() {
+					Main.updateFX(Main.tempPageURL);
+				}
+			});
 			try {
 				FileInputStream in;
 				FileOutputStream out;

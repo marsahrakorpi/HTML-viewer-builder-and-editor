@@ -2,27 +2,37 @@ package engine;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -32,9 +42,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -60,8 +73,14 @@ import listeners.OpenFolderListener;
 
 public class Main implements TreeSelectionListener, Runnable {
 
+	private static boolean mainFrameExists = false;
+	private final static JFrame frame = new JFrame("HTMLEdit");
+
+	private static String projectName;
+	private static String createProjectFolder;
+
 	private HTMLDocReader reader;
-	private TempFileSaver tempFileSaver;
+	private FileSaver tempFileSaver;
 	public static JTabbedPane tabbedPane;
 	public JScrollPane elementList;
 	public static JScrollPane elementAttributes;
@@ -82,19 +101,12 @@ public class Main implements TreeSelectionListener, Runnable {
 	private DefaultMutableTreeNode nextChild = null;
 	private DefaultMutableTreeNode top;
 
-	// public static String rootFolder = System.getProperty("user.dir");
 	public static String tempDir;
 	public static String rootFolder;
 	public static String pageURL;
 	public static String tempPageURL;
 	public static String tempCSSURL;
 	public static String tempCSSURLAbsolute;
-	// public static String cssURL = rootFolder + "";
-	// public static String jsURL = rootFolder + "";
-	// public static String rootFolder = System.getProperty("user.dir") + "/HTML";
-	// public static String pageURL = rootFolder + "/index.html";
-	// public static String cssURL = rootFolder + "/css/style.css";
-	// public static String jsURL = rootFolder + "/js/script.js";
 
 	public static String fileName = "";
 	public static String filePath = "";
@@ -121,36 +133,14 @@ public class Main implements TreeSelectionListener, Runnable {
 			prop.load(input);
 			// get the property value and print it out
 			rootFolder = prop.getProperty("rootFolder");
-
+			if (rootFolder == null || rootFolder.equals("")) {
+				createProjectfolder();
+			}
 		} catch (IOException ex) {
 			// IF NO PROPERTIES FOUND, MAKE USER SELECT A HOME FOLDER
 			// THEN WRITES A PROPERTIES FILE TO SAVE PROPERTIES
-			final JFileChooser fc = new JFileChooser();
-			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
-			int returnVal = fc.showOpenDialog(fc);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				rootFolder = fc.getSelectedFile().toString();
-				Properties outProp = new Properties();
-				OutputStream output = null;
-				try {
-					output = new FileOutputStream("config.properties");
-					// set the properties value
-					outProp.setProperty("rootFolder", fc.getSelectedFile().toString());
-					// save properties to project root folder
-					outProp.store(output, null);
-				} catch (IOException io) {
-					io.printStackTrace();
-				} finally {
-					if (output != null) {
-						try {
-							output.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
+			createProjectfolder();
+
 		} finally {
 			if (input != null) {
 				try {
@@ -175,6 +165,171 @@ public class Main implements TreeSelectionListener, Runnable {
 
 			}
 		}
+	}
+
+	private static void createProjectfolder() {
+
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		frame.setVisible(true);
+		int returnVal;
+		Object[] options = { "Confirm", "Browse", "Exit" };
+		String programLocation = System.getProperty("user.dir");
+		String defaultProjectFolder = "\\HTMLEdit";
+		projectName = "myProject";
+		if (programLocation.substring(programLocation.length() - 1).equals("\\")) {
+			programLocation = programLocation.substring(programLocation.length() - 1);
+		}
+		createProjectFolder = programLocation + defaultProjectFolder;
+		JPanel mainPanel = new JPanel();
+		mainPanel.setLayout(new BorderLayout());
+		// JOptionPane optionPane = new JOptionPane(
+		// "No project folder found. \nPlease select a project folder to use. \nConfirm
+		// to set and create a project folder.",
+		// JOptionPane.INFORMATION_MESSAGE, JOptionPane.YES_NO_CANCEL_OPTION);
+		final JDialog dialog = new JDialog(frame, "Create a New Project", true);
+		JLabel projectPath = new JLabel();
+
+		projectPath.setText("A project folder will be created in \n\n" + createProjectFolder + "\\" + projectName);
+
+		JPanel projectNamePanel = new JPanel(new BorderLayout());
+		JPanel buttonPanel = new JPanel();
+		FlowLayout layout = new FlowLayout(FlowLayout.CENTER, 20, 10);
+		buttonPanel.setLayout(layout);
+
+		JButton confirmButton = new JButton("Confirm");
+		JButton browseButton = new JButton("Browse");
+		JButton cancelButton = new JButton("Cancel");
+
+		confirmButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dialog.dispose();
+				// write root folder to properties
+				if (!Files.exists(new File(createProjectFolder).toPath())) {
+					System.out.println("Does not exist, Creating project");
+					try {
+						Files.createDirectory(new File(createProjectFolder).toPath());
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				} else {
+					System.out.println("Project with that name already exists");
+					System.exit(0);
+					/*
+					 * TO DO: CREATE POPUP MESSAGE FOR: ERROR: A PROJECT WITH THAT NAME ALREADY
+					 * EXISTS
+					 * 
+					 */
+
+				}
+				rootFolder = createProjectFolder;
+				Properties outProp = new Properties();
+				OutputStream output = null;
+				try {
+					output = new FileOutputStream("config.properties");
+					// set the properties value
+					outProp.setProperty("rootFolder", rootFolder);
+					// save properties to project root folder
+					outProp.store(output, null);
+				} catch (IOException io) {
+					io.printStackTrace();
+				} finally {
+					if (output != null) {
+						try {
+							output.close();
+						} catch (IOException e2) {
+							e2.printStackTrace();
+						}
+					}
+				}
+			}
+		});
+
+		browseButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Browse");
+				JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
+				int returnVal = fc.showOpenDialog(fc);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					createProjectFolder = fc.getSelectedFile().toString() + "\\" + projectName;
+					projectPath.setText("A project folder will be created in \n\n" + createProjectFolder);
+				} else {
+					dialog.setVisible(true);
+
+				}
+			}
+		});
+
+		cancelButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+
+		buttonPanel.add(confirmButton);
+		buttonPanel.add(browseButton);
+		buttonPanel.add(cancelButton);
+
+		JLabel projectNameLabel = new JLabel();
+		JTextField projectNameTextField = new JTextField();
+
+		projectNameLabel.setText("Project Name: ");
+		projectNameTextField.setText(projectName);
+
+		// projectName listener to set correct build paths
+		projectNameTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			private void update() {
+				projectName = projectNameTextField.getText();
+				createProjectFolder = createProjectFolder + "\\" + projectName;
+				projectPath.setText("A project folder will be created in \n\n" + createProjectFolder);
+			}
+
+		});
+		projectNamePanel.add(projectNameLabel, BorderLayout.NORTH);
+		projectNamePanel.add(projectNameTextField, BorderLayout.CENTER);
+		mainPanel.add(projectNamePanel, BorderLayout.NORTH);
+		mainPanel.add(projectPath, BorderLayout.CENTER);
+		mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+		projectPath.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+		// optionPane.setOptions(options);
+		// get user screen size in order to center the dialog
+		dialog.setContentPane(mainPanel);
+		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		dialog.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+				System.exit(0);
+			}
+		});
+
+		dialog.setSize(700, 150);
+		// center the dialog on screen
+		dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 - dialog.getWidth() / 2,
+				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2 - dialog.getHeight() / 2);
+		dialog.setVisible(true);
+
 	}
 
 	public static void setWorkDirectories(String root) {
@@ -202,7 +357,7 @@ public class Main implements TreeSelectionListener, Runnable {
 	public void run() {
 		// TODO Auto-generated method stub
 
-		JFrame frame = new JFrame("HTMLEdit");
+		// JFrame frame = new JFrame("HTMLEdit");
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		try {
 			reader = new HTMLDocReader(pageURL);
@@ -251,6 +406,12 @@ public class Main implements TreeSelectionListener, Runnable {
 		menu.addSeparator();
 		submenu = new JMenu("New");
 		menuItem = new JMenuItem("Project");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				createProjectfolder();
+			}
+		});
 		submenu.add(menuItem);
 		menu.add(submenu);
 		menuItem = new JMenuItem("Open File");
@@ -275,8 +436,13 @@ public class Main implements TreeSelectionListener, Runnable {
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		buttonPanel.setPreferredSize(new Dimension(0, 50));
 		// LEFT
-		fileRoot = new File(tempDir);
+		try {
+			fileRoot = new File(tempDir);
+		} catch (Exception e1) {
+
+		}
 		root = new DefaultMutableTreeNode(new FileNode(fileRoot));
+		root.setUserObject("Root");
 		treeModel = new DefaultTreeModel(root);
 
 		// DIRECTORY TREE
@@ -369,16 +535,16 @@ public class Main implements TreeSelectionListener, Runnable {
 			}
 
 		});
-		tempFileSaver = new TempFileSaver(reader);
+		tempFileSaver = new FileSaver(reader);
 		Object[] options = { "Save & exit", "Do Not Save", "Cancel" };
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 			@Override
 			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-				if (TempFileSaver.unsavedChanges) {
+				if (FileSaver.unsavedChanges) {
 					int result = JOptionPane.showOptionDialog(frame,
 							"You have unsaved changes. Are you sure you want to exit?", "Unsaved Changes",
 							JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
-					if(result == JOptionPane.YES_OPTION) {
+					if (result == JOptionPane.YES_OPTION) {
 						tempFileSaver.save();
 						try {
 							FileUtils.forceDelete(new File(tempDir));
@@ -387,7 +553,7 @@ public class Main implements TreeSelectionListener, Runnable {
 						}
 						System.exit(0);
 					}
-					if(result == JOptionPane.NO_OPTION) {
+					if (result == JOptionPane.NO_OPTION) {
 						try {
 							FileUtils.forceDelete(new File(tempDir));
 						} catch (IOException e) {
@@ -395,14 +561,16 @@ public class Main implements TreeSelectionListener, Runnable {
 						}
 						System.exit(0);
 					}
-					if(result == JOptionPane.CANCEL_OPTION) {
-						
+					if (result == JOptionPane.CANCEL_OPTION) {
+
 					}
 				} else {
 					try {
 						FileUtils.forceDelete(new File(tempDir));
 					} catch (IOException e) {
-
+						System.out.println("Cannot delete temp files: Temp files have not been created yet.");
+					} catch (NullPointerException npe) {
+						System.exit(0);
 					}
 					System.exit(0);
 				}
@@ -455,7 +623,7 @@ public class Main implements TreeSelectionListener, Runnable {
 	public static void updateFX(String url) {
 		File f;
 		if (url == null || url.equals("") || url.equals(null)) {
-			Main.webEngine.load("");
+			Main.webEngine.load("htt://www.google.com");
 		} else {
 			f = new File(url);
 			try {
@@ -501,7 +669,7 @@ public class Main implements TreeSelectionListener, Runnable {
 	// Creates tabbedPane tabs based on link and script elements found in doc
 	private void createTabs() {
 
-		Elements links = HTMLDocReader.headElements.select("link");
+		Elements links = reader.tempDoc.head().select("link");
 		for (int i = 0; i < links.size(); i++) {
 			JTextArea jT;
 			try {
@@ -520,7 +688,7 @@ public class Main implements TreeSelectionListener, Runnable {
 				e1.printStackTrace();
 			}
 		}
-		Elements scripts = HTMLDocReader.headElements.select("script");
+		Elements scripts = reader.tempDoc.select("script");
 		for (int j = 0; j < scripts.size(); j++) {
 			JTextArea jT;
 			try {
@@ -606,7 +774,8 @@ public class Main implements TreeSelectionListener, Runnable {
 		for (int i = 1; i < file.size(); i++) {
 			filePath += file.get(i);
 		}
-		System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " + fileType);
+		// System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
+		// fileType);
 
 		while (tabbedPane.getTabCount() > 1) {
 			tabbedPane.removeTabAt(1);
@@ -633,11 +802,16 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		}
 
-		createTabs();
+		try {
+			createTabs();
+		} catch (Exception e2) {
+			reader = new HTMLDocReader(filePath);
+			createTabs();
+		}
 
 		if (fileType.equals(".html")) {
 			textArea.setText(reader.doc.toString());
-			pageURL = filePath;
+			tempPageURL = filePath;
 		}
 		if (fileType.equals(".css")) {
 			try {
@@ -665,6 +839,7 @@ public class Main implements TreeSelectionListener, Runnable {
 		DefaultTreeModel model = (DefaultTreeModel) elementTree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
 		root.removeAllChildren();
+		root.setUserObject("Root");
 		model.reload();
 		createNodes(top);
 		DefaultMutableTreeNode currentNode = root.getNextNode();
