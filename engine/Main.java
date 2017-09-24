@@ -3,6 +3,7 @@ package engine;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,22 +12,27 @@ import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -71,19 +77,20 @@ import listeners.ListListener;
 import listeners.OpenFileListener;
 import listeners.OpenFolderListener;
 
-public class Main implements TreeSelectionListener, Runnable {
+public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	private static boolean mainFrameExists = false;
 	private final static JFrame frame = new JFrame("HTMLEdit");
 
 	private static String projectName;
-	private static String createProjectFolder;
+	private static String createProjectFolder, createProjectStart;
 
 	private HTMLDocReader reader;
 	private FileSaver tempFileSaver;
 	public static JTabbedPane tabbedPane;
 	public JScrollPane elementList;
 	public static JScrollPane elementAttributes;
+	private JPanel buttonPanelTop;
 	public static WebView webView;
 	private static WebEngine webEngine;
 	private final JFXPanel fxPanel = new JFXPanel();
@@ -105,7 +112,7 @@ public class Main implements TreeSelectionListener, Runnable {
 	public static String rootFolder;
 	public static String pageURL;
 	public static String tempPageURL;
-	public static String tempCSSURL;
+	private String tempCSSURL = "webViewCSS/webViewHighlighter.css";
 	public static String tempCSSURLAbsolute;
 
 	public static String fileName = "";
@@ -116,7 +123,6 @@ public class Main implements TreeSelectionListener, Runnable {
 
 	public static void main(String[] args) {
 		loadWorkDirectories();
-		SwingUtilities.invokeLater(new Main());
 		System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
 		System.out.println("READING PAGE URL: " + pageURL);
 	}
@@ -133,7 +139,10 @@ public class Main implements TreeSelectionListener, Runnable {
 			prop.load(input);
 			// get the property value and print it out
 			rootFolder = prop.getProperty("rootFolder");
-			if (rootFolder == null || rootFolder.equals("")) {
+			// if config finds a root folder but for some reason it does not exist, create a
+			// new one
+			// ie if the project folder has been manually deleted by the user
+			if (rootFolder == null || rootFolder.equals("") || !new File(rootFolder).exists()) {
 				createProjectfolder();
 			}
 		} catch (IOException ex) {
@@ -165,6 +174,7 @@ public class Main implements TreeSelectionListener, Runnable {
 
 			}
 		}
+		SwingUtilities.invokeLater(new Main());
 	}
 
 	private static void createProjectfolder() {
@@ -172,15 +182,15 @@ public class Main implements TreeSelectionListener, Runnable {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
-		int returnVal;
-		Object[] options = { "Confirm", "Browse", "Exit" };
+
 		String programLocation = System.getProperty("user.dir");
 		String defaultProjectFolder = "\\HTMLEdit";
 		projectName = "myProject";
 		if (programLocation.substring(programLocation.length() - 1).equals("\\")) {
 			programLocation = programLocation.substring(programLocation.length() - 1);
 		}
-		createProjectFolder = programLocation + defaultProjectFolder;
+		createProjectFolder = programLocation + defaultProjectFolder + "\\" + projectName;
+		createProjectStart = programLocation + defaultProjectFolder;
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
 		// JOptionPane optionPane = new JOptionPane(
@@ -190,10 +200,11 @@ public class Main implements TreeSelectionListener, Runnable {
 		final JDialog dialog = new JDialog(frame, "Create a New Project", true);
 		JLabel projectPath = new JLabel();
 
-		projectPath.setText("A project folder will be created in \n\n" + createProjectFolder + "\\" + projectName);
+		projectPath.setText("A project folder will be created in \n\n" + createProjectStart + "\\" + projectName);
 
 		JPanel projectNamePanel = new JPanel(new BorderLayout());
 		JPanel buttonPanel = new JPanel();
+
 		FlowLayout layout = new FlowLayout(FlowLayout.CENTER, 20, 10);
 		buttonPanel.setLayout(layout);
 
@@ -201,25 +212,53 @@ public class Main implements TreeSelectionListener, Runnable {
 		JButton browseButton = new JButton("Browse");
 		JButton cancelButton = new JButton("Cancel");
 
+		buttonPanel.add(confirmButton);
+		buttonPanel.add(browseButton);
+		buttonPanel.add(cancelButton);
+
+		JLabel projectNameLabel = new JLabel();
+		JTextField projectNameTextField = new JTextField();
+
+		projectNameLabel.setText("Project Name: ");
+		projectNameTextField.setText(projectName);
+
 		confirmButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				dialog.dispose();
+				if (projectNameTextField.getText().equals("")) {
+					JOptionPane.showMessageDialog(frame, "Please enter a project name.");
+					return;
+				}
+
 				// write root folder to properties
 				if (!Files.exists(new File(createProjectFolder).toPath())) {
-					System.out.println("Does not exist, Creating project");
 					try {
-						Files.createDirectory(new File(createProjectFolder).toPath());
+						dialog.dispose();
+						File directory = new File(createProjectFolder);
+						System.out.println(directory.toPath());
+						//have to create parent dir first. Otherwise will result in NoSuchFileException,
+						//Because it is tring to create a directory in a directory that does not exist.
+						Files.createDirectories(directory.toPath().getParent());
+						Files.createDirectory(directory.toPath());
+
+						Files.createFile(new File(directory + "\\index.html").toPath());
+						BufferedWriter bw = new BufferedWriter(new FileWriter(directory + "\\index.html"));
+						bw.write("<!DOCTYPE html>\n" + "<html>" + "\t<head>\n" + "<title>"
+								+ projectNameTextField.getText() + "</title>\n" + "\t</head>\n" + "\t<body>\n"
+								+ "\t\t<h1>" + projectNameTextField.getText() + "</h1>\n"
+								+ "\t\t<h3>Hello World!</h3>\n" + "\t<body>\n" + "</html>");
+						bw.close();
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				} else {
 					System.out.println("Project with that name already exists");
-					System.exit(0);
+					JOptionPane.showMessageDialog(frame, "A project with that name already exists.");
+					return;
 					/*
 					 * TO DO: CREATE POPUP MESSAGE FOR: ERROR: A PROJECT WITH THAT NAME ALREADY
-					 * EXISTS
+					 * EXISTS. OPTIONS TO USE THIS FOLDER, OR CANCEL AND CHHOSE A NEW FOLDER.
 					 * 
 					 */
 
@@ -244,6 +283,7 @@ public class Main implements TreeSelectionListener, Runnable {
 						}
 					}
 				}
+
 			}
 		});
 
@@ -256,7 +296,13 @@ public class Main implements TreeSelectionListener, Runnable {
 				fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
 				int returnVal = fc.showOpenDialog(fc);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					createProjectFolder = fc.getSelectedFile().toString() + "\\" + projectName;
+					String gotFile = fc.getSelectedFile().toString();
+					System.out.println(gotFile);
+					if (gotFile.substring(gotFile.length() - 1).equals("\\")) {
+						gotFile = gotFile.substring(0, gotFile.length() - 1);
+					}
+					createProjectFolder = gotFile + "\\" + projectName;
+					createProjectStart = createProjectFolder;
 					projectPath.setText("A project folder will be created in \n\n" + createProjectFolder);
 				} else {
 					dialog.setVisible(true);
@@ -268,19 +314,9 @@ public class Main implements TreeSelectionListener, Runnable {
 		cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
+				dialog.dispose();
 			}
 		});
-
-		buttonPanel.add(confirmButton);
-		buttonPanel.add(browseButton);
-		buttonPanel.add(cancelButton);
-
-		JLabel projectNameLabel = new JLabel();
-		JTextField projectNameTextField = new JTextField();
-
-		projectNameLabel.setText("Project Name: ");
-		projectNameTextField.setText(projectName);
 
 		// projectName listener to set correct build paths
 		projectNameTextField.getDocument().addDocumentListener(new DocumentListener() {
@@ -302,7 +338,8 @@ public class Main implements TreeSelectionListener, Runnable {
 
 			private void update() {
 				projectName = projectNameTextField.getText();
-				createProjectFolder = createProjectFolder + "\\" + projectName;
+				createProjectFolder = "";
+				createProjectFolder = createProjectStart + "\\" + projectName;
 				projectPath.setText("A project folder will be created in \n\n" + createProjectFolder);
 			}
 
@@ -365,7 +402,7 @@ public class Main implements TreeSelectionListener, Runnable {
 			// TODO Auto-generated catch block
 			// File was not found.
 		}
-
+		tempFileSaver = new FileSaver(reader);
 		// MIDDLE
 
 		// HTML RAW TEXT VIEWER
@@ -373,7 +410,17 @@ public class Main implements TreeSelectionListener, Runnable {
 		textArea.setEditable(false);
 		JScrollPane tScrollPane = new JScrollPane(textArea);
 		try {
-			textArea.setText(reader.doc.toString());
+			Elements links = reader.tempDoc.head().select("[href=\"webViewCSS/webViewHighlighter.css\"]");
+			if (!links.isEmpty()) {
+				for (Element el : links) {
+					el.remove();
+				}
+			} else {
+
+			}
+			textArea.setText(reader.tempDoc.toString());
+			reader.tempDoc.select("head")
+					.append("<link rel=\"stylesheet\" href=\"webViewCSS/webViewHighlighter.css\">");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			// File was not found.
@@ -402,9 +449,11 @@ public class Main implements TreeSelectionListener, Runnable {
 		menu.getAccessibleContext().setAccessibleDescription("File operations");
 		menuBar.add(menu);
 		menuBar.add(Box.createRigidArea(new Dimension(5, 2)));
+
 		// File Menu items
 		menu.addSeparator();
 		submenu = new JMenu("New");
+
 		menuItem = new JMenuItem("Project");
 		menuItem.addActionListener(new ActionListener() {
 			@Override
@@ -412,7 +461,30 @@ public class Main implements TreeSelectionListener, Runnable {
 				createProjectfolder();
 			}
 		});
+		menuItem.setPreferredSize(new Dimension(100, 20));
 		submenu.add(menuItem);
+		submenu.addSeparator();
+		menuItem = new JMenuItem("File");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+			}
+		});
+		menuItem.setPreferredSize(new Dimension(100, 20));
+		submenu.add(menuItem);
+
+		menuItem = new JMenuItem("Folder");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+			}
+		});
+
+		menuItem.setPreferredSize(new Dimension(100, 20));
+		submenu.add(menuItem);
+
 		menu.add(submenu);
 		menuItem = new JMenuItem("Open File");
 		menuItem.addActionListener(new OpenFileListener(reader));
@@ -431,10 +503,14 @@ public class Main implements TreeSelectionListener, Runnable {
 		menu.add(menuItem);
 		frame.setJMenuBar(menuBar);
 
-		// TOP
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
-		buttonPanel.setPreferredSize(new Dimension(0, 50));
+		// TOP BUTTONS PANEL
+		buttonPanelTop = new JPanel();
+		FlowLayout layout = new FlowLayout(FlowLayout.LEADING, 20, 15);
+		buttonPanelTop.setLayout(layout);
+		buttonPanelTop.setPreferredSize(new Dimension(0, 50));
+
+		createButtons(tempFileSaver);
+
 		// LEFT
 		try {
 			fileRoot = new File(tempDir);
@@ -474,7 +550,7 @@ public class Main implements TreeSelectionListener, Runnable {
 		JPanel mainPane = new JPanel(new BorderLayout());
 		scrollPane.setPreferredSize(new Dimension(200, 0));
 
-		mainPane.add(buttonPanel, BorderLayout.PAGE_START);
+		mainPane.add(buttonPanelTop, BorderLayout.PAGE_START);
 		mainPane.add(scrollPane, BorderLayout.LINE_START);
 		mainPane.add(tabbedPane, BorderLayout.CENTER);
 		mainPane.add(elementSplitPane, BorderLayout.LINE_END);
@@ -535,8 +611,10 @@ public class Main implements TreeSelectionListener, Runnable {
 			}
 
 		});
-		tempFileSaver = new FileSaver(reader);
-		Object[] options = { "Save & exit", "Do Not Save", "Cancel" };
+		if(tempFileSaver == null) {
+			tempFileSaver = new FileSaver(reader);
+		}
+		Object[] options = { "Save & exit", "Exit Without Saving", "Cancel" };
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 			@Override
 			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
@@ -546,6 +624,13 @@ public class Main implements TreeSelectionListener, Runnable {
 							JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
 					if (result == JOptionPane.YES_OPTION) {
 						tempFileSaver.save();
+						try {
+							FileUtils.forceDelete(new File(tempDir));
+						} catch (IOException e) {
+							System.out.println("Cannot delete temp files: Temp files have not been created yet.");
+						} catch (NullPointerException npe) {
+							System.exit(0);
+						}
 						try {
 							FileUtils.forceDelete(new File(tempDir));
 						} catch (IOException e) {
@@ -577,11 +662,18 @@ public class Main implements TreeSelectionListener, Runnable {
 			}
 		});
 
+		Action createNewProjectAction = new AbstractAction("CreateNewProject") {
+
+			private static final long serialVersionUID = -1448980122018647815L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				createProjectfolder();
+			}
+		};
+		
 		Action saveAction = new AbstractAction("Save") {
 
-			/**
-			 * 
-			 */
 			private static final long serialVersionUID = 5997018196165864216L;
 
 			@Override
@@ -593,12 +685,16 @@ public class Main implements TreeSelectionListener, Runnable {
 		};
 
 		// ctrl+s keybind
-		KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK);
+		KeyStroke saveKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK);
+		KeyStroke createNewPtojectKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
 		// register action in ActionMap
 		mainPane.getActionMap().put("Save", saveAction);
-		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, "Save");
+		mainPane.getActionMap().put("CreateNewProject", createNewProjectAction);
+		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(saveKeyStroke, "Save");
+		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(createNewPtojectKeyStroke, "CreateNewProject");
 
 	}
+
 
 	private static void initFX(final JFXPanel fxPanel, String url) {
 		Group group = new Group();
@@ -621,6 +717,7 @@ public class Main implements TreeSelectionListener, Runnable {
 	}
 
 	public static void updateFX(String url) {
+		System.out.println("Updating to " + url);
 		File f;
 		if (url == null || url.equals("") || url.equals(null)) {
 			Main.webEngine.load("htt://www.google.com");
@@ -701,6 +798,91 @@ public class Main implements TreeSelectionListener, Runnable {
 				e1.printStackTrace();
 			}
 		}
+	}
+
+	private void createButtons(FileSaver tempFileSaver) {
+		
+		Thread t = new Thread() {
+			public void run() {
+				// Load and set button images
+				// Create functionality buttons
+				Image smolIcon;
+				JButton newProjectButton = new JButton();
+				JButton saveButton = new JButton();
+				JButton newFileButton = new JButton();
+				JButton newFolderButton = new JButton();
+
+				try {
+
+					int smolIconWidth = 22;
+					int smolIconHeight = 22;
+					
+					Image newProjectIcon = ImageIO.read(getClass().getResource("/res/newProjectIcon.png"));
+					Image saveButtonIcon = ImageIO.read(getClass().getResource("/res/saveButtonIcon.png"));
+					Image newFolderIcon = ImageIO.read(getClass().getResource("/res/newFolderIcon.jpg"));
+					Image newFileIcon = ImageIO.read(getClass().getResource("/res/newFileIcon.jpg"));
+					
+					smolIcon = newProjectIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+					newProjectButton.setIcon(new ImageIcon(smolIcon));
+					newProjectButton.setBorder(null);
+					newProjectButton.setToolTipText("Create a new Project (Ctrl+shift+N");
+					
+					smolIcon = saveButtonIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+					saveButton.setIcon(new ImageIcon(smolIcon));
+					saveButton.setBorder(null);
+					saveButton.setToolTipText("Save (Ctrl+S)");
+					
+					smolIcon = newFileIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+					newFolderButton.setIcon(new ImageIcon(smolIcon));
+					newFolderButton.setBorder(null);
+					newFolderButton.setToolTipText("New File (Ctrl+N)");
+					
+					smolIcon = newFolderIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+					newFileButton.setIcon(new ImageIcon(smolIcon));
+					newFileButton.setBorder(null);
+					newFileButton.setToolTipText("New Folder (Ctrl+N)");
+					
+					
+				} catch (IOException e) {
+					System.out.println("Could not find a functionality button resource");
+				}
+
+				buttonPanelTop.add(newProjectButton);
+				buttonPanelTop.add(saveButton);
+				buttonPanelTop.add(newFileButton);
+				buttonPanelTop.add(newFolderButton);
+				
+				newProjectButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						createProjectfolder();
+					}
+				});
+				
+				saveButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						tempFileSaver.save();
+					}
+				});
+				
+				newFolderButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						//new folder Creator method
+					}
+				});
+				
+				newFileButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						//new file Creator method
+					}
+				});
+
+			}
+		};
+		t.start();
 	}
 
 	// if the doc cotains a dic, this will start mapping it our and creating nodes
@@ -795,7 +977,8 @@ public class Main implements TreeSelectionListener, Runnable {
 
 		try {
 			JScrollPane tScrollPane = new JScrollPane(textArea);
-			textArea.setText(reader.doc.toString());
+			textArea.setText(reader.tempDoc.toString());
+
 			JComponent panel2 = tScrollPane;
 			tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
 		} catch (Exception e2) {
@@ -810,7 +993,7 @@ public class Main implements TreeSelectionListener, Runnable {
 		}
 
 		if (fileType.equals(".html")) {
-			textArea.setText(reader.doc.toString());
+			textArea.setText(reader.tempDoc.toString());
 			tempPageURL = filePath;
 		}
 		if (fileType.equals(".css")) {

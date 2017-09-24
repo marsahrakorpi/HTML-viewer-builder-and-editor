@@ -55,35 +55,41 @@ public class HTMLDocReader extends Thread {
 		footerElements = doc.body().select("footer");
 
 	}
-	
+
 	public void updateTempDoc() {
+		// Threading here greatly reduces update lag on the JavaFX webview
+		Thread t = new Thread() {
+			public void run() {
+				File file = new File(Main.tempPageURL);
+				try {
+					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+					bw.write(tempDoc.toString());
+					bw.close();
 
-		 File file = new File(Main.tempPageURL);
-		 try {
-		 BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-		 bw.write(tempDoc.toString());
-		 bw.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 
-		 } catch (Exception e) {
-		 e.printStackTrace();
-		 }
-		
-		 input = new File(Main.tempPageURL);
-		 try {
-			tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
-		
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		 
+				input = new File(Main.tempPageURL);
+				try {
+					tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
+
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+
+		};
+		t.start();
+
 		Platform.runLater(new Runnable() {
 			public void run() {
 				Main.updateFX(Main.tempPageURL);
 			}
 		});
 	}
-	
+
 	public String readLinkDoc(String url) throws IOException {
 		// System.out.println("URL"+url);
 		docStr = "";
@@ -113,22 +119,22 @@ public class HTMLDocReader extends Thread {
 		t.start();
 		return docStr;
 	}
-	
+
 	void setDeletes(File file) {
-	    File[] contents = file.listFiles();
-	    if (contents != null) {
-	        for (File f : contents) {
-	        	System.out.println(f);
-	        	setDeletes(f);
-	        }
-	    }
-	    file.deleteOnExit();
+		File[] contents = file.listFiles();
+		if (contents != null) {
+			for (File f : contents) {
+				System.out.println(f);
+				setDeletes(f);
+			}
+		}
+		file.deleteOnExit();
 	}
-	
-	public void copyToTempFile(){
+
+	public void copyToTempFile() {
 		System.out.println("Copying");
 		System.out.println(Main.rootFolder);
-		//copy to temp
+		// copy to temp
 		File sDir = new File(Main.rootFolder);
 		try {
 			Path tempDir = Files.createTempDirectory("HTMLEdit");
@@ -138,26 +144,39 @@ public class HTMLDocReader extends Thread {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		//copy program css files to temp
+
+		// copy program css files to temp
+
 		try {
-			FileUtils.copyDirectoryToDirectory(new File(System.getProperty("user.dir")+"\\webViewCSS"), new File(Main.tempDir));
+			Path webViewDir = Paths.get(Main.tempDir+"\\webViewCSS");
+			Path webViewHighligherPath = Paths.get(webViewDir.toString()+"\\webViewHighlighter.css");
+			Files.createDirectory(webViewDir);
+			String webViewHighlighterString = ".java-highlighted-element{\r\n" + 
+					"			background-color: rgb(145, 184, 247);\r\n" + 
+					"			background-color: rgba(145, 184, 247, .5);\r\n" + 
+					"			border: 1px solid red;\r\n" + 
+					"		}	";
+			File webViewHighlighter = new File(Main.tempDir+"\\webViewHighlighter.css");
+			Files.createFile(webViewHighligherPath);
+			BufferedWriter bw = new BufferedWriter(new FileWriter(webViewHighligherPath.toFile()));
+			bw.write(webViewHighlighterString);
+			bw.close();
+//			FileUtils.copyFileToDirectory(new File(System.getProperty("user.dir") + "\\webViewCSS"),
+//					new File(Main.tempDir));
 		} catch (IOException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
-		//set temp dir to delete on exit
+		// set temp dir to delete on exit
 		Path rootPath = Paths.get(Main.tempDir);
 		try {
-			Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
-				.sorted(Comparator.reverseOrder())
-				.map(Path::toFile)
-				.forEach(File::deleteOnExit);
+			Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS).sorted(Comparator.reverseOrder()).map(Path::toFile)
+					.forEach(File::deleteOnExit);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
+
 		// scan for index.html or equivalent in root folder
 		File folder = new File(Main.tempDir);
 		File[] listOfFiles = folder.listFiles();
@@ -172,8 +191,8 @@ public class HTMLDocReader extends Thread {
 
 			}
 		}
-		
-		//parse tempDoc
+
+		// parse tempDoc
 		input = new File(Main.tempPageURL);
 		try {
 			tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
@@ -181,10 +200,9 @@ public class HTMLDocReader extends Thread {
 			// TODO Auto-generated catch block
 
 		}
-		
-		Elements webCSS = tempDoc.select("[href*=\"webViewCSS/webViewHighlighter\"]");
-		System.out.println(webCSS);
-		if(webCSS.size()==0) {
+
+		Elements webCSS = tempDoc.select("[href*=\"webViewCSS/webViewHighlighter.css\"]");
+		if (webCSS.size() == 0) {
 			tempDoc.select("head").append("<link rel=\"stylesheet\" href=\"webViewCSS/webViewHighlighter.css\">");
 		}
 
@@ -194,15 +212,6 @@ public class HTMLDocReader extends Thread {
 			}
 		});
 
-//		
-//		DefaultTreeModel model = (DefaultTreeModel) Main.tree.getModel();
-//		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-//		
-//		root.removeAllChildren();
-//		root.setUserObject(Main.tempDir);
-//		model.reload();
-//		CreateChildNodes ccn = new CreateChildNodes(new File(Main.tempDir), root);
-//		new Thread(ccn).start();
 	}
 
 }

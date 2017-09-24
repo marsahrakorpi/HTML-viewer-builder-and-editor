@@ -66,7 +66,6 @@ public class OpenFolderListener implements ActionListener {
 							|| listOfFiles[i].getName().equals("start.html")) {
 						Main.tempPageURL = fc.getSelectedFile().toString() + "\\" + listOfFiles[i].getName();
 						System.out.print("FOUND MAIN PAGE OF"+Main.tempPageURL);
-						reader.copyToTempFile();
 						if (reader == null) {
 							reader = new HTMLDocReader(Main.tempPageURL);
 						} else {

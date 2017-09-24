@@ -21,14 +21,21 @@ public class FileSaver extends Thread {
 
 	public void save() {
 
+		//return if there are no unsaved changes
+		if(!unsavedChanges) {
+			return;
+		}
+		
 		// removes the highlight class from all attributes
 		// if an element has been highlighted before, it will leave an empty class
 		// attribute
 		// checks for empty class attributes and removes them, will leave it if a class
 		// has been assigned
-		for (int i = 0; i < reader.tempDoc.select("body").size(); i++) {
-			Element element = reader.tempDoc.select("body").get(i);
+		for (int i = 0; i < reader.tempDoc.body().select("*").size(); i++) {
+			Element element = reader.tempDoc.body().select("*").get(i);
 			element.removeClass("java-highlighted-element");
+			element.removeClass(".java-highlighted-element");
+			System.out.println(element);
 			if (element.className().equals("")) {
 				element.removeAttr("class");
 			}
@@ -36,21 +43,13 @@ public class FileSaver extends Thread {
 
 		// removes webView CSS from document
 
-		Elements links = reader.tempDoc.head().select("[href=\\\"webViewCSS/webViewHighlighter\\\"]");
-		if (!links.isEmpty()) {
-			for (Element e : links) {
-				e.remove();
-			}
-		} else {
+		Elements links = reader.tempDoc.head().select("[href=\"webViewCSS/webViewHighlighter.css\"]");
 
+		for (Element e : links) {
+			e.remove();
 		}
-		// move temp back to project folder and overwrite
 
-//		System.out.println("Saving to " + Main.rootFolder + "...");
-		
-		//delete entire folder in order to reflect any changes (deletions) of project files in tempDir
-		System.out.println(reader.tempDoc+"::"+Main.tempPageURL);
-
+		System.out.println(reader.tempDoc);
 		//Write tempDoc to the tempPage, which will then be copied over to original root folder
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(Main.tempPageURL));
@@ -79,13 +78,7 @@ public class FileSaver extends Thread {
 		unsavedChanges = false;
 		//Create new temp files and set other program variables
 		reader.copyToTempFile();
-		// File f = new File( Main.tempCSSURLAbsolute);
-		// f.delete();
-		// File m = new File(Main.tempPageURL);
-		// m.delete();
-		//
-		// reader.copyToTempFile();
-		//
+
 	}
 	
 
