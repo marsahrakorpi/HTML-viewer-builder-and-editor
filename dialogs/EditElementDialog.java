@@ -57,24 +57,27 @@ public class EditElementDialog {
 	String html;
 	String fullHTML = "";
 	private JTabbedPane tabbedPane;
-	
+
 	private final JFXPanel fxPanel = new JFXPanel();
 	private static WebView webView;
 	private static WebEngine webEngine;
 	private String tempElementURL;
 	private File tempFile;
 
-	private String[] tabTitles = {"Element Specific Attributes", "Global HTML Attributes", "Style Attributes", "Events" };
+	private String[] tabTitles = { "Global HTML Attributes", "Element Specific Attributes", "Style Attributes",
+			"Events" };
 	private JPanel[] tabPanels = new JPanel[tabTitles.length];
 
 	private String[] globalHTMLAttributes = { "id", "accesskey", "contenteditable", "contextmenu", "dir", "draggable",
 			"dropzone", "lang", "spellcheck", "tabindex", "title", "translate" };
-	
+
 	private String[] cssProperties = { "Color Properties", "Background and Border Properties", "Basic Box Properties",
 			"Flexible Box Layout", "Text Properties", "Text Decoration Properties", "Font Properties",
 			"Writing Modes Properties", "Table Properties", "Lists and Counters Properties", "Animation Properties",
 			"Transform Properties", "Transitions Properties", "Basic User Interface Properties",
-			"Multi-column Layout Properties", "Paged Media",  "Generated Content for Paged Media", "Filter Effects Properties", "Image Values and Replaced Content", "Masking Properties", "Speech Properties"};
+			"Multi-column Layout Properties", "Paged Media", "Generated Content for Paged Media",
+			"Filter Effects Properties", "Image Values and Replaced Content", "Masking Properties",
+			"Speech Properties" };
 
 	private ArrayList<JLabel> attributeNameList = new ArrayList<JLabel>();
 	private ArrayList<JTextField> attributeValeList = new ArrayList<JTextField>();
@@ -102,8 +105,8 @@ public class EditElementDialog {
 		JSONObject object = new JSONObject(doc.toJson());
 		JSONArray attrObj = object.getJSONArray("attributes");
 
-		//create all tab panels
-		for(int i=0; i<tabTitles.length; i++) {
+		// create all tab panels
+		for (int i = 0; i < tabTitles.length; i++) {
 			tabPanels[i] = new JPanel();
 			tabPanels[i].setLayout(new BoxLayout(tabPanels[i], BoxLayout.PAGE_AXIS));
 			tabPanels[i].setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -111,6 +114,38 @@ public class EditElementDialog {
 			tabPanels[i].add(Box.createRigidArea(new Dimension(5, 5)));
 		}
 
+		// tab 1
+
+		JLabel l = new JLabel("Global HTML Attributes");
+		l.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+		l.setFont(new Font("Arial", Font.BOLD, 15));
+		tabPanels[0].add(l);
+
+		ArrayList<JLabel> label = new ArrayList<JLabel>();
+		ArrayList<JTextField> field = new ArrayList<JTextField>();
+		for (int i = 0; i < globalHTMLAttributes.length; i++) {
+			label.add(new JLabel(globalHTMLAttributes[i]));
+			field.add(new JTextField(""));
+		}
+		for (int i = 0; i < label.size(); i++) {
+			tabPanels[0].add(label.get(i));
+			tabPanels[0].add(field.get(i));
+			label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+			field.get(i).setMaximumSize(new Dimension(275, 20));
+			field.get(i).setHorizontalAlignment(JTextField.LEFT);
+		}
+		JCheckBox hiddenCheck = new JCheckBox("hidden");
+		hiddenCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent arg0) {
+				// TODO Auto-generated method stub
+				// SET HIDDEN
+			}
+		});
+		// tabPanels[0].add(hiddenCheck);
+
+		
+		//Tab 2
 		for (int i = 0; i < attrObj.length(); i++) {
 			JSONObject obb = attrObj.optJSONObject(i);
 			System.out.println(obb);
@@ -119,14 +154,13 @@ public class EditElementDialog {
 				String currentKey = iterator.next();
 				JSONArray arrFromKey = obb.getJSONArray(currentKey);
 				System.out.println(currentKey);
-				tabPanels[0].add(new JLabel(currentKey));
+				tabPanels[1].add(new JLabel(currentKey));
 				for (int j = 0; j < arrFromKey.length(); j++) {
 					System.out.println(arrFromKey.get(j));
-					tabPanels[0].add(new JLabel(arrFromKey.get(j).toString()));
+					tabPanels[1].add(new JLabel(arrFromKey.get(j).toString()));
 				}
 			}
 		}
-		
 
 		fullHTML = doc.getString("tag");
 		System.out.println(fullHTML);
@@ -155,46 +189,14 @@ public class EditElementDialog {
 		previewPane.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().height) / 6);
 		JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, previewPane, tabbedPane);
 
-		//tab 2
-		
-		JLabel l = new JLabel("Global HTML Attributes");
-		l.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-		l.setFont(new Font("Arial", Font.BOLD, 15));
-		tabPanels[1].add(l);
-		
-		ArrayList<JLabel> label = new ArrayList<JLabel>();
-		ArrayList<JTextField> field = new ArrayList<JTextField>();
-		for (int i = 0; i < globalHTMLAttributes.length; i++) {
-			label.add(new JLabel(globalHTMLAttributes[i]));
-			field.add(new JTextField(""));
-		}
-		for (int i = 0; i < label.size(); i++) {
-			tabPanels[1].add(label.get(i));
-			tabPanels[1].add(field.get(i));
-			label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-			field.get(i).setMaximumSize(new Dimension(275, 20));
-			field.get(i).setHorizontalAlignment(JTextField.LEFT);
-		}
-		JCheckBox hiddenCheck = new JCheckBox("hidden");
-		hiddenCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent arg0) {
-				// TODO Auto-generated method stub
-				//SET HIDDEN 
-			}
-		});
-//		tabPanels[1].add(hiddenCheck);
-		
-		//creat the tabs
-		for(int i=0; i<tabTitles.length; i++){
+		// creat the tabs
+		for (int i = 0; i < tabTitles.length; i++) {
 			JComponent c = tabPanels[i];
 			tabbedPane.addTab(tabTitles[i], null, c, tabTitles[i]);
 		}
-		
 
-		
-		//tab 3 content
-		
+		// tab 3 content
+
 		JPanel bottomPanel = new JPanel();
 		FlowLayout layout = new FlowLayout(FlowLayout.TRAILING, 20, 20);
 		bottomPanel.setLayout(layout);
@@ -236,7 +238,6 @@ public class EditElementDialog {
 		dialog.setVisible(true);
 	}
 
-	
 	private static void initFX(final JFXPanel fxPanel, String url) {
 		Group group = new Group();
 		Scene scene = new Scene(group);
