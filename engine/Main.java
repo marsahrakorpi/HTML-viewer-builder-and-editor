@@ -68,6 +68,7 @@ import org.jsoup.select.Elements;
 
 import com.sun.glass.events.KeyEvent;
 
+import dialogs.NewElementDialog;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Group;
@@ -81,7 +82,7 @@ import listeners.OpenFolderListener;
 
 public class Main extends Thread implements TreeSelectionListener, Runnable {
 
-	private final static JFrame frame = new JFrame("HTMLEdit");
+	public final static JFrame frame = new JFrame("HTMLEdit");
 
 	private static String projectName;
 	private static String createProjectFolder, createProjectStart;
@@ -951,35 +952,41 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				// LEFT LISTENERS
 				newProjectButton.addActionListener(new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent arg0) {
+					public void actionPerformed(ActionEvent e) {
 						createProjectfolder();
 					}
 				});
 
 				saveButton.addActionListener(new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent arg0) {
+					public void actionPerformed(ActionEvent e) {
 						tempFileSaver.save();
 					}
 				});
 
+
+				// MIDDLE LISTENERS
 				newFolderButton.addActionListener(new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent arg0) {
+					public void actionPerformed(ActionEvent e) {
 						// new folder Creator method
 					}
 				});
 
 				newFileButton.addActionListener(new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent arg0) {
+					public void actionPerformed(ActionEvent e) {
 						// new file Creator method
 					}
 				});
 
-				// MIDDLE LISTENERS
-
 				// RIGHT LISTENERS
+				newElementButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						new NewElementDialog();
+					}
+				});
 
 			}
 		};
