@@ -1,6 +1,7 @@
 package engine;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
@@ -21,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -31,7 +34,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -79,18 +81,17 @@ import listeners.OpenFolderListener;
 
 public class Main extends Thread implements TreeSelectionListener, Runnable {
 
-	private static boolean mainFrameExists = false;
 	private final static JFrame frame = new JFrame("HTMLEdit");
 
 	private static String projectName;
 	private static String createProjectFolder, createProjectStart;
 
-	private HTMLDocReader reader;
+	private static HTMLDocReader reader;
 	private FileSaver tempFileSaver;
 	public static JTabbedPane tabbedPane;
 	public JScrollPane elementList;
 	public static JScrollPane elementAttributes;
-	private JPanel buttonPanelTop;
+	private JPanel buttonPanelMain, buttonPanelLeft, buttonPanelMiddle, buttonPanelRight;
 	public static WebView webView;
 	private static WebEngine webEngine;
 	private final JFXPanel fxPanel = new JFXPanel();
@@ -101,18 +102,18 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	private DefaultTreeModel treeModel;
 
 	public static JTree tree;
-	private JTree elementTree;
+	public static JTree elementTree;
 
-	private DefaultMutableTreeNode parent = null;
-	private DefaultMutableTreeNode child = null;
-	private DefaultMutableTreeNode nextChild = null;
-	private DefaultMutableTreeNode top;
+	private static DefaultMutableTreeNode parent = null;
+	private static DefaultMutableTreeNode child = null;
+	private static DefaultMutableTreeNode nextChild = null;
+	private static DefaultMutableTreeNode top;
 
 	public static String tempDir;
 	public static String rootFolder;
 	public static String pageURL;
 	public static String tempPageURL;
-	private String tempCSSURL = "webViewCSS/webViewHighlighter.css";
+	private static String tempCSSURL = "webViewCSS/webViewHighlighter.css";
 	public static String tempCSSURLAbsolute;
 
 	public static String fileName = "";
@@ -169,6 +170,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				if (listOfFiles[i].getName().equals("index.html") || listOfFiles[i].getName().equals("home.html")
 						|| listOfFiles[i].getName().equals("start.html")) {
 					pageURL = rootFolder + "\\" + listOfFiles[i].getName();
+
 				}
 			} else if (listOfFiles[i].isDirectory()) {
 
@@ -235,19 +237,50 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					try {
 						dialog.dispose();
 						File directory = new File(createProjectFolder);
-						System.out.println(directory.toPath());
-						//have to create parent dir first. Otherwise will result in NoSuchFileException,
-						//Because it is tring to create a directory in a directory that does not exist.
+
+						// have to create parent dir first. Otherwise will result in
+						// NoSuchFileException,
+						// Because it is tring to create a directory in a directory that does not exist.
 						Files.createDirectories(directory.toPath().getParent());
 						Files.createDirectory(directory.toPath());
 
+						// index.html
 						Files.createFile(new File(directory + "\\index.html").toPath());
 						BufferedWriter bw = new BufferedWriter(new FileWriter(directory + "\\index.html"));
 						bw.write("<!DOCTYPE html>\n" + "<html>" + "\t<head>\n" + "<title>"
-								+ projectNameTextField.getText() + "</title>\n" + "\t</head>\n" + "\t<body>\n"
-								+ "\t\t<h1>" + projectNameTextField.getText() + "</h1>\n"
+								+ projectNameTextField.getText() + "</title>\n"
+								+ "\t<link rel=\"stylesheet\" href=\"css/style.css\">\n"
+								+ "\t<script type=\"text/javascript\" src=\"js/script.js\"\n></script>" + "\t</head>\n"
+								+ "\t<body>\n" + "\t\t<h1>" + projectNameTextField.getText() + "</h1>\n"
 								+ "\t\t<h3>Hello World!</h3>\n" + "\t<body>\n" + "</html>");
 						bw.close();
+
+						// css/style.css
+						Path cssDir = Paths.get(directory + "\\css");
+						Path stylesheet = Paths.get(cssDir.toString() + "\\style.css");
+						Files.createDirectory(cssDir);
+						Files.createFile(stylesheet);
+
+						BufferedWriter bw2 = new BufferedWriter(new FileWriter(cssDir + "\\style.css"));
+						bw2.write(
+								"h1{\n" + "\tcolor:red;\n" + "\tfont-size: 32px;\n" + "\ttext-align: center;\n" + "}");
+						bw2.close();
+
+						// js/script.js
+						Path jsDir = Paths.get(directory + "\\javascript");
+						Path script = Paths.get(jsDir.toString() + "\\script.js");
+						Files.createDirectory(jsDir);
+						Files.createFile(script);
+
+						BufferedWriter bw3 = new BufferedWriter(new FileWriter(jsDir + "\\script.js"));
+						bw3.write("<!DOCTYPE html>\n" + "<html>" + "\t<head>\n" + "<title>"
+								+ projectNameTextField.getText() + "</title>\n"
+								+ "\t<link rel=\"stylesheet\" href=\"css/style.css\">\n"
+								+ "\t<script type=\"text/javascript\" src=\"js/script.js\"\n" + "\t</head>\n"
+								+ "\t<body>\n" + "\t\t<h1>" + projectNameTextField.getText() + "</h1>\n"
+								+ "\t\t<h3>Hello World!</h3>\n" + "\t<body>\n" + "</html>");
+						bw3.close();
+
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -283,7 +316,17 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 						}
 					}
 				}
-
+				try {
+					FileHandler.deleteFolder(new File(Main.tempDir));
+				} catch (Exception ioE) {
+					System.out.println("Cannot delete temp files: Temp files do not exist");
+				}
+				setWorkDirectories(rootFolder);
+				try {
+					reader.copyToTempFile();
+				} catch (Exception e1) {
+				}
+				updateFrame();
 			}
 		});
 
@@ -504,12 +547,24 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		frame.setJMenuBar(menuBar);
 
 		// TOP BUTTONS PANEL
-		buttonPanelTop = new JPanel();
-		FlowLayout layout = new FlowLayout(FlowLayout.LEADING, 20, 15);
-		buttonPanelTop.setLayout(layout);
-		buttonPanelTop.setPreferredSize(new Dimension(0, 50));
+		buttonPanelMain = new JPanel(new BorderLayout());
 
-		createButtons(tempFileSaver);
+		FlowLayout layout = new FlowLayout(FlowLayout.LEADING, 20, 15);
+
+		buttonPanelLeft = new JPanel();
+		buttonPanelMiddle = new JPanel();
+		buttonPanelRight = new JPanel();
+
+		buttonPanelMain.add(buttonPanelLeft, BorderLayout.LINE_START);
+		buttonPanelMain.add(buttonPanelMiddle, BorderLayout.CENTER);
+		buttonPanelMain.add(buttonPanelRight, BorderLayout.LINE_END);
+
+		buttonPanelLeft.setLayout(layout);
+		buttonPanelMiddle.setLayout(layout);
+		buttonPanelRight.setLayout(layout);
+		// buttonPanelLeft.setPreferredSize(new Dimension(0, 50));
+
+		createButtons();
 
 		// LEFT
 		try {
@@ -537,6 +592,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		elementTree = new JTree(top);
 		elementTree.addTreeSelectionListener(new ListListener(reader));
 		elementTree.addTreeSelectionListener(new ElementHighlightingListener(reader));
+		elementTree.addMouseListener(new ElementTreeMouseListener(reader));
 
 		// RIGHT
 		elementList = new JScrollPane(elementTree);
@@ -544,13 +600,13 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		elementAttributes.getVerticalScrollBar().setUnitIncrement(20);
 
 		JSplitPane elementSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, elementList, elementAttributes);
-		elementSplitPane.setDividerLocation(300);
+		elementSplitPane.setDividerLocation(500);
 		elementSplitPane.setPreferredSize(new Dimension(400, 0));
 
 		JPanel mainPane = new JPanel(new BorderLayout());
 		scrollPane.setPreferredSize(new Dimension(200, 0));
 
-		mainPane.add(buttonPanelTop, BorderLayout.PAGE_START);
+		mainPane.add(buttonPanelMain, BorderLayout.PAGE_START);
 		mainPane.add(scrollPane, BorderLayout.LINE_START);
 		mainPane.add(tabbedPane, BorderLayout.CENTER);
 		mainPane.add(elementSplitPane, BorderLayout.LINE_END);
@@ -611,7 +667,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			}
 
 		});
-		if(tempFileSaver == null) {
+		if (tempFileSaver == null) {
 			tempFileSaver = new FileSaver(reader);
 		}
 		Object[] options = { "Save & exit", "Exit Without Saving", "Cancel" };
@@ -625,24 +681,17 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					if (result == JOptionPane.YES_OPTION) {
 						tempFileSaver.save();
 						try {
-							FileUtils.forceDelete(new File(tempDir));
-						} catch (IOException e) {
-							System.out.println("Cannot delete temp files: Temp files have not been created yet.");
-						} catch (NullPointerException npe) {
-							System.exit(0);
-						}
-						try {
-							FileUtils.forceDelete(new File(tempDir));
-						} catch (IOException e) {
-
+							FileHandler.deleteFolder(new File(Main.tempDir));
+						} catch (Exception e) {
+							System.out.println("Cannot delete temp files: Temp files do not exist");
 						}
 						System.exit(0);
 					}
 					if (result == JOptionPane.NO_OPTION) {
 						try {
-							FileUtils.forceDelete(new File(tempDir));
-						} catch (IOException e) {
-
+							FileHandler.deleteFolder(new File(Main.tempDir));
+						} catch (Exception e) {
+							System.out.println("Cannot delete temp files: Temp files do not exist");
 						}
 						System.exit(0);
 					}
@@ -651,11 +700,9 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					}
 				} else {
 					try {
-						FileUtils.forceDelete(new File(tempDir));
-					} catch (IOException e) {
-						System.out.println("Cannot delete temp files: Temp files have not been created yet.");
-					} catch (NullPointerException npe) {
-						System.exit(0);
+						FileHandler.deleteFolder(new File(Main.tempDir));
+					} catch (Exception e) {
+						System.out.println("Cannot delete temp files: Temp files do not exist");
 					}
 					System.exit(0);
 				}
@@ -671,7 +718,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				createProjectfolder();
 			}
 		};
-		
+
 		Action saveAction = new AbstractAction("Save") {
 
 			private static final long serialVersionUID = 5997018196165864216L;
@@ -686,15 +733,17 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 		// ctrl+s keybind
 		KeyStroke saveKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK);
-		KeyStroke createNewPtojectKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
+		KeyStroke createNewPtojectKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_N,
+				InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
 		// register action in ActionMap
 		mainPane.getActionMap().put("Save", saveAction);
 		mainPane.getActionMap().put("CreateNewProject", createNewProjectAction);
 		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(saveKeyStroke, "Save");
-		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(createNewPtojectKeyStroke, "CreateNewProject");
+		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(createNewPtojectKeyStroke,
+				"CreateNewProject");
 
+		updateFrame();
 	}
-
 
 	private static void initFX(final JFXPanel fxPanel, String url) {
 		Group group = new Group();
@@ -717,7 +766,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	}
 
 	public static void updateFX(String url) {
-		System.out.println("Updating to " + url);
 		File f;
 		if (url == null || url.equals("") || url.equals(null)) {
 			Main.webEngine.load("htt://www.google.com");
@@ -734,27 +782,29 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	}
 
 	// For creating nodes, the variable int index will number the elements in order.
-	// This is used to later direct commands to the correct html element.
-	private void createNodes(DefaultMutableTreeNode top) {
+	// This is used to later direct commands to the correct html element via
+	// BodyElementInfo.
+	private static void createNodes(DefaultMutableTreeNode top) {
 
 		parent = new DefaultMutableTreeNode("Head");
 		top.add(parent);
 
 		for (int i = 1; i < HTMLDocReader.headElements.size(); i++) {
-			child = new DefaultMutableTreeNode(new HeadElementInfo(HTMLDocReader.headElements.get(i).nodeName(), i));
+			child = new DefaultMutableTreeNode(
+					new HeadElementInfo(reader.tempDoc.head().select("*").get(i).nodeName(), i));
 			parent.add(child);
 		}
 
 		parent = new DefaultMutableTreeNode("Body");
-		for (int i = 1; i < HTMLDocReader.bodyElements.size(); i++) {
+		for (int i = 1; i < reader.tempDoc.body().select("*").size(); i++) {
 
-			if (HTMLDocReader.bodyElements.get(i).nodeName().equals("div")) {
+			if (reader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
 				Element element = HTMLDocReader.bodyElements.get(i);
 				i += createDivTree(parent, child, i, element);
 			} else {
-				child = new DefaultMutableTreeNode(new BodyElementInfo(
-						HTMLDocReader.bodyElements.get(i).nodeName() + " " + HTMLDocReader.bodyElements.get(i).id(),
-						i));
+				child = new DefaultMutableTreeNode(
+						new BodyElementInfo(reader.tempDoc.body().select("*").get(i).nodeName() + " "
+								+ reader.tempDoc.body().select("*").get(i).id(), i));
 				parent.add(child);
 			}
 
@@ -764,9 +814,10 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	}
 
 	// Creates tabbedPane tabs based on link and script elements found in doc
-	private void createTabs() {
+	private static void createTabs() {
 
 		Elements links = reader.tempDoc.head().select("link");
+		System.out.println(links);
 		for (int i = 0; i < links.size(); i++) {
 			JTextArea jT;
 			try {
@@ -774,7 +825,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				if (links.get(i).attr("href").equals(tempCSSURL)) {
 
 				} else {
-					jT = new JTextArea(reader.readLinkDoc(links.get(i).attr("href")));
+					jT = new JTextArea();
+					jT.setText(reader.readLinkDoc(links.get(i).attr("href")));
 					JScrollPane scrollPane = new JScrollPane(jT);
 					JComponent c = scrollPane;
 					tabbedPane.addTab(links.get(i).attr("href"), null, c, "CSS");
@@ -800,85 +852,134 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		}
 	}
 
-	private void createButtons(FileSaver tempFileSaver) {
-		
+	private void createButtons() {
+
 		Thread t = new Thread() {
 			public void run() {
 				// Load and set button images
 				// Create functionality buttons
 				Image smolIcon;
+
+				// LEFT
 				JButton newProjectButton = new JButton();
 				JButton saveButton = new JButton();
-				JButton newFileButton = new JButton();
-				JButton newFolderButton = new JButton();
 
+				// MIDDLE
+				JButton newFileButton = new JButton("");
+				JButton newFolderButton = new JButton();
+				
+				// RIGHT
+				JButton newElementButton = new JButton("New HTML Element");
+
+				int smolIconWidth = 22;
+				int smolIconHeight = 22;
+
+				/*
+				 * TO DO:: Currently if one resource is not found, anything following it will
+				 * not be loaded. Separate into separate try/catches so loading will not stop if
+				 * an error is encountered
+				 * 
+				 */
 				try {
 
-					int smolIconWidth = 22;
-					int smolIconHeight = 22;
-					
+					// LEFT
 					Image newProjectIcon = ImageIO.read(getClass().getResource("/res/newProjectIcon.png"));
 					Image saveButtonIcon = ImageIO.read(getClass().getResource("/res/saveButtonIcon.png"));
+
+
+					// MIDDLE
 					Image newFolderIcon = ImageIO.read(getClass().getResource("/res/newFolderIcon.jpg"));
 					Image newFileIcon = ImageIO.read(getClass().getResource("/res/newFileIcon.jpg"));
 					
-					smolIcon = newProjectIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+					// RIGHT
+					Image newElementIcon = ImageIO.read(getClass().getResource("/res/newElementIcon.png"));
+
+					// LEFT
+					smolIcon = newProjectIcon.getScaledInstance(smolIconWidth, smolIconHeight,
+							java.awt.Image.SCALE_SMOOTH);
 					newProjectButton.setIcon(new ImageIcon(smolIcon));
 					newProjectButton.setBorder(null);
 					newProjectButton.setToolTipText("Create a new Project (Ctrl+shift+N");
-					
-					smolIcon = saveButtonIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+
+					smolIcon = saveButtonIcon.getScaledInstance(smolIconWidth, smolIconHeight,
+							java.awt.Image.SCALE_SMOOTH);
 					saveButton.setIcon(new ImageIcon(smolIcon));
 					saveButton.setBorder(null);
 					saveButton.setToolTipText("Save (Ctrl+S)");
-					
-					smolIcon = newFileIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+
+					// MIDDLE
+					smolIcon = newFileIcon.getScaledInstance(smolIconWidth, smolIconHeight,
+							java.awt.Image.SCALE_SMOOTH);
 					newFolderButton.setIcon(new ImageIcon(smolIcon));
 					newFolderButton.setBorder(null);
+					newFolderButton.setOpaque(true);
+					newFolderButton.setContentAreaFilled(false);
+					newFolderButton.setBorderPainted(false);
 					newFolderButton.setToolTipText("New File (Ctrl+N)");
-					
-					smolIcon = newFolderIcon.getScaledInstance(smolIconWidth, smolIconHeight, java.awt.Image.SCALE_SMOOTH);
+
+					smolIcon = newFolderIcon.getScaledInstance(smolIconWidth, smolIconHeight,
+							java.awt.Image.SCALE_SMOOTH);
 					newFileButton.setIcon(new ImageIcon(smolIcon));
 					newFileButton.setBorder(null);
+					newFileButton.setOpaque(true);
+					newFileButton.setContentAreaFilled(false);
+					newFileButton.setBorderPainted(false);
 					newFileButton.setToolTipText("New Folder (Ctrl+N)");
 					
-					
+					// RIGHT
+					smolIcon = newElementIcon.getScaledInstance(smolIconWidth, smolIconHeight,
+							java.awt.Image.SCALE_SMOOTH);
+					newElementButton.setIcon(new ImageIcon(smolIcon));
+					// newElementButton.setBorder(null);
+					newElementButton.setToolTipText("New HTML Element (Control + H)");
+
 				} catch (IOException e) {
 					System.out.println("Could not find a functionality button resource");
 				}
 
-				buttonPanelTop.add(newProjectButton);
-				buttonPanelTop.add(saveButton);
-				buttonPanelTop.add(newFileButton);
-				buttonPanelTop.add(newFolderButton);
+				// LEFT
+				buttonPanelLeft.add(newProjectButton);
+				buttonPanelLeft.add(saveButton);
+
+				// MIDDLE
+				buttonPanelMiddle.add(newFolderButton);
+				buttonPanelMiddle.add(newFileButton);
 				
+				// RIGHT
+				buttonPanelRight.add(newElementButton);
+
+				// LEFT LISTENERS
 				newProjectButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
 						createProjectfolder();
 					}
 				});
-				
+
 				saveButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
 						tempFileSaver.save();
 					}
 				});
-				
+
 				newFolderButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
-						//new folder Creator method
+						// new folder Creator method
 					}
 				});
-				
+
 				newFileButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
-						//new file Creator method
+						// new file Creator method
 					}
 				});
+
+				// MIDDLE LISTENERS
+
+				// RIGHT LISTENERS
 
 			}
 		};
@@ -887,7 +988,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	// if the doc cotains a dic, this will start mapping it our and creating nodes
 	// for the element tree
-	private int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index, Element element) {
+	private static int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index,
+			Element element) {
 		// int i = index;
 		int skipAmount = 0;
 		int secondSkipAmount = 0;
@@ -914,7 +1016,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		return skipAmount;
 	}
 
-	private int getDivContent(DefaultMutableTreeNode child, DefaultMutableTreeNode nextChild, int index, Element div) {
+	private static int getDivContent(DefaultMutableTreeNode child, DefaultMutableTreeNode nextChild, int index,
+			Element div) {
 		int skipAmount = 0;
 		int secondSkipAmount = 0;
 		Elements divElements = div.getAllElements();
@@ -958,6 +1061,10 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		}
 		// System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
 		// fileType);
+		updateFrame();
+	}
+
+	public static void updateFrame() {
 
 		while (tabbedPane.getTabCount() > 1) {
 			tabbedPane.removeTabAt(1);
@@ -978,7 +1085,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		try {
 			JScrollPane tScrollPane = new JScrollPane(textArea);
 			textArea.setText(reader.tempDoc.toString());
-
+			textArea.setCaretPosition(0);
 			JComponent panel2 = tScrollPane;
 			tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
 		} catch (Exception e2) {
@@ -1023,8 +1130,9 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
 		root.removeAllChildren();
 		root.setUserObject("Root");
-		model.reload();
 		createNodes(top);
+		model.reload();
+
 		DefaultMutableTreeNode currentNode = root.getNextNode();
 
 		do {

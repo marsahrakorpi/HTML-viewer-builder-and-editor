@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -63,7 +64,7 @@ public class ListListener implements TreeSelectionListener {
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
 		Main.textArea.getHighlighter().removeAllHighlights();
-		
+
 		try {
 			p.removeAll();
 			Main.elementAttributes.setViewportView(p);
@@ -96,88 +97,95 @@ public class ListListener implements TreeSelectionListener {
 
 			// BODY
 			if (e.getPath().getPathComponent(1).toString().equals("Body")) {
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
-				if (node == null) {
-					System.out.println("node null");
-					return;
-				}
+				try {
+					DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
+					if (node == null) {
+						System.out.println("node null");
+						return;
+					}
 
-				Object nodeInfo = node.getUserObject();
-				BodyElementInfo bElement = (BodyElementInfo) nodeInfo;
-				// System.out.println(bElement.elementName+reader.bodyElements.get(bElement.index).nodeName());
-				styleLabel.clear();
-				label.clear();
-				styleField.clear();
-				field.clear();
+					Object nodeInfo = node.getUserObject();
+					BodyElementInfo bElement = (BodyElementInfo) nodeInfo;
+					// System.out.println(bElement.elementName+reader.bodyElements.get(bElement.index).nodeName());
+					styleLabel.clear();
+					label.clear();
+					styleField.clear();
+					field.clear();
 
-				elementName.setText(bElement.elementName.toUpperCase() + "\n\n");
-				elementName.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 0));
-				elementName.setFont(new Font("Arial", Font.BOLD, 20));
-				p.add(elementName);
+					elementName.setText(bElement.elementName.toUpperCase() + "\n\n");
+					elementName.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 0));
+					elementName.setFont(new Font("Arial", Font.BOLD, 20));
+					p.add(elementName);
 
-				for (int i = 0; i < styleLabel.size(); i++) {
-					p.add(styleLabel.get(i));
-					p.add(styleField.get(i));
-					styleLabel.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-					styleField.get(i).setMaximumSize(d);
-					styleField.get(i).setHorizontalAlignment(JTextField.LEFT);
-				}
+					for (int i = 0; i < styleLabel.size(); i++) {
+						p.add(styleLabel.get(i));
+						p.add(styleField.get(i));
+						styleLabel.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+						styleField.get(i).setMaximumSize(d);
+						styleField.get(i).setHorizontalAlignment(JTextField.LEFT);
+					}
 
-				// GLOBAL HTML ATTRIBUTE FIELDS
-				JLabel l = new JLabel("Global HTML Attributes");
-				l.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-				l.setFont(new Font("Arial", Font.BOLD, 15));
-				p.add(l);
+					// GLOBAL HTML ATTRIBUTE FIELDS
+					JLabel l = new JLabel("Global HTML Attributes");
+					l.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+					l.setFont(new Font("Arial", Font.BOLD, 15));
+					p.add(l);
 
-				for (int i = 0; i < globalHTMLAttributes.length; i++) {
-					label.add(new JLabel(globalHTMLAttributes[i]));
-					// find the correct html element in the HTMLReader by refering to the
-					// bodyElementInfo index
-					Element element = reader.tempDoc.body().select("*").get(bElement.index);
-					if (element.hasAttr(globalHTMLAttributes[i])) {
+					for (int i = 0; i < globalHTMLAttributes.length; i++) {
+						label.add(new JLabel(globalHTMLAttributes[i]));
+						// find the correct html element in the HTMLReader by refering to the
+						// bodyElementInfo index
+						Element element;
+						element = reader.tempDoc.body().select("*").get(bElement.index);
+
+						if (element.hasAttr(globalHTMLAttributes[i])) {
 							field.add(new JTextField(element.attr(globalHTMLAttributes[i])));
-					} else {
-						field.add(new JTextField(""));
+						} else {
+							field.add(new JTextField(""));
+
+						}
+						// Add listeners to text fields
+						field.get(i).getDocument()
+								.addDocumentListener(new FieldDocumentListener(i, bElement.index, reader));
+						field.get(i).addKeyListener(new FieldKeyListener(i));
+					}
+
+					for (int i = 0; i < label.size(); i++) {
+						p.add(label.get(i));
+						p.add(field.get(i));
+						label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+						field.get(i).setMaximumSize(d);
+						field.get(i).setHorizontalAlignment(JTextField.LEFT);
+					}
+
+					JCheckBox hiddenCheck = new JCheckBox("hidden");
+					hiddenCheck.addItemListener(new CheckListener(bElement.index, reader, hiddenCheck));
+					p.add(hiddenCheck);
+
+					int offset = reader.tempDoc.toString()
+							.indexOf(reader.tempDoc.body().select("*").get(bElement.index).outerHtml());
+					int length = reader.tempDoc.body().select("*").get(bElement.index).toString().length();
+
+					/*
+					 *
+					 * TO DO: FIX DIV HIGHLIGHTING CURRENTL ONLY SINGULAR ELEMENTS ARE HIGHLIGHTED
+					 *
+					 */
+
+					while (offset != -1) {
+						try {
+							Main.textArea.getHighlighter().addHighlight(offset, offset + length, painter);
+							offset = reader.tempDoc.toString()
+									.indexOf(reader.tempDoc.body().select("*").get(bElement.index).toString(), offset + 1);
+						} catch (BadLocationException ble) {
+							// TODO Auto-generated catch block
+							ble.printStackTrace();
+						}
 
 					}
-					// Add listeners to text fields
-					field.get(i).getDocument()
-							.addDocumentListener(new FieldDocumentListener(i, bElement.index, reader));
-					field.get(i).addKeyListener(new FieldKeyListener(i));
+				} catch (IndexOutOfBoundsException ioob) {
+					return;
 				}
-
-				for (int i = 0; i < label.size(); i++) {
-					p.add(label.get(i));
-					p.add(field.get(i));
-					label.get(i).setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-					field.get(i).setMaximumSize(d);
-					field.get(i).setHorizontalAlignment(JTextField.LEFT);
-				}
-
-				JCheckBox hiddenCheck = new JCheckBox("hidden");
-				hiddenCheck.addItemListener(new CheckListener(bElement.index, reader, hiddenCheck));
-				p.add(hiddenCheck);
-
-//				int offset = reader.doc.toString().indexOf(HTMLDocReader.bodyElements.get(bElement.index).outerHtml());
-//				int length = HTMLDocReader.bodyElements.get(bElement.index).toString().length();
-//
-//				/*
-//				 * 
-//				 * TO DO: FIX DIV HIGHLIGHTING CURRENTL ONLY SINGULAR ELEMENTS ARE HIGHLIGHTED
-//				 * 
-//				 */
-//
-//				while (offset != -1) {
-//					try {
-//						Main.textArea.getHighlighter().addHighlight(offset, offset + length, painter);
-//						offset = reader.doc.toString()
-//								.indexOf(HTMLDocReader.bodyElements.get(bElement.index).toString(), offset + 1);
-//					} catch (BadLocationException ble) {
-//						// TODO Auto-generated catch block
-//						ble.printStackTrace();
-//					}
-//
-//				}
 
 			}
 		}

@@ -56,7 +56,17 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 				BodyElementInfo bElement = (BodyElementInfo) nodeInfo;
 
 				// System.out.println(HTMLDocReader.bodyElements.get(bElement.index));
-				highlightElement(reader.tempDoc.body().select("*").get(bElement.index));
+				try {
+					highlightElement(reader.tempDoc.body().select("*").get(bElement.index));
+				} catch (IndexOutOfBoundsException e1) {
+					/*
+					 * 
+					 * Will cause an exception when deleting and element from the elementTree,
+					 * because it will still fire off a valueChanged event. If deleting the last element of the tree, the element at bElement.index
+					 * will no longer exist, hence creating and indexOutOfBounds exception.					 *
+					 *
+					 */
+				}
 			}
 		}
 	}

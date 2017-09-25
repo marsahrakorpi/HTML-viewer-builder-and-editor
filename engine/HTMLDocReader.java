@@ -79,7 +79,7 @@ public class HTMLDocReader extends Thread {
 					e1.printStackTrace();
 				}
 			}
-
+			
 		};
 		t.start();
 
@@ -88,10 +88,11 @@ public class HTMLDocReader extends Thread {
 				Main.updateFX(Main.tempPageURL);
 			}
 		});
+		
 	}
+	
 
 	public String readLinkDoc(String url) throws IOException {
-		// System.out.println("URL"+url);
 		docStr = "";
 		this.url = url;
 		Thread t = new Thread() {
@@ -103,7 +104,8 @@ public class HTMLDocReader extends Thread {
 					}
 					br.close();
 				} catch (IOException e) {
-					String furl = Main.rootFolder + "/" + url;
+					String furl = Main.tempDir + "\\" + url;
+					System.out.println(furl);
 					try (BufferedReader br = new BufferedReader(new FileReader(furl))) {
 						String sCurrentLine;
 						while ((sCurrentLine = br.readLine()) != null) {
@@ -134,6 +136,7 @@ public class HTMLDocReader extends Thread {
 	public void copyToTempFile() {
 		System.out.println("Copying");
 		System.out.println(Main.rootFolder);
+			
 		// copy to temp
 		File sDir = new File(Main.rootFolder);
 		try {
@@ -156,7 +159,6 @@ public class HTMLDocReader extends Thread {
 					"			background-color: rgba(145, 184, 247, .5);\r\n" + 
 					"			border: 1px solid red;\r\n" + 
 					"		}	";
-			File webViewHighlighter = new File(Main.tempDir+"\\webViewHighlighter.css");
 			Files.createFile(webViewHighligherPath);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(webViewHighligherPath.toFile()));
 			bw.write(webViewHighlighterString);
@@ -200,7 +202,11 @@ public class HTMLDocReader extends Thread {
 			// TODO Auto-generated catch block
 
 		}
-
+		try {
+			Main.textArea.setText(tempDoc.toString());
+		} catch (Exception e){
+			
+		}
 		Elements webCSS = tempDoc.select("[href*=\"webViewCSS/webViewHighlighter.css\"]");
 		if (webCSS.size() == 0) {
 			tempDoc.select("head").append("<link rel=\"stylesheet\" href=\"webViewCSS/webViewHighlighter.css\">");

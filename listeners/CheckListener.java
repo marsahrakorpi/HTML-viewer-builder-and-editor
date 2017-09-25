@@ -57,15 +57,7 @@ public class CheckListener extends Thread implements ItemListener {
 				}
 			}
 		}
-		
-//		Main.textArea.setText(reader.tempDoc.toString());
-//		Platform.runLater(new Runnable() {
-//			public void run() {
-//				Main.updateFX(Main.tempPageURL);
-//			}
-//		});
 
-		System.out.println(element.outerHtml());
 		Thread t = new Thread() {
 			public void run() {
 				FileSaver.unsavedChanges = true;
@@ -77,7 +69,6 @@ public class CheckListener extends Thread implements ItemListener {
 					bw.close();
 
 					reader.readDoc(Main.tempPageURL);
-					reader.readLinkDoc(Main.tempPageURL);
 					Main.textArea.setText(reader.doc.toString());
 					Platform.runLater(new Runnable() {
 						public void run() {
