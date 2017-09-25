@@ -7,6 +7,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
@@ -35,6 +37,7 @@ import javax.swing.JTextField;
 
 import org.bson.Document;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.mongodb.Block;
@@ -102,8 +105,6 @@ public class EditElementDialog {
 
 		Document doc = elementsCollection.find(eq("name", html)).first();
 
-		JSONObject object = new JSONObject(doc.toJson());
-		JSONArray attrObj = object.getJSONArray("attributes");
 
 		// create all tab panels
 		for (int i = 0; i < tabTitles.length; i++) {
@@ -114,6 +115,7 @@ public class EditElementDialog {
 			tabPanels[i].add(Box.createRigidArea(new Dimension(5, 5)));
 		}
 
+		
 		// tab 1
 
 		JLabel l = new JLabel("Global HTML Attributes");
@@ -146,24 +148,40 @@ public class EditElementDialog {
 
 		
 		//Tab 2
-		for (int i = 0; i < attrObj.length(); i++) {
-			JSONObject obb = attrObj.optJSONObject(i);
-			System.out.println(obb);
-			Iterator<String> iterator = obb.keys();
-			while (iterator.hasNext()) {
-				String currentKey = iterator.next();
-				JSONArray arrFromKey = obb.getJSONArray(currentKey);
-				System.out.println(currentKey);
-				tabPanels[1].add(new JLabel(currentKey));
-				for (int j = 0; j < arrFromKey.length(); j++) {
-					System.out.println(arrFromKey.get(j));
-					tabPanels[1].add(new JLabel(arrFromKey.get(j).toString()));
+		
+
+		
+		try {
+			JSONArray attrObj;
+			JSONObject object = new JSONObject(doc.toJson());
+			attrObj = object.getJSONArray("attributes");
+			
+			for (int i = 0; i < attrObj.length(); i++) {
+				JSONObject obb = attrObj.optJSONObject(i);
+				System.out.println(obb);
+				Iterator<String> iterator = obb.keys();
+				while (iterator.hasNext()) {
+					String currentKey = iterator.next();
+					JSONArray arrFromKey = obb.getJSONArray(currentKey);
+					System.out.println(currentKey);
+					tabPanels[1].add(new JLabel(currentKey));
+					for (int j = 0; j < arrFromKey.length(); j++) {
+						System.out.println(arrFromKey.get(j));
+						tabPanels[1].add(new JLabel(arrFromKey.get(j).toString()));
+					}
 				}
 			}
+		} catch (Exception e1) {
+			tabPanels[1].add(new JLabel("Element does not have attributes that are specific to it."));
+			System.out.println("Document not found in database matching "+html);
 		}
 
-		fullHTML = doc.getString("tag");
-		System.out.println(fullHTML);
+		try {
+			fullHTML = doc.getString("tag");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			fullHTML = html;
+		}
 
 		try {
 			tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
@@ -204,6 +222,20 @@ public class EditElementDialog {
 		JButton cancelButton = new JButton("Cancel");
 		bottomPanel.add(confirmButton);
 		bottomPanel.add(cancelButton);
+		
+		confirmButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
+		
+		cancelButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				mongoClient.close();
+				dialog.dispose();
+			}
+		});
 
 		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
 			@Override
