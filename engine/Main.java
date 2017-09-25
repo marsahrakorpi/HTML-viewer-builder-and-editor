@@ -2,6 +2,7 @@ package engine;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
@@ -59,6 +60,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
@@ -582,7 +584,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		tree.setShowsRootHandles(true);
 		tree.addTreeSelectionListener(this);
 		JScrollPane scrollPane = new JScrollPane(tree);
-
+		scrollPane.setPreferredSize(new Dimension(600,0));
 		// ELEMENTS TREE
 		top = new DefaultMutableTreeNode("Document");
 		try {
@@ -591,7 +593,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			// TODO Auto-generated catch block
 		}
 		elementTree = new JTree(top);
-		elementTree.addTreeSelectionListener(new ListListener(reader));
+//		elementTree.addTreeSelectionListener(new ListListener(reader));
 		elementTree.addTreeSelectionListener(new ElementHighlightingListener(reader));
 		elementTree.addMouseListener(new ElementTreeMouseListener(reader));
 
@@ -600,17 +602,29 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		elementAttributes = new JScrollPane();
 		elementAttributes.getVerticalScrollBar().setUnitIncrement(20);
 
-		JSplitPane elementSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, elementList, elementAttributes);
-		elementSplitPane.setDividerLocation(500);
-		elementSplitPane.setPreferredSize(new Dimension(400, 0));
-
+		JScrollPane elementTreePane = new JScrollPane(elementList);
+		elementTreePane.setPreferredSize(new Dimension(400,0));
 		JPanel mainPane = new JPanel(new BorderLayout());
 		scrollPane.setPreferredSize(new Dimension(200, 0));
 
 		mainPane.add(buttonPanelMain, BorderLayout.PAGE_START);
 		mainPane.add(scrollPane, BorderLayout.LINE_START);
 		mainPane.add(tabbedPane, BorderLayout.CENTER);
-		mainPane.add(elementSplitPane, BorderLayout.LINE_END);
+		mainPane.add(elementTreePane, BorderLayout.LINE_END);
+		
+		Color topColor = new Color(50,50, 50);
+		Color sideColor = new Color(50, 55, 65);
+		buttonPanelLeft.setBackground(topColor);
+		buttonPanelMiddle.setBackground(topColor);
+		buttonPanelRight.setBackground(topColor);
+		mainPane.setBackground(topColor);
+		tabbedPane.setBackground(Color.WHITE);
+		scrollPane.setBackground(Color.LIGHT_GRAY);
+		tree.setBackground(sideColor);
+		elementTree.setBackground(sideColor);
+		tree.setCellRenderer(new TreeCellRenderer());
+		elementTree.setCellRenderer(new TreeCellRenderer());
+		frame.getContentPane().setBackground( topColor );
 
 		textArea.setCaretPosition(0);
 
@@ -900,12 +914,18 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 							java.awt.Image.SCALE_SMOOTH);
 					newProjectButton.setIcon(new ImageIcon(smolIcon));
 					newProjectButton.setBorder(null);
+					newProjectButton.setOpaque(true);
+					newProjectButton.setContentAreaFilled(false);
+					newProjectButton.setBorderPainted(false);
 					newProjectButton.setToolTipText("Create a new Project (Ctrl+shift+N");
 
 					smolIcon = saveButtonIcon.getScaledInstance(smolIconWidth, smolIconHeight,
 							java.awt.Image.SCALE_SMOOTH);
 					saveButton.setIcon(new ImageIcon(smolIcon));
 					saveButton.setBorder(null);
+					saveButton.setOpaque(true);
+					saveButton.setContentAreaFilled(false);
+					saveButton.setBorderPainted(false);
 					saveButton.setToolTipText("Save (Ctrl+S)");
 
 					// MIDDLE
