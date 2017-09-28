@@ -78,6 +78,7 @@ import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import listeners.ElementHighlightingListener;
+import listeners.ElementTreeMouseListener;
 import listeners.ListListener;
 import listeners.OpenFileListener;
 import listeners.OpenFolderListener;

@@ -18,7 +18,15 @@ import javax.swing.SwingConstants;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
+
+import org.bson.Document;
+
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 import engine.Main;
 
@@ -30,6 +38,7 @@ public class NewElementDialog implements TreeSelectionListener{
 	
 	public NewElementDialog() {
 		// TODO Auto-generated constructor stub
+		
 		final JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
 		final JDialog dialog = new JDialog(Main.frame, "Create a new HTML Element", true);
@@ -67,6 +76,16 @@ public class NewElementDialog implements TreeSelectionListener{
 		tree.addTreeSelectionListener(this);
 		dialog.setContentPane(mainPanel);
 		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		
+		/*
+		 * Loads MongoDB here to spread loading times around
+		 * Otherwise EditNewElementDialog will have a noticeable delay when opening
+		 */
+		MongoClient mongoClient = new MongoClient(
+				new MongoClientURI("mongodb://user:password@ds151024.mlab.com:51024/htmlelements"));
+		MongoDatabase db = mongoClient.getDatabase("htmlelements");
+		MongoCollection<Document> testCollection = db.getCollection("test");
+		MongoCollection<Document> elementsCollection = db.getCollection("elements");
 
 		dialog.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
@@ -80,12 +99,11 @@ public class NewElementDialog implements TreeSelectionListener{
 				if(currentTagSelection.equals("")) {
 					return;
 				} else {
-
 					dialog.dispose();
 //					StringBuilder str = new StringBuilder(currentTagSelection);
 //					str.insert(1, "/");
 //					String html = currentTagSelection+"New Element"+str;
-					new EditElementDialog(currentTagSelection);
+					new EditNewElementDialog(currentTagSelection, mongoClient, db, elementsCollection);
 
 				}
 			}
@@ -94,9 +112,9 @@ public class NewElementDialog implements TreeSelectionListener{
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				dialog.dispose();
+				
 			}
 		});
-
 		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 4,
 				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2);
 		// center the dialog on screen
@@ -105,8 +123,18 @@ public class NewElementDialog implements TreeSelectionListener{
 		dialog.setVisible(true);
 		
 
-	}
+	
 
+	}
+	private static String getTreeText(TreeModel model, Object object, String indent) {
+	    String myRow = indent + object + "\n";
+//		String myRow = "";
+	    for (int i = 0; i < model.getChildCount(object); i++) {
+	        myRow += getTreeText(model, model.getChild(object, i), indent + "  ");
+	    }
+	    return myRow;
+	}
+	
 	private void createNodes(DefaultMutableTreeNode top) {
 		DefaultMutableTreeNode category = null;
 		DefaultMutableTreeNode element = null;
@@ -114,21 +142,21 @@ public class NewElementDialog implements TreeSelectionListener{
 		category = new DefaultMutableTreeNode("Basic HTML");
 		top.add(category);
 
-		element = new DefaultMutableTreeNode(new ElementInfo("<h1>","<h1>New Heading 1 Element</h1>","Defines a heading of Size 1"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<h1>","Defines a heading of Size 1"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<h2>","<h1>New Heading 2 Element</h1>","Defines a heading of Size 2"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<h2>","Defines a heading of Size 2"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<h3>","<h1>New Heading 3 Element</h1>","Defines a heading of Size 3"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<h3>","Defines a heading of Size 3"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<h4>","<h1>New Heading 4 Element</h1>","Defines a heading of Size 4"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<h4>","Defines a heading of Size 4"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<h5>","<h1>New Heading 5 Element</h1>","Defines a heading of Size 5"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<h5>","Defines a heading of Size 5"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<h6>","<h1>New Heading 6 Element</h1>","Defines a heading of Size 6"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<h6>","Defines a heading of Size 6"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<p>","<p>New Paragraph</p>"," Defines a paragraph"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<p>"," Defines a paragraph"));
 		category.add(element);
-		element = new DefaultMutableTreeNode(new ElementInfo("<br>","	Inserts a single line break"));
+		element = new DefaultMutableTreeNode(new ElementInfo("<br>","Inserts a single line break"));
 		category.add(element);
 		element = new DefaultMutableTreeNode(new ElementInfo("<hr>","	Defines a thematic change in the content"));
 		category.add(element);
