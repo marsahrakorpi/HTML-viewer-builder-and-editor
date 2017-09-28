@@ -9,9 +9,9 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
+import engine.FileSaver;
 import engine.HTMLDocReader;
 import engine.Main;
-import engine.FileSaver;
 import javafx.application.Platform;
 
 public class FieldDocumentListener implements DocumentListener {
