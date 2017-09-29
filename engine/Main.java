@@ -335,7 +335,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				updateFrame();
 			}
 		});
-
+		
 		browseButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -641,7 +641,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		frame.pack();
 		// frame.setLocationByPlatform(true);
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		frame.setVisible(true);
+		
 
 		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
 			@Override
@@ -764,6 +764,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(saveKeyStroke, "Save");
 		mainPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(createNewPtojectKeyStroke,
 				"CreateNewProject");
+		frame.setVisible(true);
 
 		updateFrame();
 	}
@@ -808,71 +809,79 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	// This is used to later direct commands to the correct html element via
 	// BodyElementInfo.
 	private static void createNodes(DefaultMutableTreeNode top) {
+		Thread t = new Thread() {
+			public void run() {
+				parent = new DefaultMutableTreeNode("Head");
+				top.add(parent);
 		
-		parent = new DefaultMutableTreeNode("Head");
-		top.add(parent);
+				for (int i = 1; i < reader.tempDoc.head().select("*").size(); i++) {
+					child = new DefaultMutableTreeNode(
+							new HeadElementInfo(reader.tempDoc.head().select("*").get(i).nodeName(), i));
+					parent.add(child);
+				}
+		
+				parent = new DefaultMutableTreeNode("Body");
+				for (int i = 1; i < reader.tempDoc.body().select("*").size(); i++) {
+		
+					if (reader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
+						Element element = reader.tempDoc.body().select("*").get(i);
+						i += createDivTree(parent, child, i, element);
+					} else {
+						child = new DefaultMutableTreeNode(
+								new BodyElementInfo(reader.tempDoc.body().select("*").get(i).nodeName() + " "
+										+ reader.tempDoc.body().select("*").get(i).id(), i, reader));
+						parent.add(child);
+					}
+		
+				}
+				top.add(parent);
 
-		for (int i = 1; i < reader.tempDoc.head().select("*").size(); i++) {
-			child = new DefaultMutableTreeNode(
-					new HeadElementInfo(reader.tempDoc.head().select("*").get(i).nodeName(), i));
-			parent.add(child);
-		}
-
-		parent = new DefaultMutableTreeNode("Body");
-		for (int i = 1; i < reader.tempDoc.body().select("*").size(); i++) {
-
-			if (reader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
-				Element element = reader.tempDoc.body().select("*").get(i);
-				i += createDivTree(parent, child, i, element);
-			} else {
-				child = new DefaultMutableTreeNode(
-						new BodyElementInfo(reader.tempDoc.body().select("*").get(i).nodeName() + " "
-								+ reader.tempDoc.body().select("*").get(i).id(), i, reader));
-				parent.add(child);
 			}
-
-		}
-		top.add(parent);
+		}; t.start();
 
 	}
 
 	// Creates tabbedPane tabs based on link and script elements found in doc
 	private static void createTabs() {
+		Thread t = new Thread() {
+			public void run() {
+				Elements links = reader.tempDoc.head().select("link");
+//				System.out.println(links);
+				for (int i = 0; i < links.size(); i++) {
+					JTextArea jT;
+					try {
+						// DO NOT ADD THE TEMP CSS FILE TO THE TABS
+						if (links.get(i).attr("href").equals(tempCSSURL)) {
 
-		Elements links = reader.tempDoc.head().select("link");
-//		System.out.println(links);
-		for (int i = 0; i < links.size(); i++) {
-			JTextArea jT;
-			try {
-				// DO NOT ADD THE TEMP CSS FILE TO THE TABS
-				if (links.get(i).attr("href").equals(tempCSSURL)) {
+						} else {
+							jT = new JTextArea();
+							jT.setText(reader.readLinkDoc(links.get(i).attr("href")));
+							JScrollPane scrollPane = new JScrollPane(jT);
+							JComponent c = scrollPane;
+							tabbedPane.addTab(links.get(i).attr("href"), null, c, "CSS");
+						}
 
-				} else {
-					jT = new JTextArea();
-					jT.setText(reader.readLinkDoc(links.get(i).attr("href")));
-					JScrollPane scrollPane = new JScrollPane(jT);
-					JComponent c = scrollPane;
-					tabbedPane.addTab(links.get(i).attr("href"), null, c, "CSS");
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
+				Elements scripts = reader.tempDoc.select("script");
+				for (int j = 0; j < scripts.size(); j++) {
+					JTextArea jT;
+					try {
+						jT = new JTextArea(reader.readLinkDoc(links.get(j).attr("src")));
+						JScrollPane scrollPane = new JScrollPane(jT);
+						JComponent c = scrollPane;
+						tabbedPane.addTab("Script", null, c, "Script");
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		}; t.start();
 
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-		}
-		Elements scripts = reader.tempDoc.select("script");
-		for (int j = 0; j < scripts.size(); j++) {
-			JTextArea jT;
-			try {
-				jT = new JTextArea(reader.readLinkDoc(links.get(j).attr("src")));
-				JScrollPane scrollPane = new JScrollPane(jT);
-				JComponent c = scrollPane;
-				tabbedPane.addTab("Script", null, c, "Script");
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-		}
 	}
 
 	private void createButtons() {
@@ -909,7 +918,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					Image newProjectIcon = ImageIO.read(getClass().getResource("/res/newProjectIcon.png"));
 					Image saveButtonIcon = ImageIO.read(getClass().getResource("/res/saveButtonIcon.png"));
 
-
 					// MIDDLE
 					Image newFolderIcon = ImageIO.read(getClass().getResource("/res/newFolderIcon.jpg"));
 					Image newFileIcon = ImageIO.read(getClass().getResource("/res/newFileIcon.jpg"));
@@ -926,7 +934,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					newProjectButton.setContentAreaFilled(false);
 					newProjectButton.setBorderPainted(false);
 					newProjectButton.setToolTipText("Create a new Project (Ctrl+shift+N");
-
+					
 					smolIcon = saveButtonIcon.getScaledInstance(smolIconWidth, smolIconHeight,
 							java.awt.Image.SCALE_SMOOTH);
 					saveButton.setIcon(new ImageIcon(smolIcon));
@@ -970,13 +978,18 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				buttonPanelLeft.add(newProjectButton);
 				buttonPanelLeft.add(saveButton);
 
+				newProjectButton.revalidate();
+				saveButton.revalidate();
+				
 				// MIDDLE
 				buttonPanelMiddle.add(newFolderButton);
 				buttonPanelMiddle.add(newFileButton);
+				newFolderButton.revalidate();
+				newFileButton.revalidate();
 				
 				// RIGHT
 				buttonPanelRight.add(newElementButton);
-
+				buttonPanelRight.revalidate();
 				// LEFT LISTENERS
 				newProjectButton.addActionListener(new ActionListener() {
 					@Override
@@ -1100,7 +1113,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	}
 
 	public static void updateFrame() {
-		System.out.println("Updating frame");
+
 		while (tabbedPane.getTabCount() > 1) {
 			tabbedPane.removeTabAt(1);
 		}
