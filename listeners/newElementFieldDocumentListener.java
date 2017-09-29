@@ -3,6 +3,8 @@ package listeners;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import dialogs.EditNewElementDialog;
@@ -39,18 +41,15 @@ public class newElementFieldDocumentListener implements DocumentListener {
 	}
 
 	public void updateElement() {
-
+		element = EditNewElementDialog.getJsoupElement();
 		String attributeKey = EditNewElementDialog.label.get(index).getText();
-		System.out.println(attributeKey);
 		if(EditNewElementDialog.field.get(index).getText().equals("") || EditNewElementDialog.field.get(index).getText()==null) {
 			element.removeAttr(attributeKey);
 		} else {
-			System.out.println(element);
-			System.out.println(attributeKey);
-			System.out.println(EditNewElementDialog.field.get(index).getText());
 			element.attr(attributeKey, EditNewElementDialog.field.get(index).getText());
 		}
-		EditNewElementDialog.fullHTML = element.toString();
+		Document fullHTMLDoc = Jsoup.parseBodyFragment(element.toString());
+		EditNewElementDialog.fullHTML = fullHTMLDoc.toString();
 		EditNewElementDialog.updateDoc();
 	}
 

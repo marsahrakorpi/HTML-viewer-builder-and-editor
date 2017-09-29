@@ -676,7 +676,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			public void componentResized(ComponentEvent arg0) {
 				// TODO Auto-generated method stub
 				try {
-					webView.setPrefSize(tabbedPane.getSize().width, tabbedPane.getSize().height);
+					webView.setPrefSize(tabbedPane.getSize().width-10, tabbedPane.getSize().height-20);
 				} catch (NullPointerException e) {
 
 				}
@@ -775,7 +775,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		Main.webView = new WebView();
 		webView.isResizable();
 		group.getChildren().add(webView);
-		webView.setPrefSize(tabbedPane.getSize().width, tabbedPane.getSize().height);
+		webView.setPrefSize(tabbedPane.getSize().width-10, tabbedPane.getSize().height-20);
 
 		// Obtain the webEngine to navigate
 		Main.webEngine = webView.getEngine();
@@ -822,7 +822,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		for (int i = 1; i < reader.tempDoc.body().select("*").size(); i++) {
 
 			if (reader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
-				Element element = reader.tempDoc.select("*").get(i);
+				Element element = reader.tempDoc.body().select("*").get(i);
 				i += createDivTree(parent, child, i, element);
 			} else {
 				child = new DefaultMutableTreeNode(
@@ -1012,7 +1012,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				newElementButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						new NewElementDialog();
+						new NewElementDialog(reader);
 					}
 				});
 

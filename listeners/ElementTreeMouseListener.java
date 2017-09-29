@@ -3,9 +3,6 @@ package listeners;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -16,6 +13,7 @@ import javax.swing.tree.TreePath;
 
 import org.jsoup.nodes.Element;
 
+import dialogs.EditElementDialog;
 import engine.BodyElementInfo;
 import engine.FileSaver;
 import engine.HTMLDocReader;
@@ -54,7 +52,7 @@ public class ElementTreeMouseListener extends Thread implements MouseListener {
 
 	private void editBodyElement(BodyElementInfo bElement) {
 		Element element = reader.tempDoc.body().select("*").get(bElement.index);
-		FileSaver.unsavedChanges = true;
+		new EditElementDialog(element, reader);
 	}
 
 	private void removeBodyElement(BodyElementInfo bElement) {

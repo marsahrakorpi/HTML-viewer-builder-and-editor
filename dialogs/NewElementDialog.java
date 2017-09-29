@@ -28,6 +28,7 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
+import engine.HTMLDocReader;
 import engine.Main;
 
 public class NewElementDialog implements TreeSelectionListener{
@@ -35,13 +36,14 @@ public class NewElementDialog implements TreeSelectionListener{
 	String currentTagSelection = "";
 	String currentTagFullHtml = "";
 	JLabel selectedElementLabel;
+	HTMLDocReader reader;
 	
-	public NewElementDialog() {
+	public NewElementDialog(HTMLDocReader reader) {
 		// TODO Auto-generated constructor stub
-		
+		this.reader = reader;
 		final JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
-		final JDialog dialog = new JDialog(Main.frame, "Create a new HTML Element", true);
+		final JDialog dialog = new JDialog(Main.frame, "Select an Element", true);
 
 		JPanel topPanel = new JPanel();
 		
@@ -84,7 +86,6 @@ public class NewElementDialog implements TreeSelectionListener{
 		MongoClient mongoClient = new MongoClient(
 				new MongoClientURI("mongodb://user:password@ds151024.mlab.com:51024/htmlelements"));
 		MongoDatabase db = mongoClient.getDatabase("htmlelements");
-		MongoCollection<Document> testCollection = db.getCollection("test");
 		MongoCollection<Document> elementsCollection = db.getCollection("elements");
 
 		dialog.addWindowListener(new WindowAdapter() {
@@ -103,7 +104,7 @@ public class NewElementDialog implements TreeSelectionListener{
 //					StringBuilder str = new StringBuilder(currentTagSelection);
 //					str.insert(1, "/");
 //					String html = currentTagSelection+"New Element"+str;
-					new EditNewElementDialog(currentTagSelection, mongoClient, db, elementsCollection);
+					new EditNewElementDialog(currentTagSelection, mongoClient, db, elementsCollection, reader);
 
 				}
 			}

@@ -36,7 +36,6 @@ public class FileSaver extends Thread {
 					Element element = reader.tempDoc.body().select("*").get(i);
 					element.removeClass("java-highlighted-element");
 					element.removeClass(".java-highlighted-element");
-					System.out.println(element);
 					if (element.className().equals("")) {
 						element.removeAttr("class");
 					}

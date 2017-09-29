@@ -27,7 +27,8 @@ public class HTMLDocReader extends Thread {
 	Boolean footer = false;
 
 	private File input;
-	public Document doc, tempDoc;
+	public Document doc;
+	public static Document tempDoc;
 	private String docStr;
 	public static Elements headElements;
 	public static Elements bodyElements;
