@@ -65,6 +65,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import listeners.newElementFieldDocumentListener;
 
 public class EditNewElementDialog {
 

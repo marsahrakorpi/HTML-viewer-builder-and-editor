@@ -10,11 +10,12 @@ public class BodyElementInfo {
 	public String elementName;
 	public int index;
 	private Element element;
-	
-	public BodyElementInfo(String elementName, int index) {		
+	HTMLDocReader reader;
+	public BodyElementInfo(String elementName, int index, HTMLDocReader reader) {		
 		this.elementName = elementName;
 		this.index = index;
-		this.element = HTMLDocReader.bodyElements.get((int)index);
+		this.reader=reader;
+		this.element = reader.tempDoc.body().select("*").get(index);
 //		System.out.println("creating element "+elementName+"with index of "+index);
 	}
 	

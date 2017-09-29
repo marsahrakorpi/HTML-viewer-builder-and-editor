@@ -58,6 +58,7 @@ public class HTMLDocReader extends Thread {
 
 	public void updateTempDoc() {
 		// Threading here greatly reduces update lag on the JavaFX webview
+//		System.out.println("Updating temp doc with doc of: "+tempDoc.toString());
 		Thread t = new Thread() {
 			public void run() {
 				File file = new File(Main.tempPageURL);
@@ -78,8 +79,9 @@ public class HTMLDocReader extends Thread {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			}
-			
+
+			}		
+
 		};
 		t.start();
 
@@ -89,12 +91,14 @@ public class HTMLDocReader extends Thread {
 			}
 		});
 		
+		
 	}
 	
 
 	public String readLinkDoc(String url) throws IOException {
 		docStr = "";
 		this.url = url;
+		
 		Thread t = new Thread() {
 			public void start() {
 				try (BufferedReader br = new BufferedReader(new FileReader(url))) {
@@ -105,7 +109,7 @@ public class HTMLDocReader extends Thread {
 					br.close();
 				} catch (IOException e) {
 					String furl = Main.tempDir + "\\" + url;
-					System.out.println(furl);
+//					System.out.println(furl);
 					try (BufferedReader br = new BufferedReader(new FileReader(furl))) {
 						String sCurrentLine;
 						while ((sCurrentLine = br.readLine()) != null) {
@@ -134,8 +138,6 @@ public class HTMLDocReader extends Thread {
 	}
 
 	public void copyToTempFile() {
-		System.out.println("Copying");
-		System.out.println(Main.rootFolder);
 			
 		// copy to temp
 		File sDir = new File(Main.rootFolder);
