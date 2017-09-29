@@ -1114,8 +1114,13 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public static void updateFrame() {
 
-		while (tabbedPane.getTabCount() > 1) {
-			tabbedPane.removeTabAt(1);
+		try {
+			while (tabbedPane.getTabCount() > 1) {
+				tabbedPane.removeTabAt(1);
+			}
+		} catch (Exception e3) {
+			//May run into issues when creating a project folder and there are is no config file,
+			//just ignore that, the frame will refresh again to reload.
 		}
 
 		if (reader == null) {
