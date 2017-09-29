@@ -39,7 +39,7 @@ public class CheckListener extends Thread implements ItemListener {
 
 	@Override
 	public void itemStateChanged(ItemEvent e) {
-		element = reader.tempDoc.body().select("*").get(elementIndex);
+		element = HTMLDocReader.tempDoc.body().select("*").get(elementIndex);
 		String attribute = checkBox.getText();
 		if (checkBox.isSelected()) {
 //			System.out.println("SETTING TO HIDDEN");
@@ -65,7 +65,7 @@ public class CheckListener extends Thread implements ItemListener {
 				File file = new File(Main.tempPageURL);
 				try {
 					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-					bw.write(reader.tempDoc.toString());
+					bw.write(HTMLDocReader.tempDoc.toString());
 					bw.close();
 
 					reader.readDoc(Main.tempPageURL);

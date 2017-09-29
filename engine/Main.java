@@ -2,7 +2,6 @@ package engine;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
@@ -25,7 +24,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -49,7 +47,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -61,12 +58,9 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.apache.commons.io.FileUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -81,10 +75,10 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import listeners.ElementHighlightingListener;
 import listeners.ElementTreeMouseListener;
-import listeners.ListListener;
 import listeners.OpenFileListener;
 import listeners.OpenFolderListener;
 
+@SuppressWarnings("restriction")
 public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public final static JFrame frame = new JFrame("HTMLEdit");
@@ -130,8 +124,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public static void main(String[] args) {
 		loadWorkDirectories();
-//		System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
-//		System.out.println("READING PAGE URL: " + pageURL);
+		// System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
+		// System.out.println("READING PAGE URL: " + pageURL);
 	}
 
 	public static void loadWorkDirectories() {
@@ -335,7 +329,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				updateFrame();
 			}
 		});
-		
+
 		browseButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -459,7 +453,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		textArea.setEditable(false);
 		JScrollPane tScrollPane = new JScrollPane(textArea);
 		try {
-			Elements links = reader.tempDoc.head().select("[href=\"webViewCSS/webViewHighlighter.css\"]");
+			Elements links = HTMLDocReader.tempDoc.head().select("[href=\"webViewCSS/webViewHighlighter.css\"]");
 			if (!links.isEmpty()) {
 				for (Element el : links) {
 					el.remove();
@@ -467,8 +461,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			} else {
 
 			}
-			textArea.setText(reader.tempDoc.toString());
-			reader.tempDoc.select("head")
+			textArea.setText(HTMLDocReader.tempDoc.toString());
+			HTMLDocReader.tempDoc.select("head")
 					.append("<link rel=\"stylesheet\" href=\"webViewCSS/webViewHighlighter.css\">");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -587,7 +581,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		tree.setShowsRootHandles(true);
 		tree.addTreeSelectionListener(this);
 		JScrollPane scrollPane = new JScrollPane(tree);
-		scrollPane.setPreferredSize(new Dimension(600,0));
+		scrollPane.setPreferredSize(new Dimension(600, 0));
 		// ELEMENTS TREE
 		top = new DefaultMutableTreeNode("Document");
 		try {
@@ -596,14 +590,13 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			// TODO Auto-generated catch block
 		}
 		elementTree = new JTree(top);
-//		elementTree.addTreeSelectionListener(new ListListener(reader));
+		// elementTree.addTreeSelectionListener(new ListListener(reader));
 		elementTree.addTreeSelectionListener(new ElementHighlightingListener(reader));
 		elementTree.addMouseListener(new ElementTreeMouseListener(reader));
 		elementTree.setDragEnabled(true);
 		elementTree.setDropMode(DropMode.ON_OR_INSERT);
 		elementTree.setTransferHandler(new TreeTransferHandler(reader));
-		elementTree.getSelectionModel().setSelectionMode(
-                TreeSelectionModel.CONTIGUOUS_TREE_SELECTION);
+		elementTree.getSelectionModel().setSelectionMode(TreeSelectionModel.CONTIGUOUS_TREE_SELECTION);
 
 		// RIGHT
 		elementList = new JScrollPane(elementTree);
@@ -611,7 +604,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		elementAttributes.getVerticalScrollBar().setUnitIncrement(20);
 
 		JScrollPane elementTreePane = new JScrollPane(elementList);
-		elementTreePane.setPreferredSize(new Dimension(400,0));
+		elementTreePane.setPreferredSize(new Dimension(400, 0));
 		JPanel mainPane = new JPanel(new BorderLayout());
 		scrollPane.setPreferredSize(new Dimension(200, 0));
 
@@ -619,8 +612,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		mainPane.add(scrollPane, BorderLayout.LINE_START);
 		mainPane.add(tabbedPane, BorderLayout.CENTER);
 		mainPane.add(elementTreePane, BorderLayout.LINE_END);
-		
-		Color topColor = new Color(50,50, 50);
+
+		Color topColor = new Color(50, 50, 50);
 		Color sideColor = new Color(50, 55, 65);
 		buttonPanelLeft.setBackground(topColor);
 		buttonPanelMiddle.setBackground(topColor);
@@ -632,7 +625,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		elementTree.setBackground(sideColor);
 		tree.setCellRenderer(new TreeCellRenderer());
 		elementTree.setCellRenderer(new TreeCellRenderer());
-		frame.getContentPane().setBackground( topColor );
+		frame.getContentPane().setBackground(topColor);
 
 		textArea.setCaretPosition(0);
 
@@ -641,7 +634,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		frame.pack();
 		// frame.setLocationByPlatform(true);
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		
 
 		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
 			@Override
@@ -676,7 +668,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			public void componentResized(ComponentEvent arg0) {
 				// TODO Auto-generated method stub
 				try {
-					webView.setPrefSize(tabbedPane.getSize().width-10, tabbedPane.getSize().height-20);
+					webView.setPrefSize(tabbedPane.getSize().width - 10, tabbedPane.getSize().height - 20);
 				} catch (NullPointerException e) {
 
 				}
@@ -776,7 +768,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		Main.webView = new WebView();
 		webView.isResizable();
 		group.getChildren().add(webView);
-		webView.setPrefSize(tabbedPane.getSize().width-10, tabbedPane.getSize().height-20);
+		webView.setPrefSize(tabbedPane.getSize().width - 10, tabbedPane.getSize().height - 20);
 
 		// Obtain the webEngine to navigate
 		Main.webEngine = webView.getEngine();
@@ -809,35 +801,32 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	// This is used to later direct commands to the correct html element via
 	// BodyElementInfo.
 	private static void createNodes(DefaultMutableTreeNode top) {
-		Thread t = new Thread() {
-			public void run() {
+
 				parent = new DefaultMutableTreeNode("Head");
 				top.add(parent);
-		
-				for (int i = 1; i < reader.tempDoc.head().select("*").size(); i++) {
+
+				for (int i = 1; i < HTMLDocReader.tempDoc.head().select("*").size(); i++) {
 					child = new DefaultMutableTreeNode(
-							new HeadElementInfo(reader.tempDoc.head().select("*").get(i).nodeName(), i));
+							new HeadElementInfo(HTMLDocReader.tempDoc.head().select("*").get(i).nodeName(), i));
 					parent.add(child);
 				}
-		
+
 				parent = new DefaultMutableTreeNode("Body");
-				for (int i = 1; i < reader.tempDoc.body().select("*").size(); i++) {
-		
-					if (reader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
-						Element element = reader.tempDoc.body().select("*").get(i);
+				for (int i = 1; i < HTMLDocReader.tempDoc.body().select("*").size(); i++) {
+
+					if (HTMLDocReader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
+						Element element = HTMLDocReader.tempDoc.body().select("*").get(i);
 						i += createDivTree(parent, child, i, element);
 					} else {
 						child = new DefaultMutableTreeNode(
-								new BodyElementInfo(reader.tempDoc.body().select("*").get(i).nodeName() + " "
-										+ reader.tempDoc.body().select("*").get(i).id(), i, reader));
+								new BodyElementInfo(HTMLDocReader.tempDoc.body().select("*").get(i).nodeName() + " "
+										+ HTMLDocReader.tempDoc.body().select("*").get(i).id(), i, reader));
 						parent.add(child);
 					}
-		
+
 				}
 				top.add(parent);
-
-			}
-		}; t.start();
+			
 
 	}
 
@@ -845,8 +834,9 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	private static void createTabs() {
 		Thread t = new Thread() {
 			public void run() {
-				Elements links = reader.tempDoc.head().select("link");
-//				System.out.println(links);
+
+				Elements links = HTMLDocReader.tempDoc.head().select("link");
+				// System.out.println(links);
 				for (int i = 0; i < links.size(); i++) {
 					JTextArea jT;
 					try {
@@ -866,7 +856,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 						e1.printStackTrace();
 					}
 				}
-				Elements scripts = reader.tempDoc.select("script");
+				Elements scripts = HTMLDocReader.tempDoc.select("script");
 				for (int j = 0; j < scripts.size(); j++) {
 					JTextArea jT;
 					try {
@@ -880,12 +870,12 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					}
 				}
 			}
-		}; t.start();
+		};
+		t.start();
 
 	}
 
 	private void createButtons() {
-
 		Thread t = new Thread() {
 			public void run() {
 				// Load and set button images
@@ -899,7 +889,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				// MIDDLE
 				JButton newFileButton = new JButton("");
 				JButton newFolderButton = new JButton();
-				
+
 				// RIGHT
 				JButton newElementButton = new JButton("New HTML Element");
 
@@ -921,7 +911,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					// MIDDLE
 					Image newFolderIcon = ImageIO.read(getClass().getResource("/res/newFolderIcon.jpg"));
 					Image newFileIcon = ImageIO.read(getClass().getResource("/res/newFileIcon.jpg"));
-					
+
 					// RIGHT
 					Image newElementIcon = ImageIO.read(getClass().getResource("/res/newElementIcon.png"));
 
@@ -934,7 +924,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					newProjectButton.setContentAreaFilled(false);
 					newProjectButton.setBorderPainted(false);
 					newProjectButton.setToolTipText("Create a new Project (Ctrl+shift+N");
-					
+
 					smolIcon = saveButtonIcon.getScaledInstance(smolIconWidth, smolIconHeight,
 							java.awt.Image.SCALE_SMOOTH);
 					saveButton.setIcon(new ImageIcon(smolIcon));
@@ -962,7 +952,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					newFileButton.setContentAreaFilled(false);
 					newFileButton.setBorderPainted(false);
 					newFileButton.setToolTipText("New Folder (Ctrl+N)");
-					
+
 					// RIGHT
 					smolIcon = newElementIcon.getScaledInstance(smolIconWidth, smolIconHeight,
 							java.awt.Image.SCALE_SMOOTH);
@@ -980,13 +970,13 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 				newProjectButton.revalidate();
 				saveButton.revalidate();
-				
+
 				// MIDDLE
 				buttonPanelMiddle.add(newFolderButton);
 				buttonPanelMiddle.add(newFileButton);
 				newFolderButton.revalidate();
 				newFileButton.revalidate();
-				
+
 				// RIGHT
 				buttonPanelRight.add(newElementButton);
 				buttonPanelRight.revalidate();
@@ -1004,7 +994,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 						tempFileSaver.save();
 					}
 				});
-
 
 				// MIDDLE LISTENERS
 				newFolderButton.addActionListener(new ActionListener() {
@@ -1028,10 +1017,10 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 						new NewElementDialog(reader);
 					}
 				});
-
 			}
 		};
 		t.start();
+
 	}
 
 	// if the doc cotains a dic, this will start mapping it our and creating nodes
@@ -1048,15 +1037,16 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		parent.add(child);
 		for (int j = 1; j < divElements.size(); j++) {
 			if (divElements.get(j).nodeName().equals("div")) {
-				nextChild = new DefaultMutableTreeNode(
-						new BodyElementInfo(divElements.get(j).nodeName() + " " + divElements.get(j).id(), index, reader));
+				nextChild = new DefaultMutableTreeNode(new BodyElementInfo(
+						divElements.get(j).nodeName() + " " + divElements.get(j).id(), index, reader));
 				secondSkipAmount += getDivContent(child, nextChild, index, divElements.get(j));
 				skipAmount += secondSkipAmount;
 				j += secondSkipAmount;
 				index += secondSkipAmount;
 				child.add(nextChild);
 			} else {
-				child.add(new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), index, reader)));
+				child.add(
+						new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(j).nodeName(), index, reader)));
 				index++;
 			}
 			skipAmount += 1;
@@ -1072,14 +1062,15 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		index++;
 		for (int i = 1; i < divElements.size(); i++) {
 			if (divElements.get(i).nodeName().equals("div")) {
-				DefaultMutableTreeNode whatAmIDoingWithMyLife = new DefaultMutableTreeNode(
-						new BodyElementInfo(divElements.get(i).nodeName() + " " + divElements.get(i).id(), index, reader));
+				DefaultMutableTreeNode whatAmIDoingWithMyLife = new DefaultMutableTreeNode(new BodyElementInfo(
+						divElements.get(i).nodeName() + " " + divElements.get(i).id(), index, reader));
 				secondSkipAmount += getDivContent(nextChild, whatAmIDoingWithMyLife, index, divElements.get(i));
 				i += secondSkipAmount;
 				index += secondSkipAmount;
 				nextChild.add(whatAmIDoingWithMyLife);
 			} else {
-				nextChild.add(new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(i).nodeName(), index, reader)));
+				nextChild.add(
+						new DefaultMutableTreeNode(new BodyElementInfo(divElements.get(i).nodeName(), index, reader)));
 				index++;
 			}
 			skipAmount += 1;
@@ -1119,8 +1110,9 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				tabbedPane.removeTabAt(1);
 			}
 		} catch (Exception e3) {
-			//May run into issues when creating a project folder and there are is no config file,
-			//just ignore that, the frame will refresh again to reload.
+			// May run into issues when creating a project folder and there are is no config
+			// file,
+			// just ignore that, the frame will refresh again to reload.
 		}
 
 		if (reader == null) {
@@ -1132,7 +1124,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				try {
 					reader.readDoc(filePath);
 				} catch (IOException e) {
-					
+
 				}
 			}
 		}
@@ -1141,7 +1133,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 		try {
 			JScrollPane tScrollPane = new JScrollPane(textArea);
-			textArea.setText(reader.tempDoc.toString());
+			textArea.setText(HTMLDocReader.tempDoc.toString());
 			textArea.setCaretPosition(0);
 			JComponent panel2 = tScrollPane;
 			tabbedPane.addTab("HTML", null, panel2, "View HTML Document");
@@ -1157,7 +1149,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		}
 
 		if (fileType.equals(".html")) {
-			textArea.setText(reader.tempDoc.toString());
+			textArea.setText(HTMLDocReader.tempDoc.toString());
 			tempPageURL = filePath;
 		}
 		if (fileType.equals(".css")) {
@@ -1189,22 +1181,23 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		root.setUserObject("Root");
 		createNodes(top);
 		model.reload();
-        for(int i=1; i<elementTree.getRowCount(); i++) {
-        	elementTree.expandRow(i);
-        }
 
-//		DefaultMutableTreeNode currentNode = root.getNextNode();
-//
-//		do {
-//			if (currentNode.getLevel() == 1) {
-//				elementTree.expandPath(new TreePath(currentNode.getParent()));
-//			}
-//			currentNode = currentNode.getNextNode();
-//		} while (currentNode != null);
+		for (int i = 1; i < elementTree.getRowCount(); i++) {
+			elementTree.expandRow(i);
+		}
+
+		// DefaultMutableTreeNode currentNode = root.getNextNode();
+		//
+		// do {
+		// if (currentNode.getLevel() == 1) {
+		// elementTree.expandPath(new TreePath(currentNode.getParent()));
+		// }
+		// currentNode = currentNode.getNextNode();
+		// } while (currentNode != null);
 	}
-	
+
 	public static void rescanElementTree(DefaultTreeModel model) {
-//		DefaultTreeModel model = (DefaultTreeModel) elementTree.getModel();
+		// DefaultTreeModel model = (DefaultTreeModel) elementTree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
 		root.removeAllChildren();
 		root.setUserObject("Root");

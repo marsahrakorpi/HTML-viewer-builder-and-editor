@@ -15,7 +15,7 @@ public class BodyElementInfo {
 		this.elementName = elementName;
 		this.index = index;
 		this.reader=reader;
-		this.element = reader.tempDoc.body().select("*").get(index);
+		this.element = HTMLDocReader.tempDoc.body().select("*").get(index);
 //		System.out.println("creating element "+elementName+"with index of "+index);
 	}
 	

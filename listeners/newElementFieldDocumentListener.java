@@ -12,12 +12,9 @@ import dialogs.EditNewElementDialog;
 public class newElementFieldDocumentListener implements DocumentListener {
 
 	int index;
-	Element element;
-
 	public newElementFieldDocumentListener(int i) {
 		// TODO Auto-generated constructor stub
 		this.index = i;
-		this.element = EditNewElementDialog.getJsoupElement();
 	}
 
 	@Override
@@ -41,7 +38,8 @@ public class newElementFieldDocumentListener implements DocumentListener {
 	}
 
 	public void updateElement() {
-		element = EditNewElementDialog.getJsoupElement();
+		Element element = EditNewElementDialog.el;
+		System.out.println(element);
 		String attributeKey = EditNewElementDialog.label.get(index).getText();
 		if(EditNewElementDialog.field.get(index).getText().equals("") || EditNewElementDialog.field.get(index).getText()==null) {
 			element.removeAttr(attributeKey);

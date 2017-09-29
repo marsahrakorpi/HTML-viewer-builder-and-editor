@@ -175,7 +175,7 @@ class TreeTransferHandler extends TransferHandler {
 				}
 				return;
 			}
-			Elements elements = reader.tempDoc.body().select("*");
+			Elements elements = HTMLDocReader.tempDoc.body().select("*");
 			Element el = elements.get(movingFromIndex);
 
 			Element copyElement = el.clone();
@@ -194,8 +194,8 @@ class TreeTransferHandler extends TransferHandler {
 				Document newBodyDocument = Jsoup.parse(newBody);
 				Element newBodyElement = newBodyDocument.body();
 
-				reader.tempDoc.body().remove();
-				reader.tempDoc.head().after(newBodyElement);
+				HTMLDocReader.tempDoc.body().remove();
+				HTMLDocReader.tempDoc.head().after(newBodyElement);
 
 				reader.updateTempDoc();
 				Main.updateFrame();

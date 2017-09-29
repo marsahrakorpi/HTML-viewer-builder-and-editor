@@ -51,14 +51,14 @@ public class ElementTreeMouseListener extends Thread implements MouseListener {
 	}
 
 	private void editBodyElement(BodyElementInfo bElement) {
-		Element element = reader.tempDoc.body().select("*").get(bElement.index);
+		Element element = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
 		new EditElementDialog(element, reader);
 	}
 
 	private void removeBodyElement(BodyElementInfo bElement) {
-		Element element = reader.tempDoc.body().select("*").get(bElement.index);
+		Element element = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
 		System.out.println(element);
-		reader.tempDoc.body().select("*").get(bElement.index).remove();
+		HTMLDocReader.tempDoc.body().select("*").get(bElement.index).remove();
 		reader.updateTempDoc();
 		Main.updateFrame();
 

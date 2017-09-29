@@ -57,7 +57,7 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 
 				// System.out.println(HTMLDocReader.bodyElements.get(bElement.index));
 				try {
-					highlightElement(reader.tempDoc.body().select("*").get(bElement.index));
+					highlightElement(HTMLDocReader.tempDoc.body().select("*").get(bElement.index));
 				} catch (IndexOutOfBoundsException e1) {
 					/*
 					 * 
@@ -74,13 +74,13 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 	private void highlightElement(Element element) {
 		removeAllHighlights();
 		element.addClass("java-highlighted-element");
-		Main.textArea.setText(reader.tempDoc.toString());
+		Main.textArea.setText(HTMLDocReader.tempDoc.toString());
 		reader.updateTempDoc();
 
 	}
 
 	private void removeAllHighlights() {
-		Elements elements = reader.tempDoc.body().select("*");
+		Elements elements = HTMLDocReader.tempDoc.body().select("*");
 		for (Element e : elements) {
 			// removes the highlight css class
 			e.removeClass("java-highlighted-element");
@@ -91,7 +91,7 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 				e.removeAttr("class");
 			}
 		}
-		Main.textArea.setText(reader.tempDoc.toString());
+		Main.textArea.setText(HTMLDocReader.tempDoc.toString());
 //		 Thread t = new Thread() {
 //		 public void run() {
 //		

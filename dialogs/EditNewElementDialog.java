@@ -20,13 +20,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.NumberFormat;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -35,7 +33,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -46,19 +43,27 @@ import javax.swing.JTextField;
 import javax.swing.RootPaneContainer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.NumberFormatter;
 
+import org.apache.commons.io.FileUtils;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.w3c.css.sac.InputSource;
 
-import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.steadystate.css.dom.CSSRuleListImpl;
+import com.steadystate.css.dom.CSSStyleDeclarationImpl;
+import com.steadystate.css.dom.CSSStyleRuleImpl;
+import com.steadystate.css.dom.CSSStyleSheetImpl;
+import com.steadystate.css.dom.CSSValueImpl;
+import com.steadystate.css.dom.Property;
+import com.steadystate.css.parser.CSSOMParser;
+import com.steadystate.css.parser.SACParserCSS3;
 
 import engine.FileSaver;
 import engine.HTMLDocReader;
@@ -75,7 +80,7 @@ public class EditNewElementDialog {
 
 	static String html;
 	public static String fullHTML = "";
-	private static Element el, element;
+	public static Element el, element;
 	private JTabbedPane tabbedPane;
 	private static JTextArea textArea;
 	private final JFXPanel fxPanel = new JFXPanel();
@@ -99,7 +104,7 @@ public class EditNewElementDialog {
 			"Multi-column Layout Properties", "Paged Media", "Generated Content for Paged Media",
 			"Filter Effects Properties", "Image Values and Replaced Content", "Masking Properties",
 			"Speech Properties" };
-	
+
 	String[] colorProperties = { "color", "opacity" };
 	String[] backgroundAndBorderProperties = { "background", "background-attachment", "background-blend-mode",
 			"background-color", "background-image", "background-position", "background-repeat", "background-clip",
@@ -156,14 +161,14 @@ public class EditNewElementDialog {
 
 	private ArrayList<JLabel> attributeNameList = new ArrayList<JLabel>();
 	private ArrayList<JTextField> attributeValueList = new ArrayList<JTextField>();
-
+	CSSStyleSheetImpl stylesheet;
 	MongoClient mongoClient;
 	HTMLDocReader reader;
 
 	public EditNewElementDialog(String html, MongoClient mongoClient, MongoDatabase db,
 			MongoCollection<Document> elementsCollection, HTMLDocReader reader) {
 
-		this.html = html;
+		EditNewElementDialog.html = html;
 		this.reader = reader;
 
 		final JPanel mainPanel = new JPanel();
@@ -174,17 +179,18 @@ public class EditNewElementDialog {
 		root.getGlassPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		root.getGlassPane().setVisible(true);
 
-//		try {
-//
-//			org.jsoup.nodes.Document w3Doc = Jsoup.connect("https://www.w3schools.com/cssref/default.asp").get();
-//			Elements tdElements = w3Doc.select("table.w3-table-all td:eq(0)");
-//			for (Element e : tdElements) {
-//				System.out.println("\"" + e.text() + "\",");
-//			}
-//		} catch (IOException e2) {
-//			// TODO Auto-generated catch block
-//			e2.printStackTrace();
-//		}
+		// try {
+		//
+		// org.jsoup.nodes.Document w3Doc =
+		// Jsoup.connect("https://www.w3schools.com/cssref/default.asp").get();
+		// Elements tdElements = w3Doc.select("table.w3-table-all td:eq(0)");
+		// for (Element e : tdElements) {
+		// System.out.println("\"" + e.text() + "\",");
+		// }
+		// } catch (IOException e2) {
+		// // TODO Auto-generated catch block
+		// e2.printStackTrace();
+		// }
 
 		Dimension d = new Dimension(150, 20);
 		// mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
@@ -499,24 +505,44 @@ public class EditNewElementDialog {
 			tabPanels[1].add(new JLabel("Element does not have attributes that are specific to it."));
 		}
 
-		//Tab 3
+		// Tab 3
 		JLabel cssLabel = new JLabel("Style Properties");
 		cssLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		cssLabel.setFont(new Font("Arial", Font.BOLD, 15));
 		tabPanels[2].add(cssLabel);
 		
+		//http://www.csscompiler.com/wp-content/uploads/2013/04/css_wizard.jpg
+		Elements links = HTMLDocReader.tempDoc.head().select("link[href]");
+		for (int i=0; i<links.size(); i++) {
+			Element e = links.get(i);
+			if(e.attr("href").equals("webViewCSS/webViewHighlighter.css")) {
+				continue;
+			}
+			String linkHref = Main.tempDir+"/"+e.attr("href");
+			System.out.println(linkHref);
+			try {
+				InputSource inputSource = new InputSource(
+						new StringReader(FileUtils.readFileToString(new File(linkHref), "UTF-8")));
+				CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+				stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
+				System.out.println(getRule("h1"));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
 
-//		try {
-//			tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
-//			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
-//			bw.write(fullHTML);
-//			bw.close();
-//			tempFile.deleteOnExit();
-//			tempElementURL = tempFile.getAbsolutePath();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		try {
+			tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
+			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
+			bw.write(fullHTML);
+			bw.close();
+			tempFile.deleteOnExit();
+			tempElementURL = tempFile.getAbsolutePath();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		textArea = new JTextArea(fullHTML);
 		textArea.setFont(new Font("Arial", Font.BOLD, 15));
@@ -546,9 +572,12 @@ public class EditNewElementDialog {
 			public void actionPerformed(ActionEvent arg0) {
 				System.out.println("Confirm Button pressed");
 				try {
-					reader.tempDoc.body().append(textArea.getText());
+					HTMLDocReader.tempDoc.body().append(textArea.getText());
 					reader.updateTempDoc();
 					Main.updateFrame();
+					for (int i = 1; i < Main.elementTree.getRowCount(); i++) {
+						Main.elementTree.expandRow(i);
+					}
 					mongoClient.close();
 					FileSaver.unsavedChanges = true;
 					dialog.dispose();
@@ -606,12 +635,57 @@ public class EditNewElementDialog {
 		textArea.setLineWrap(true);
 		updateDoc();
 		dialog.setVisible(true);
-		
+
 	}
 
-	private static String getFullHTML() {
-		return fullHTML;
+	// private static String getFullHTML() {
+	// return fullHTML;
+	// }
+	/*
+	 * First get a rule by the selector. Note that class selectors need to be
+	 * preceeded with the asterisk [*]. So if the rule selector is .myCssClass the
+	 * selector argument needs to be *.myCssClass
+	 * 
+	 * 
+	 */
+	public CSSStyleRuleImpl getRule(String selector) {
+		/* I have set stylesheet to the class so that it is only parsed once */
+		CSSStyleSheetImpl ss = stylesheet;
+		CSSRuleListImpl rules = (CSSRuleListImpl) ss.getCssRules();
+		CSSStyleRuleImpl rule;
+		/* need to loop over all the rules and select the one that matches. */
+		for (int i = 0; i < rules.getLength(); i++) {
+			rule = (CSSStyleRuleImpl) rules.item(i);
+			if (rule.getSelectorText().equals(selector)) {
+				return rule;
+			}
+		}
+		return null;
 	}
+//	a method to read a property of a specific rule:
+	public Property getProperty(String selector, String property){
+        Property retProp = null;
+        CSSStyleRuleImpl rule = getRule(selector);
+        if(rule != null){
+            CSSStyleDeclarationImpl style = (CSSStyleDeclarationImpl) rule.getStyle();
+            List<Property> props = style.getProperties();
+            for(Property prop : props){
+                if(prop.getName().equals(property)){
+                    return prop;
+                }
+            }
+        }
+        return retProp;
+    }
+	
+	public void writeCssProperty(String selector, String property, String newValue){
+        Property prop = getProperty(selector, property);
+        if(prop != null){
+            CSSValueImpl val = new CSSValueImpl();
+            val.setCssText(newValue);
+            prop.setValue(val);
+        }
+    }
 
 	private static void initFX(final JFXPanel fxPanel, String url) {
 		Group group = new Group();
@@ -652,25 +726,26 @@ public class EditNewElementDialog {
 
 	public static void updateDoc() {
 
-		Elements styles =  HTMLDocReader.tempDoc.select("link[href]");
+		Elements styles = HTMLDocReader.tempDoc.select("link[href]");
 		org.jsoup.nodes.Document doc = Jsoup.parse(fullHTML);
-		for(Element e: styles) {
+		for (Element e : styles) {
 			doc.head().append(e.toString());
 		}
 		try {
 			tempFile.delete();
 			tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
 			tempFile.deleteOnExit();
-		}  catch (Exception e) {
-			
+		} catch (Exception e) {
+
 		}
 		try {
+			System.out.println(tempFile);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
 			bw.write(doc.toString());
 			bw.close();
 			textArea.setText(doc.select(html.substring(1, html.length() - 1)).toString());
 		} catch (IOException e) {
-
+			return;
 		}
 		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
 			@Override
@@ -682,10 +757,10 @@ public class EditNewElementDialog {
 
 	private Element createJsoupElement() {
 		element = Jsoup.parseBodyFragment(fullHTML);
-		System.out.println(element);
 		String elementNoTags = html.substring(1, html.length() - 1);
 		Elements elementSelector = element.select(elementNoTags);
 		Element el = elementSelector.first();
+		System.out.println(el);
 		updateDoc();
 		return el;
 	}

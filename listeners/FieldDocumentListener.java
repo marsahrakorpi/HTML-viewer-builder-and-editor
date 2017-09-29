@@ -49,7 +49,7 @@ public class FieldDocumentListener implements DocumentListener {
 		FileSaver.unsavedChanges = true;
 		String attrib = ListListener.label.get(fieldIndex).getText();
 
-		element = reader.tempDoc.body().select("*").get(elementIndex);
+		element = HTMLDocReader.tempDoc.body().select("*").get(elementIndex);
 		String attributeToRemove = ListListener.label.get(fieldIndex).getText();
 		if (ListListener.field.get(fieldIndex).getText().equals("")
 				|| ListListener.field.get(fieldIndex).getText() == null) {
@@ -68,7 +68,7 @@ public class FieldDocumentListener implements DocumentListener {
 		} else {
 			element.attr(attrib, ListListener.field.get(fieldIndex).getText());
 		}
-		Main.textArea.setText(reader.tempDoc.toString());
+		Main.textArea.setText(HTMLDocReader.tempDoc.toString());
 		Platform.runLater(new Runnable() {
 			public void run() {
 				Main.updateFX(Main.tempPageURL);

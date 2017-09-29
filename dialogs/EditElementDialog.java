@@ -62,13 +62,13 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import listeners.newElementFieldDocumentListener;
+import listeners.existingElementFieldDocumentListener;
 
 public class EditElementDialog {
 
 	static Element element;
 	HTMLDocReader reader;
-	static String fullHTML;
+	public static String fullHTML;
 	
 	private JTabbedPane tabbedPane;
 	private static JTextArea textArea;
@@ -89,7 +89,7 @@ public class EditElementDialog {
 			"dropzone", "lang", "spellcheck", "tabindex", "title", "translate" };
 
 	public EditElementDialog(Element element, HTMLDocReader reader) {
-		this.element = element;
+		EditElementDialog.element = element;
 		//remove highlighter css class from element
 		element.removeClass("java-highlighted-element");
 		element.removeClass(".java-highlighted-element");

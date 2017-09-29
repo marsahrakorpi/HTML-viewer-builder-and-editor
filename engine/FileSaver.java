@@ -32,8 +32,8 @@ public class FileSaver extends Thread {
 				// attribute
 				// checks for empty class attributes and removes them, will leave it if a class
 				// has been assigned
-				for (int i = 0; i < reader.tempDoc.body().select("*").size(); i++) {
-					Element element = reader.tempDoc.body().select("*").get(i);
+				for (int i = 0; i < HTMLDocReader.tempDoc.body().select("*").size(); i++) {
+					Element element = HTMLDocReader.tempDoc.body().select("*").get(i);
 					element.removeClass("java-highlighted-element");
 					element.removeClass(".java-highlighted-element");
 					if (element.className().equals("")) {
@@ -43,18 +43,18 @@ public class FileSaver extends Thread {
 
 				// removes webView CSS from document
 
-				Elements links = reader.tempDoc.head().select("[href=\"webViewCSS/webViewHighlighter.css\"]");
+				Elements links = HTMLDocReader.tempDoc.head().select("[href=\"webViewCSS/webViewHighlighter.css\"]");
 
 				for (Element e : links) {
 					e.remove();
 				}
 
-				System.out.println(reader.tempDoc);
+				System.out.println(HTMLDocReader.tempDoc);
 				// Write tempDoc to the tempPage, which will then be copied over to original
 				// root folder
 				try {
 					BufferedWriter bw = new BufferedWriter(new FileWriter(Main.tempPageURL));
-					bw.write(reader.tempDoc.toString());
+					bw.write(HTMLDocReader.tempDoc.toString());
 					bw.close();
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block

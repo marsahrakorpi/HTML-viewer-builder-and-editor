@@ -136,7 +136,7 @@ public class ListListener implements TreeSelectionListener {
 						// find the correct html element in the HTMLReader by refering to the
 						// bodyElementInfo index
 						Element element;
-						element = reader.tempDoc.body().select("*").get(bElement.index);
+						element = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
 
 						if (element.hasAttr(globalHTMLAttributes[i])) {
 							field.add(new JTextField(element.attr(globalHTMLAttributes[i])));
@@ -162,9 +162,9 @@ public class ListListener implements TreeSelectionListener {
 					hiddenCheck.addItemListener(new CheckListener(bElement.index, reader, hiddenCheck));
 					p.add(hiddenCheck);
 
-					int offset = reader.tempDoc.toString()
-							.indexOf(reader.tempDoc.body().select("*").get(bElement.index).outerHtml());
-					int length = reader.tempDoc.body().select("*").get(bElement.index).toString().length();
+					int offset = HTMLDocReader.tempDoc.toString()
+							.indexOf(HTMLDocReader.tempDoc.body().select("*").get(bElement.index).outerHtml());
+					int length = HTMLDocReader.tempDoc.body().select("*").get(bElement.index).toString().length();
 
 					/*
 					 *
@@ -175,8 +175,8 @@ public class ListListener implements TreeSelectionListener {
 					while (offset != -1) {
 						try {
 							Main.textArea.getHighlighter().addHighlight(offset, offset + length, painter);
-							offset = reader.tempDoc.toString()
-									.indexOf(reader.tempDoc.body().select("*").get(bElement.index).toString(), offset + 1);
+							offset = HTMLDocReader.tempDoc.toString()
+									.indexOf(HTMLDocReader.tempDoc.body().select("*").get(bElement.index).toString(), offset + 1);
 						} catch (BadLocationException ble) {
 							// TODO Auto-generated catch block
 							ble.printStackTrace();

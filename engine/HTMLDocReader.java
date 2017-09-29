@@ -38,7 +38,7 @@ public class HTMLDocReader extends Thread {
 
 		super();
 		this.url = url;
-
+		
 		try {
 			readDoc(this.url);
 			copyToTempFile();
