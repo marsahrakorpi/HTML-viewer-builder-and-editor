@@ -9,7 +9,6 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.LinearGradientPaint;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,15 +16,13 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,11 +31,11 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -55,22 +52,13 @@ import javax.swing.plaf.FontUIResource;
 
 import org.apache.commons.io.FileUtils;
 import org.bson.Document;
-import org.jdesktop.swingx.JXTaskPane;
-import org.jdesktop.swingx.JXTaskPaneContainer;
-import org.jdesktop.swingx.painter.MattePainter;
-import org.jdesktop.swingx.painter.Painter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.w3c.css.sac.InputSource;
-import org.w3c.css.sac.SelectorList;
-import org.w3c.dom.css.CSSRuleList;
-import org.w3c.dom.css.CSSStyleDeclaration;
-import org.w3c.dom.css.CSSStyleSheet;
 
-import com.helger.css.decl.CSSStyleRule;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -84,7 +72,6 @@ import com.steadystate.css.format.CSSFormat;
 import com.steadystate.css.parser.CSSOMParser;
 import com.steadystate.css.parser.SACParserCSS3;
 
-import engine.FileHandler;
 import engine.FileSaver;
 import engine.HTMLDocReader;
 import engine.Main;
@@ -98,50 +85,52 @@ import listeners.newElementFieldDocumentListener;
 
 public class EditNewElementDialog {
 
-	static String html;
-	private static String elementNoTags = "";
-	public static String fullHTML = "";
-	public static Element el, element;
-	private static JTabbedPane tabbedPane;
-	private static JTextArea textArea;
-	private final JFXPanel fxPanel = new JFXPanel();
-	private static WebView webView;
-	private static WebEngine webEngine;
-	private String tempElementURL;
-	private static File tempFile;
-	private static JSplitPane previewPane;
-	public static ArrayList<JLabel> label;
-	public static ArrayList<JTextField> field;
-	private String[] tabTitles = { "Global HTML Attributes", "Element Specific Attributes", "Style properties",
-			"Events" };
-	private JPanel[] tabPanels = new JPanel[tabTitles.length];
+	// Variables
+	private static String html; // short form HTML
+	public static String fullHTML; // full HTML
+	private static String elementNoTags;
 
+	// ATTRIBUTES
 	private String[] globalHTMLAttributes = { "id", "accesskey", "contenteditable", "contextmenu", "dir", "draggable",
 			"dropzone", "lang", "spellcheck", "tabindex", "title", "translate" };
 
-	private String[] cssProperties = { "Color Properties", "Background and Border Properties", "Basic Box Properties",
-			"Flexible Box Layout", "Text Properties", "Text Decoration Properties", "Font Properties",
-			"Writing Modes Properties", "Table Properties", "Lists and Counters Properties", "Animation Properties",
-			"Transform Properties", "Transitions Properties", "Basic User Interface Properties",
-			"Multi-column Layout Properties", "Paged Media", "Generated Content for Paged Media",
-			"Filter Effects Properties", "Image Values and Replaced Content", "Masking Properties",
-			"Speech Properties" };
+	// ELEMENTS
+	public static Element el; // short, ie <h1>Element</h1>
+	public static Element element; // full html doc form
 
-	private ArrayList<JLabel> attributeNameList = new ArrayList<JLabel>();
-	private ArrayList<JTextField> attributeValueList = new ArrayList<JTextField>();
-	ArrayList<CSSStyleSheetImpl> stylesheets = new ArrayList<CSSStyleSheetImpl>();
-	String selectedCSSFile = "";
-	String tempCSSFilePath = "";
-	File tempCSSFile;
-	static CSSStyleSheetImpl stylesheet;
-	CSSStyleRuleImpl cssRule;
-	MongoClient mongoClient;
-	HTMLDocReader reader;
+	// TEMP FILES
+	public static File tempCSSFile;
+	public static File tempHTMLFile;
+
+	// CSS
+	ArrayList<String> cssFiles;
+	private static CSSStyleSheetImpl stylesheet;
+	private String cssSelector;
+
+	// JAVA FX
+	private final JFXPanel fxPanel = new JFXPanel();
+	public static WebView webView;
+	public static WebEngine webEngine;
+
+	// UI
+	private String[] tabTitles = { "Global Attributes", "Element Attributes", "Style properties",
+			"Events" };
+	private JPanel[] tabPanels = new JPanel[tabTitles.length];
+
+	public static ArrayList<JLabel> label;
+	public static ArrayList<JTextField> field;
+
+	private static JTextArea textArea;
+	private static JTabbedPane tabbedPane;
+	public static JSplitPane previewPane;
+
+	// Classes
+	private HTMLDocReader reader;
 
 	public EditNewElementDialog(String html, MongoClient mongoClient, MongoDatabase db,
-			MongoCollection<Document> elementsCollection, HTMLDocReader reader) throws IOException {
+			MongoCollection<Document> elementsCollection, HTMLDocReader reader) {
 
-		EditNewElementDialog.html = html;
+		this.html = html;
 		this.reader = reader;
 
 		final JPanel mainPanel = new JPanel();
@@ -152,28 +141,78 @@ public class EditNewElementDialog {
 		root.getGlassPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		root.getGlassPane().setVisible(true);
 
-		// try {
-		//
-		// org.jsoup.nodes.Document w3Doc =
-		// Jsoup.connect("https://www.w3schools.com/cssref/default.asp").get();
-		// Elements tdElements = w3Doc.select("table.w3-table-all td:eq(0)");
-		// for (Element e : tdElements) {
-		// System.out.println("\"" + e.text() + "\",");
-		// }
-		// } catch (IOException e2) {
-		// // TODO Auto-generated catch block
-		// e2.printStackTrace();
-		// }
-
 		Dimension d = new Dimension(150, 20);
-		// mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-		// mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		// mainPanel.add(Box.createHorizontalGlue());
-		// mainPanel.add(Box.createRigidArea(new Dimension(5, 5)));
 
 		Document doc = elementsCollection.find(eq("name", html)).first();
 
-		// create all tab panels
+		JSONArray attrObj;
+		JSONObject object = new JSONObject(doc.toJson());
+		fullHTML = object.get("tag").toString();
+
+		// Database may return weird tags such as <img></img>.
+		// parsing to jsoup elements and then back to string will fix the tags to be
+		// appropriate
+		el = createJsoupElement();
+		fullHTML = element.toString();
+
+		// file handling
+
+		// CSS TEMP
+
+		// get css fuiles from doc and store in array
+		cssFiles = new ArrayList<String>();
+		Elements links = HTMLDocReader.tempDoc.head().select("link[href]");
+		for (int i = 0; i < links.size(); i++) {
+			Element e = links.get(i);
+			if (e.attr("href").equals("webViewCSS/webViewHighlighter.css")) {
+				// System.out.println("Ignoring webViewHighlighter CSS");
+			} else {
+				cssFiles.add(e.attr("href"));
+			}
+		}
+
+		// copy the first css doc found into the tempCSS.
+		// This will be used as the default
+		try {
+			// System.out.println(tempFile);
+			String firstFoundCss = FileUtils.readFileToString(new File(Main.tempDir + "\\" + cssFiles.get(0)), "UTF-8");
+			tempCSSFile = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			BufferedWriter bw = new BufferedWriter(new FileWriter(tempCSSFile));
+			bw.write(firstFoundCss);
+			bw.close();
+			tempCSSFile.deleteOnExit();
+
+			// Also set the stylesheet
+			InputSource inputSource = new InputSource(
+					new StringReader(FileUtils.readFileToString(tempCSSFile, "UTF-8")));
+			CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+			stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
+		} catch (IOException e2) {
+
+		}
+
+		// HTML TEMP
+
+		// Create temporary HTML doc
+		Elements styles = HTMLDocReader.tempDoc.select("link[href]");
+		org.jsoup.nodes.Document sdoc = Jsoup.parse(fullHTML);
+		for (Element e1 : styles) {
+			sdoc.head().append(e1.toString());
+		}
+		sdoc.head().append("<link rel=\"stylesheet\" href=\"HTMLTempCSS.css\"");
+		try {
+			// System.out.println(tempFile);
+			tempHTMLFile = new File(Main.tempDir + "\\" + "HTMLEditAttributeTemp.html");
+			BufferedWriter bw = new BufferedWriter(new FileWriter(tempHTMLFile));
+			bw.write(sdoc.toString());
+			bw.close();
+			tempHTMLFile.deleteOnExit();
+		} catch (IOException e2) {
+
+		}
+
+		// Create tabs
+
 		for (int i = 0; i < tabTitles.length; i++) {
 			tabPanels[i] = new JPanel();
 			tabPanels[i].setLayout(new BoxLayout(tabPanels[i], BoxLayout.PAGE_AXIS));
@@ -181,7 +220,6 @@ public class EditNewElementDialog {
 			tabPanels[i].add(Box.createHorizontalGlue());
 			tabPanels[i].add(Box.createRigidArea(new Dimension(5, 5)));
 			tabPanels[i].revalidate();
-
 		}
 
 		// tab 1
@@ -197,10 +235,7 @@ public class EditNewElementDialog {
 			label.add(new JLabel(globalHTMLAttributes[i]));
 			field.add(new JTextField(""));
 		}
-		// p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 		for (int i = 0; i < label.size(); i++) {
-
-			// b.setLayout(new FlowLayout(FlowLayout.LEADING));
 
 			tabPanels[0].add(label.get(i));
 			tabPanels[0].add(field.get(i));
@@ -223,30 +258,24 @@ public class EditNewElementDialog {
 					el.removeAttr(hiddenCheck.getText());
 				}
 				fullHTML = element.toString();
-				// updateDoc();
+				updateDoc();
 
 				// SET HIDDEN
 			}
 		});
+
 		tabPanels[0].add(hiddenCheck);
 		tabPanels[0].setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		// Tab 2
-		JLabel esa = new JLabel("Element Specific Attributes");
-		esa.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-		esa.setFont(new Font("Arial", Font.BOLD, 15));
-		tabPanels[1].add(esa);
-
+		/*
+		 * 
+		 * TAB 2, ELEMENT SPECIFIC ATTRIBUTES. THIS WILL ALSO CREATE FULL HTML TAGS AND
+		 * ELEMENTS
+		 * 
+		 */
+		// MONGO DB JSON PARSING
 		try {
-			JSONArray attrObj;
-			JSONObject object = new JSONObject(doc.toJson());
-			fullHTML = object.get("tag").toString();
 
-			// Database may return weird tags such as <img></img>.
-			// parsing to jsoup elements and then back to string will fix the tags to be
-			// appropriate
-			el = createJsoupElement();
-			fullHTML = element.toString();
 			attrObj = object.getJSONArray("attributes");
 			JPanel valuePanel = new JPanel();
 			// valuePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -477,482 +506,150 @@ public class EditNewElementDialog {
 			// specific to it."));
 		}
 
-		// Tab 3
+		/*
+		 * 
+		 * TAB 3 CSS STYLES AND HANDLING CHANGES AKA MY LIFE IS A MESS
+		 * 
+		 */
+
 		JLabel cssLabel = new JLabel("Style Properties");
 		elementNoTags = html.substring(1, html.length() - 1);
 		cssLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		cssLabel.setFont(new Font("Arial", Font.BOLD, 15));
 		tabPanels[2].add(cssLabel);
-		ArrayList<String> cssFiles = new ArrayList<String>();
-		// https://developerlife.com/2008/01/28/swingx-tutorial-task-pane/
-		// http://www.csscompiler.com/wp-content/uploads/2013/04/css_wizard.jpg
-		Elements links = HTMLDocReader.tempDoc.head().select("link[href]");
-		for (int i = 0; i < links.size(); i++) {
-			Element e = links.get(i);
-			if (e.attr("href").equals("webViewCSS/webViewHighlighter.css")) {
-				// System.out.println("Ignoring webViewHighlighter CSS");
-			} else {
-				String linkHref = Main.tempDir + "/" + e.attr("href");
-				cssFiles.add(e.attr("href"));
-			}
 
-		}
+		JPanel filesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JLabel fileLabel = new JLabel("Apply rule in File: ");
 
-		String[] cssFilesString = cssFiles.toArray(new String[0]);
-		selectedCSSFile = cssFilesString[0];
+		JComboBox<String> cssFilesComboBox = new JComboBox<String>(cssFiles.toArray(new String[cssFiles.size()]));
 
-		tempCSSFile = new File(Main.tempDir + "\\HTMLTempCSS.css");
-		tempCSSFile.deleteOnExit();
-		tempCSSFilePath = tempCSSFile.getAbsolutePath();
-
-		try {
-			String tempCSS = FileUtils.readFileToString(new File(Main.tempDir + "\\" + selectedCSSFile), "UTF-8");
-			FileUtils.write(tempCSSFile, tempCSS, "UTF-8");
-			InputSource inputSource = new InputSource(
-					new StringReader(FileUtils.readFileToString(tempCSSFile, "UTF-8")));
-			CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
-			stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
-		} catch (IOException e1) {
-
-		}
-
-		JComboBox<String> cssFilesComboBox = new JComboBox<String>(cssFilesString);
 		cssFilesComboBox.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				selectedCSSFile = (String) cssFilesComboBox.getSelectedItem();
+			public void actionPerformed(ActionEvent f) {
 				try {
 					tempCSSFile.delete();
-					tempCSSFile = new File(Main.tempDir + "\\HTMLTempCSS.css");
+					String existingCSSFile = FileUtils.readFileToString(
+							new File(Main.tempDir + "\\" + cssFilesComboBox.getSelectedItem().toString()), "UTF-8");
+					tempCSSFile = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+					BufferedWriter bw = new BufferedWriter(new FileWriter(tempCSSFile));
+					bw.write(existingCSSFile);
+					bw.close();
 					tempCSSFile.deleteOnExit();
-					tempCSSFilePath = tempCSSFile.getAbsolutePath();
-					String tempCSS = FileUtils.readFileToString(new File(Main.tempDir + "\\" + selectedCSSFile),
-							"UTF-8");
-					FileUtils.write(tempCSSFile, tempCSS, "UTF-8");
-					InputSource inputSource = new InputSource(new StringReader(
-							FileUtils.readFileToString(new File(Main.tempDir + "\\" + selectedCSSFile), "UTF-8")));
-					CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
-					stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
-					textArea.setText(getRule(elementNoTags).toString());
 				} catch (IOException e) {
 
 				}
-
 			}
 		});
 
-		// System.out.println("Rules for :" + elementNoTags + " = " +
-		// getRule(elementNoTags));
-		if (getRule(elementNoTags) == null || getRule(elementNoTags).toString().equals("")) {
-			// System.out.println("NO CSS RULES FOR ELEMENT " + elementNoTags + " WERE
-			// FOUND");
-			String cssStr = FileUtils.readFileToString(tempCSSFile, "UTF-8");
-			cssStr += "\n" + elementNoTags + "{\n\n}";
-			FileUtils.write(tempCSSFile, cssStr, "UTF-8");
-			InputSource inputSource = new InputSource(
-					new StringReader(FileUtils.readFileToString(tempCSSFile, "UTF-8")));
-			CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
-			stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
-		}
+		filesPanel.add(fileLabel);
+		filesPanel.add(cssFilesComboBox);
 
-		tabPanels[2].add(cssFilesComboBox);
+		tabPanels[2].add(filesPanel);
+
+		JPanel referPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JLabel referLabel = new JLabel("Refer to this element by: ");
+		String[] selectors = { "tag", "id", "class" };
+		JComboBox<String> cssSelectorComboBox = new JComboBox<String>(selectors);
+		cssSelectorComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent s) {
+				switch (cssSelectorComboBox.getSelectedItem().toString()) {
+				case "tag":
+					cssSelector = elementNoTags;
+					System.out.println(cssSelector);
+					break;
+				case "id":
+					String id = el.attr("id");
+					Elements idInDoc = null;
+					try {
+						idInDoc = HTMLDocReader.tempDoc.select("#" + id);
+
+						if (idInDoc.size() > 1) {
+							JOptionPane.showMessageDialog(dialog, "One or more elements with the ID \"" + el.attr("id")
+									+ "\" have been detected.\n Please set a new ID for this element in the global HTML attributes.",
+									"Multiple Same ID", JOptionPane.ERROR_MESSAGE);
+						}
+					} catch (Exception e1) {
+						// no id set for element
+
+					}
+					System.out.println(el.attr("id"));
+
+					if (id.equals("") || id == null) {
+						cssSelector = elementNoTags;
+						JOptionPane.showMessageDialog(dialog,
+								"No ID found for this element.\n Please set an ID in the global HTML attributes.",
+								"No ID", JOptionPane.ERROR_MESSAGE);
+						cssSelectorComboBox.setSelectedIndex(0);
+					} else {
+						cssSelector = "#" + id;
+						if (getRule(cssSelector) == null) {
+							try {
+								// CREATE ID RULE IN TEMP CSS
+								String oCSS = FileUtils.readFileToString(tempCSSFile, "UTF-8");
+
+								Platform.runLater(new Runnable() {
+									@Override
+									public void run() {
+										updateFX(tempHTMLFile.getAbsolutePath());
+									}
+								});
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}
+
+					break;
+				case "class":
+					cssSelector = "." + elementNoTags;
+					System.out.println(cssSelector);
+					break;
+				default:
+
+				}
+			}
+		});
+		referPanel.add(referLabel);
+		referPanel.add(cssSelectorComboBox);
+
+		tabPanels[2].add(referPanel);
+
+		CSSStylePanels cssPanels = new CSSStylePanels(cssSelector, stylesheet, tempHTMLFile, tempCSSFile, elementNoTags,
+				d, textArea, tabbedPane, "EditNewElementDialog");
+		tabPanels[2].add(cssPanels.getContainer());
 
 		changeUIdefaults();
-
-		JXTaskPaneContainer container = new JXTaskPaneContainer();
-
-		ArrayList<JXTaskPane> taskPanes = new ArrayList<JXTaskPane>();
-
-		JXTaskPane textPropertiesTaskPane = new JXTaskPane();
-
-		JTextField colorValue = new JTextField("");
-		textPropertiesTaskPane.setTitle("Text Properties");
-		taskPanes.add(textPropertiesTaskPane);
-		JPanel textColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-		textColorPanel.add(new JLabel("Text Color"));
-		JCheckBox colorCheck = new JCheckBox("");
-		colorCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (colorCheck.isSelected() && !colorValue.getText().equals("")) {
-					writeCssProperty(elementNoTags, "color", colorValue.getText());
-				}
-				if (!colorCheck.isSelected()) {
-					removeCSSProperty(elementNoTags, "color");
-				}
-			}
-		});
-		textColorPanel.add(colorCheck);
-		colorValue.setPreferredSize(d);
-		textColorPanel.add(colorValue);
-		JButton textColorButton = new JButton("Choose Color");
-		textColorButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
-				if (c != null) {
-					colorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
-					if (colorCheck.isSelected()) {
-						writeCssProperty(elementNoTags, "color", colorValue.getText());
-					}
-				}
-			}
-		});
-		textColorPanel.add(textColorButton);
-
-		JPanel textAlignPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-		String[] textAlignOptions = { "left", "right", "center", "justify", "initial", "inherit" };
-
-		textAlignPanel.add(new JLabel("Text-align"));
-
-		JCheckBox textAlignCheck = new JCheckBox("");
-		JComboBox<String> alignComboBox = new JComboBox<String>(textAlignOptions);
-
-		alignComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if (textAlignCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "text-align", alignComboBox.getSelectedItem().toString());
-				}
-				if (!textAlignCheck.isSelected()) {
-					return;
-				}
-			}
-
-		});
-
-		textAlignCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (textAlignCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "text-align", alignComboBox.getSelectedItem().toString());
-				}
-				if (!textAlignCheck.isSelected()) {
-					removeCSSProperty(elementNoTags, "text-align");
-				}
-			}
-		});
-
-		textAlignPanel.add(textAlignCheck);
-		textAlignPanel.add(alignComboBox);
-
-		JPanel textTransformPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-		String[] textTransformOptions = { "none", "capitalize", "uppercase", "lowercase", "initial", "inherit" };
-
-		textTransformPanel.add(new JLabel("Text-transform"));
-
-		JCheckBox transformCheck = new JCheckBox("");
-		JComboBox<String> transformComboBox = new JComboBox<String>(textTransformOptions);
-
-		transformComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if (transformCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "text-transform", transformComboBox.getSelectedItem().toString());
-				}
-				if (!transformCheck.isSelected()) {
-					return;
-				}
-			}
-
-		});
-
-		transformCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (transformCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "text-transform", transformComboBox.getSelectedItem().toString());
-				}
-				if (!transformCheck.isSelected()) {
-					removeCSSProperty(elementNoTags, "text-transform");
-				}
-			}
-		});
-
-		textTransformPanel.add(transformCheck);
-		textTransformPanel.add(transformComboBox);
-
-		textPropertiesTaskPane.add(textColorPanel);
-		textPropertiesTaskPane.add(textAlignPanel);
-		textPropertiesTaskPane.add(textTransformPanel);
-
-		JXTaskPane fontPropertiesTaskPane = new JXTaskPane();
-		fontPropertiesTaskPane.setTitle("Font Properties");
-		taskPanes.add(fontPropertiesTaskPane);
-
-		JPanel fontFamilyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-
-		JPanel fontSizePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-		String[] fontSizes = { "px", "em", "%" };
-		fontSizePanel.add(new JLabel("Font-size"));
-
-		JCheckBox fontSizeCheck = new JCheckBox("");
-		JComboBox<String> fontSizeComboBox = new JComboBox<String>(fontSizes);
-		JTextField fontSizeTextField = new JTextField("");
-		fontSizeTextField.setPreferredSize(d);
-
-		fontSizeCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (fontSizeCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "font-size",
-							fontSizeTextField.getText() + fontSizeComboBox.getSelectedItem().toString());
-				}
-				if (!fontSizeCheck.isSelected()) {
-					removeCSSProperty(elementNoTags, "font-size");
-				}
-			}
-		});
-
-		fontSizeTextField.getDocument().addDocumentListener(new DocumentListener() {
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void update() {
-				if (fontSizeCheck.isSelected()) {
-					if (fontSizeTextField.getText().equals("") || fontSizeTextField.getText() == null) {
-						removeCSSProperty(elementNoTags, "font-size");
-					} else {
-						writeCssProperty(elementNoTags, "font-size",
-								fontSizeTextField.getText() + fontSizeComboBox.getSelectedItem().toString());
-					}
-				}
-			}
-
-		});
-
-		fontSizeComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if (fontSizeCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "font-size",
-							fontSizeTextField.getText() + fontSizeComboBox.getSelectedItem().toString());
-				}
-				if (!fontSizeCheck.isSelected()) {
-					return;
-				}
-			}
-
-		});
-
-		fontSizePanel.add(fontSizeCheck);
-		fontSizePanel.add(fontSizeTextField);
-		fontSizePanel.add(fontSizeComboBox);
-
-		JPanel fontStylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-		String[] fontStyles = { "normal", "italic", "oblique", "initial", "inherit" };
-
-		fontStylePanel.add(new JLabel("Font Style"));
-		JCheckBox fontStyleCheck = new JCheckBox("");
-		JComboBox<String> fontStyleComboBox = new JComboBox<String>(fontStyles);
-
-		fontStyleCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (fontStyleCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "font-style", fontStyleComboBox.getSelectedItem().toString());
-				}
-				if (!fontStyleCheck.isSelected()) {
-					removeCSSProperty(elementNoTags, "font-style");
-				}
-			}
-		});
-		fontStyleComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if (fontStyleCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "font-style", fontStyleComboBox.getSelectedItem().toString());
-				}
-				if (!fontStyleCheck.isSelected()) {
-					return;
-				}
-			}
-
-		});
-
-		fontStylePanel.add(fontStyleCheck);
-		fontStylePanel.add(fontStyleComboBox);
-
-		JPanel fontWeightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-		String[] fontWeights = { "normal", "bold", "bolder", "lighter", "100", "200", "300", "400", "500", "600", "700",
-				"800", "900", "initial", "inherit" };
-
-		fontWeightPanel.add(new JLabel("Font Style"));
-		JCheckBox fontWeightCheck = new JCheckBox("");
-		JComboBox<String> fontWeightComboBox = new JComboBox<String>(fontWeights);
-
-		fontWeightCheck.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (fontWeightCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "font-weight", fontWeightComboBox.getSelectedItem().toString());
-				}
-				if (!fontWeightCheck.isSelected()) {
-					removeCSSProperty(elementNoTags, "font-weight");
-				}
-			}
-		});
-		fontWeightComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if (fontWeightCheck.isSelected()) {
-					writeCssProperty(elementNoTags, "font-weight", fontWeightComboBox.getSelectedItem().toString());
-				}
-				if (!fontWeightCheck.isSelected()) {
-					return;
-				}
-			}
-
-		});
-		fontStylePanel.add(fontWeightCheck);
-		fontStylePanel.add(fontWeightComboBox);
-
-		fontPropertiesTaskPane.add(fontFamilyPanel);
-		fontPropertiesTaskPane.add(fontSizePanel);
-		fontPropertiesTaskPane.add(fontStylePanel);
-		fontPropertiesTaskPane.add(fontWeightPanel);
-
-		JXTaskPane texTDecorationropertiesTaskPane = new JXTaskPane();
-		texTDecorationropertiesTaskPane.setTitle("Text Decoration Properties");
-		taskPanes.add(texTDecorationropertiesTaskPane);
-
-		JXTaskPane backgroundandBorderPropertiesTaskPane = new JXTaskPane();
-		backgroundandBorderPropertiesTaskPane.setTitle("Background and Border Properties");
-		taskPanes.add(backgroundandBorderPropertiesTaskPane);
-
-		JXTaskPane basicBoxPropertiesTaskPane = new JXTaskPane();
-		basicBoxPropertiesTaskPane.setTitle("Basic Box Properties");
-		taskPanes.add(basicBoxPropertiesTaskPane);
-
-		JXTaskPane flexibleBoxLayoutTaskPane = new JXTaskPane();
-		flexibleBoxLayoutTaskPane.setTitle("Flexible Box Layout");
-		taskPanes.add(flexibleBoxLayoutTaskPane);
-
-		JXTaskPane writingModesPropertiesTaskPane = new JXTaskPane();
-		writingModesPropertiesTaskPane.setTitle("Writing Modes Properties");
-		taskPanes.add(writingModesPropertiesTaskPane);
-
-		JXTaskPane tablePropertiesTaskPane = new JXTaskPane();
-		tablePropertiesTaskPane.setTitle("Table Properties");
-		taskPanes.add(tablePropertiesTaskPane);
-
-		JXTaskPane listsandCountersPropertiesTaskPane = new JXTaskPane();
-		listsandCountersPropertiesTaskPane.setTitle("Lists And Counters Properties");
-		taskPanes.add(listsandCountersPropertiesTaskPane);
-
-		JXTaskPane animationPropertiesTaskPane = new JXTaskPane();
-		animationPropertiesTaskPane.setTitle("Animation Properties");
-		taskPanes.add(animationPropertiesTaskPane);
-
-		JXTaskPane transformPropertiesTaskPane = new JXTaskPane();
-		transformPropertiesTaskPane.setTitle("Transform Properties");
-		taskPanes.add(transformPropertiesTaskPane);
-
-		JXTaskPane transitionsPropertiesTaskPane = new JXTaskPane();
-		transitionsPropertiesTaskPane.setTitle("Transition Properties");
-		taskPanes.add(transitionsPropertiesTaskPane);
-
-		JXTaskPane basicUserInterfacePropertiesTaskPane = new JXTaskPane();
-		basicUserInterfacePropertiesTaskPane.setTitle("Basic User Interface Properties");
-		taskPanes.add(basicUserInterfacePropertiesTaskPane);
-
-		JXTaskPane multicolumnLayoutPropertiesTaskPane = new JXTaskPane();
-		multicolumnLayoutPropertiesTaskPane.setTitle("Multicolumn Layout Properties");
-		taskPanes.add(multicolumnLayoutPropertiesTaskPane);
-
-		JXTaskPane pagedMediaTaskPane = new JXTaskPane();
-		pagedMediaTaskPane.setTitle("Paged Media Task Pane");
-		taskPanes.add(pagedMediaTaskPane);
-
-		JXTaskPane generatedContentforPagedMediaTaskPane = new JXTaskPane();
-		generatedContentforPagedMediaTaskPane.setTitle("Generated Content For Paged Media");
-		taskPanes.add(generatedContentforPagedMediaTaskPane);
-
-		JXTaskPane filterEffectsPropertiesTaskPane = new JXTaskPane();
-		filterEffectsPropertiesTaskPane.setTitle("Filter Effects");
-		taskPanes.add(filterEffectsPropertiesTaskPane);
-
-		JXTaskPane imageValuesandReplacedContentTaskPane = new JXTaskPane();
-		imageValuesandReplacedContentTaskPane.setTitle("Image values and Replaced Content");
-		taskPanes.add(imageValuesandReplacedContentTaskPane);
-
-		JXTaskPane maskingPropertiesTaskPane = new JXTaskPane();
-		maskingPropertiesTaskPane.setTitle("MAskin Properties");
-		taskPanes.add(maskingPropertiesTaskPane);
-
-		JXTaskPane speechPropertiesTaskPane = new JXTaskPane();
-		speechPropertiesTaskPane.setTitle("Speech Properties");
-		taskPanes.add(speechPropertiesTaskPane);
-
-		for (JXTaskPane tp : taskPanes) {
-			tp.setCollapsed(true);
-			container.add(tp);
-		}
-		taskPanes.get(0).setCollapsed(false);
-		tabPanels[2].add(container);
-
-		// taskpane.add(new AbstractAction() {
-		// {
-		// putValue(Action.NAME, "task pane item 2 : an action");
-		// putValue(Action.SHORT_DESCRIPTION, "perform an action");
-		//// putValue(Action.SMALL_ICON, Images.NetworkConnected.getIcon(32, 32));
-		// }
-		//
-		// public void actionPerformed(ActionEvent e) {
-		// label.setText("an action performed");
-		// }
-		// });
-		// add the task pane to the taskpanecontainer
-
-		Elements styles = HTMLDocReader.tempDoc.select("link[href]");
-		org.jsoup.nodes.Document sdoc = Jsoup.parse(fullHTML);
-		for (Element e : styles) {
-
-			sdoc.head().append(e.toString());
-		}
-
-		try {
-			// System.out.println(tempFile);
-			tempFile = new File(Main.tempDir + "\\" + "HTMLEditAttributeTemp.html");
-			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
-			bw.write(sdoc.toString());
-			bw.close();
-			tempFile.deleteOnExit();
-		} catch (IOException e) {
-			return;
-		}
 
 		textArea = new JTextArea(fullHTML);
 		textArea.setFont(new Font("Arial", Font.BOLD, 15));
 		tabbedPane = new JTabbedPane();
 		previewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, fxPanel, textArea);
-		previewPane.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().height) / 8);
 		JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, previewPane, tabbedPane);
 
 		// creat the tabs
-		for (int i = 0; i < tabTitles.length; i++) {
-			JScrollPane scrollPane = new JScrollPane(tabPanels[i]);
+		for (int m = 0; m < tabTitles.length; m++) {
+			JScrollPane scrollPane = new JScrollPane(tabPanels[m]);
 			scrollPane.getVerticalScrollBar().setUnitIncrement(10);
 			JComponent c = scrollPane;
-			tabbedPane.addTab(tabTitles[i], null, c, tabTitles[i]);
+			tabbedPane.addTab(tabTitles[m], null, c, tabTitles[m]);
 		}
+
+		// LISTENER FOR TABs TO CHANGE BETWEEN HTML TEXT VIEW AND CSS TEXT VIEW
+		tabbedPane.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				// TODO Auto-generated method stub
+				if (tabbedPane.getSelectedIndex() == 2) {
+					// File input = new File(Main.tempDir+"\\"+selectedCSSFile);
+					textArea.setText(getRule(cssSelector).toString());
+				}
+				if (tabbedPane.getSelectedIndex() != 2) {
+					updateDoc();
+				}
+			}
+		});
 
 		JPanel bottomPanel = new JPanel();
 		FlowLayout layout = new FlowLayout(FlowLayout.TRAILING, 20, 20);
@@ -966,9 +663,27 @@ public class EditNewElementDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					HTMLDocReader.tempDoc.body().append(textArea.getText());
+					// CHECK IF ELEMENT WITH THIS ID ALREADY EXISTS
+					String id = el.attr("id");
+					Elements idInDoc = reader.tempDoc.select("#" + id);
+					if (idInDoc.size() > 0 || idInDoc != null) {
+						JOptionPane.showMessageDialog(dialog, "One or more elements with the ID \"" + el.attr("id")
+								+ "\" have been detected.\n Please set a new ID for this element in the global HTML attributes.",
+								"Multiple Same ID", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+
+					HTMLDocReader.tempDoc.body().append(element.select(html).toString());
+
+					tempCSSFile.delete();
+					tempHTMLFile.delete();
 					reader.updateTempDoc();
 					Main.updateFrame();
+					Platform.runLater(new Runnable() {
+						public void run() {
+							Main.reloadWebEngine();
+						}
+					});
 					for (int i = 1; i < Main.elementTree.getRowCount(); i++) {
 						Main.elementTree.expandRow(i);
 					}
@@ -989,14 +704,15 @@ public class EditNewElementDialog {
 			}
 		});
 
-		for (int i = 0; i < field.size(); i++) {
-			field.get(i).getDocument().addDocumentListener(new newElementFieldDocumentListener(i));
+		for (int j = 0; j < field.size(); j++) {
+			field.get(j).getDocument().addDocumentListener(new newElementFieldDocumentListener(j));
 		}
 
 		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
 			@Override
 			public void run() {
-				initFX(fxPanel, tempFile);
+				System.out.println("InitFx in constructor");
+				initFX(fxPanel, tempHTMLFile);
 			}
 		});
 
@@ -1008,7 +724,8 @@ public class EditNewElementDialog {
 		dialog.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				try {
-					tempFile.delete();
+					tempCSSFile.delete();
+					tempHTMLFile.delete();
 				} catch (Exception e) {
 
 				}
@@ -1017,178 +734,38 @@ public class EditNewElementDialog {
 			}
 		});
 
-		tabbedPane.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				// TODO Auto-generated method stub
-				if (tabbedPane.getSelectedIndex() == 2) {
-					// File input = new File(Main.tempDir+"\\"+selectedCSSFile);
-					textArea.setText(getRule(elementNoTags).toString());
-				}
-				if (tabbedPane.getSelectedIndex() != 2) {
-					updateDoc();
-				}
-			}
-		});
-
 		dialog.pack();
-		mainSplit.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 4);
+
+		mainSplit.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 3 - 100);
+		previewPane.setDividerLocation(dialog.getHeight() / 4);
 		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 2,
 				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2);
 		// center the dialog on screen
-		dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 - dialog.getWidth() / 2,
-				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2 - dialog.getHeight() / 2);
+		dialog.setLocation(
+				(Toolkit.getDefaultToolkit().getScreenSize().width) / 2 + Main.frame.getX() - dialog.getWidth() / 2,
+				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2 + Main.frame.getY() - dialog.getHeight() / 2);
+		// dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 -
+		// dialog.getWidth() / 2,
+		// (Toolkit.getDefaultToolkit().getScreenSize().height) / 2 - dialog.getHeight()
+		// / 2);
+
 		root.getGlassPane().setCursor(Cursor.getDefaultCursor());
 
 		textArea.setMaximumSize(new Dimension(previewPane.getWidth(), previewPane.getHeight()));
 		textArea.setLineWrap(true);
 		updateDoc();
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				webEngine.reload();
+			}
+		});
 		dialog.setVisible(true);
 
 	}
 
-	private void changeUIdefaults() {
-		// JXTaskPaneContainer settings (developer defaults)
-		/*
-		 * These are all the properties that can be set (may change with new version of
-		 * SwingX) "TaskPaneContainer.useGradient", "TaskPaneContainer.background",
-		 * "TaskPaneContainer.backgroundGradientStart",
-		 * "TaskPaneContainer.backgroundGradientEnd", etc.
-		 */
-		// setting taskpanecontainer defaults
-		UIManager.put("TaskPaneContainer.useGradient", Boolean.FALSE);
-		UIManager.put("TaskPaneContainer.background", Color.WHITE);
-		// setting taskpane defaults
-		UIManager.put("TaskPane.font", new FontUIResource(new Font("Verdana", Font.BOLD, 16)));
-		UIManager.put("TaskPane.titleBackgroundGradientStart", Color.WHITE);
-		UIManager.put("TaskPane.titleBackgroundGradientEnd", Color.LIGHT_GRAY);
-	}
-
-	public Painter getPainter() {
-		int width = 100;
-		int height = 100;
-		Color color1 = Color.WHITE;
-		Color color2 = Color.WHITE;
-		LinearGradientPaint gradientPaint = new LinearGradientPaint(0.0f, 0.0f, width, height,
-				new float[] { 0.0f, 1.0f }, new Color[] { color1, color2 });
-		MattePainter mattePainter = new MattePainter(gradientPaint);
-		return mattePainter;
-	}
-
-	// private static String getFullHTML() {
-	// return fullHTML;
-	// }
-	/*
-	 * First get a rule by the selector. Note that class selectors need to be
-	 * preceeded with the asterisk [*]. So if the rule selector is .myCssClass the
-	 * selector argument needs to be *.myCssClass
-	 * 
-	 * 
-	 */
-	public static CSSStyleRuleImpl getRule(String selector) {
-		CSSStyleSheetImpl ss = stylesheet;
-		CSSRuleListImpl rules = (CSSRuleListImpl) ss.getCssRules();
-		CSSStyleRuleImpl rule;
-		/* need to loop over all the rules and select the one that matches. */
-		for (int i = 0; i < rules.getLength(); i++) {
-			rule = (CSSStyleRuleImpl) rules.item(i);
-			if (rule.getSelectorText().equals(selector)) {
-				return rule;
-			}
-		}
-		return null;
-	}
-
-	// a method to read a property of a specific rule:
-	public Property getProperty(String selector, String property) {
-		Property retProp = null;
-		CSSStyleRuleImpl rule = getRule(selector);
-		if (rule != null) {
-			CSSStyleDeclarationImpl style = (CSSStyleDeclarationImpl) rule.getStyle();
-			List<Property> props = style.getProperties();
-			for (Property prop : props) {
-				if (prop.getName().equals(property)) {
-					return prop;
-				}
-			}
-		}
-		return retProp;
-	}
-
-	public void writeCssProperty(String selector, String property, String newValue) {
-		Property prop = getProperty(selector, property);
-		if (prop != null) {
-			CSSValueImpl val = new CSSValueImpl();
-			val.setCssText(newValue);
-			prop.setValue(val);
-
-			CSSFormat format = new CSSFormat();
-			format.setRgbAsHex(true);
-			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
-			try {
-				// FileUtils.writeStringToFile(file, data, encoding);
-				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						updateFX(tempFile.getAbsolutePath());
-					}
-				});
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else {
-			CSSStyleRuleImpl r = getRule(elementNoTags);
-			r.setCssText(elementNoTags + "{" + r.getStyle() + ";" + property + ":" + newValue + "}");
-			CSSFormat format = new CSSFormat();
-			format.setRgbAsHex(true);
-			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
-			try {
-				// FileUtils.writeStringToFile(file, data, encoding);
-				System.out.println(stylesheet.getCssText(format));
-				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						updateFX(tempFile.getAbsolutePath());
-					}
-				});
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
-	}
-
-	public void removeCSSProperty(String selector, String property) {
-		Property prop = getProperty(selector, property);
-		System.out.println("Removing property:" + prop);
-		if (prop != null) {
-			// CSSValueImpl val = new CSSValueImpl();
-			// val.setCssText(null);
-			prop.setValue(null);
-			CSSFormat format = new CSSFormat();
-			format.setRgbAsHex(true);
-			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
-			try {
-				// FileUtils.writeStringToFile(file, data, encoding);
-				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						updateFX(tempFile.getAbsolutePath());
-					}
-				});
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private static void initFX(final JFXPanel fxPanel, File f) {
+	private void initFX(final JFXPanel fxPanel, File f) {
+		System.out.println("initFx");
 		Group group = new Group();
 		Scene scene = new Scene(group);
 		fxPanel.setScene(scene);
@@ -1206,13 +783,13 @@ public class EditNewElementDialog {
 		}
 	}
 
-	private static void updateFX(String url) {
-		File f;
+	public static void updateFX(String url) {
+		System.out.println("updateFX");
+		File f = new File(url);
 		webView.setPrefSize(previewPane.getSize().width, previewPane.getSize().height);
 		if (url == null || url.equals("") || url.equals(null)) {
 			webEngine.load("htt://www.google.com");
 		} else {
-			f = new File(url);
 			try {
 				webEngine.load(f.toURI().toString());
 				webEngine.reload();
@@ -1231,11 +808,6 @@ public class EditNewElementDialog {
 
 	public static void updateDoc() {
 
-		// Elements styles = HTMLDocReader.tempDoc.select("link[href]");
-		// org.jsoup.nodes.Document doc = Jsoup.parse(fullHTML);
-		// for (Element s : styles) {
-		// doc.head().append(s.outerHtml());
-		// }
 		org.jsoup.nodes.Document doc = Jsoup.parse(fullHTML);
 		doc.head().append("<link rel=\"stylesheet\" href=\"HTMLTempCSS.css\">");
 		try {
@@ -1247,7 +819,7 @@ public class EditNewElementDialog {
 		}
 		try {
 			// System.out.println(tempFile);
-			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(tempHTMLFile));
 			bw.write(doc.toString());
 			bw.close();
 			textArea.setText(doc.select(html.substring(1, html.length() - 1)).toString());
@@ -1260,14 +832,120 @@ public class EditNewElementDialog {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				updateFX(tempFile.getAbsolutePath());
+				updateFX(tempHTMLFile.getAbsolutePath());
 			}
 		});
 	}
 
+	private static CSSStyleRuleImpl getRule(String selector) {
+		CSSStyleSheetImpl ss = stylesheet;
+		CSSRuleListImpl rules = (CSSRuleListImpl) ss.getCssRules();
+		CSSStyleRuleImpl rule;
+		/* need to loop over all the rules and select the one that matches. */
+		for (int i = 0; i < rules.getLength(); i++) {
+			rule = (CSSStyleRuleImpl) rules.item(i);
+			if (rule.getSelectorText().equals(selector)) {
+				return rule;
+			}
+		}
+		return null;
+	}
+
+	// a method to read a property of a specific rule:
+	private Property getProperty(String selector, String property) {
+		Property retProp = null;
+		CSSStyleRuleImpl rule = getRule(selector);
+		if (rule != null) {
+			CSSStyleDeclarationImpl style = (CSSStyleDeclarationImpl) rule.getStyle();
+			List<Property> props = style.getProperties();
+			for (Property prop : props) {
+				if (prop.getName().equals(property)) {
+					return prop;
+				}
+			}
+		}
+		return retProp;
+	}
+
+	private void writeCssProperty(String selector, String property, String newValue) {
+		Property prop = getProperty(selector, property);
+		if (prop != null) {
+			try {
+				CSSValueImpl val = new CSSValueImpl();
+				val.setCssText(newValue);
+				prop.setValue(val);
+			} catch (Exception e1) {
+				// catch syntax errors, do nothing, doesn't matter
+			}
+
+			CSSFormat format = new CSSFormat();
+			format.setRgbAsHex(true);
+			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			try {
+				// FileUtils.writeStringToFile(file, data, encoding);
+				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						updateFX(tempHTMLFile.getAbsolutePath());
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			CSSStyleRuleImpl r = getRule(elementNoTags);
+			r.setCssText(elementNoTags + "{" + r.getStyle() + ";" + property + ":" + newValue + "}");
+			CSSFormat format = new CSSFormat();
+			format.setRgbAsHex(true);
+			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			try {
+				// FileUtils.writeStringToFile(file, data, encoding);
+				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						updateFX(tempHTMLFile.getAbsolutePath());
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void removeCSSProperty(String selector, String property) {
+		Property prop = getProperty(selector, property);
+		System.out.println("Removing property:" + prop);
+		if (prop != null) {
+			// CSSValueImpl val = new CSSValueImpl();
+			// val.setCssText(null);
+			prop.setValue(null);
+			CSSFormat format = new CSSFormat();
+			format.setRgbAsHex(true);
+			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			try {
+				// FileUtils.writeStringToFile(file, data, encoding);
+				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						updateFX(tempHTMLFile.getAbsolutePath());
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 	private Element createJsoupElement() {
 		element = Jsoup.parseBodyFragment(fullHTML);
-		String elementNoTags = html.substring(1, html.length() - 1);
+		elementNoTags = html.substring(1, html.length() - 1);
+		cssSelector = elementNoTags;
 		Elements elementSelector = element.select(elementNoTags);
 		Element el = elementSelector.first();
 		updateDoc();
@@ -1276,6 +954,23 @@ public class EditNewElementDialog {
 
 	public static Element getJsoupElement() {
 		return el;
+	}
+
+	private void changeUIdefaults() {
+		// JXTaskPaneContainer settings (developer defaults)
+		/*
+		 * These are all the properties that can be set (may change with new version of
+		 * SwingX) "TaskPaneContainer.useGradient", "TaskPaneContainer.background",
+		 * "TaskPaneContainer.backgroundGradientStart",
+		 * "TaskPaneContainer.backgroundGradientEnd", etc.
+		 */
+		// setting taskpanecontainer defaults
+		UIManager.put("TaskPaneContainer.useGradient", Boolean.FALSE);
+		UIManager.put("TaskPaneContainer.background", Color.WHITE);
+		// setting taskpane defaults
+		UIManager.put("TaskPane.font", new FontUIResource(new Font("Verdana", Font.BOLD, 16)));
+		UIManager.put("TaskPane.titleBackgroundGradientStart", Color.WHITE);
+		UIManager.put("TaskPane.titleBackgroundGradientEnd", Color.LIGHT_GRAY);
 	}
 
 }

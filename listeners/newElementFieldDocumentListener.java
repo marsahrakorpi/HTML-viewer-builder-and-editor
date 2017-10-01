@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import dialogs.EditNewElementDialog;
+import dialogs.EditNewElementDialogDeprecated;
 
 public class newElementFieldDocumentListener implements DocumentListener {
 

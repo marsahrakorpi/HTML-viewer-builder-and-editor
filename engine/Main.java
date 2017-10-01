@@ -93,7 +93,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	public static JScrollPane elementAttributes;
 	private JPanel buttonPanelMain, buttonPanelLeft, buttonPanelMiddle, buttonPanelRight;
 	public static WebView webView;
-	private static WebEngine webEngine;
+	public static WebEngine webEngine;
 	private final JFXPanel fxPanel = new JFXPanel();
 
 	public static File fileRoot;
@@ -796,6 +796,10 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		}
 
 	}
+	
+	public static void reloadWebEngine() {
+		Main.webEngine.reload();
+	}
 
 	// For creating nodes, the variable int index will number the elements in order.
 	// This is used to later direct commands to the correct html element via
@@ -1173,7 +1177,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				updateFX(tempPageURL);
 			}
 		});
-
+		
 		// RESET ELEMENTS TREE
 		DefaultTreeModel model = (DefaultTreeModel) elementTree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
