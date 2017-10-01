@@ -9,6 +9,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.LinearGradientPaint;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,8 +17,11 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
@@ -30,6 +34,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -41,18 +46,31 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.RootPaneContainer;
+import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.FontUIResource;
 
 import org.apache.commons.io.FileUtils;
 import org.bson.Document;
+import org.jdesktop.swingx.JXTaskPane;
+import org.jdesktop.swingx.JXTaskPaneContainer;
+import org.jdesktop.swingx.painter.MattePainter;
+import org.jdesktop.swingx.painter.Painter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.w3c.css.sac.InputSource;
+import org.w3c.css.sac.SelectorList;
+import org.w3c.dom.css.CSSRuleList;
+import org.w3c.dom.css.CSSStyleDeclaration;
+import org.w3c.dom.css.CSSStyleSheet;
 
+import com.helger.css.decl.CSSStyleRule;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -62,9 +80,11 @@ import com.steadystate.css.dom.CSSStyleRuleImpl;
 import com.steadystate.css.dom.CSSStyleSheetImpl;
 import com.steadystate.css.dom.CSSValueImpl;
 import com.steadystate.css.dom.Property;
+import com.steadystate.css.format.CSSFormat;
 import com.steadystate.css.parser.CSSOMParser;
 import com.steadystate.css.parser.SACParserCSS3;
 
+import engine.FileHandler;
 import engine.FileSaver;
 import engine.HTMLDocReader;
 import engine.Main;
@@ -79,9 +99,10 @@ import listeners.newElementFieldDocumentListener;
 public class EditNewElementDialog {
 
 	static String html;
+	private static String elementNoTags = "";
 	public static String fullHTML = "";
 	public static Element el, element;
-	private JTabbedPane tabbedPane;
+	private static JTabbedPane tabbedPane;
 	private static JTextArea textArea;
 	private final JFXPanel fxPanel = new JFXPanel();
 	private static WebView webView;
@@ -97,6 +118,7 @@ public class EditNewElementDialog {
 
 	private String[] globalHTMLAttributes = { "id", "accesskey", "contenteditable", "contextmenu", "dir", "draggable",
 			"dropzone", "lang", "spellcheck", "tabindex", "title", "translate" };
+
 	private String[] cssProperties = { "Color Properties", "Background and Border Properties", "Basic Box Properties",
 			"Flexible Box Layout", "Text Properties", "Text Decoration Properties", "Font Properties",
 			"Writing Modes Properties", "Table Properties", "Lists and Counters Properties", "Animation Properties",
@@ -105,68 +127,19 @@ public class EditNewElementDialog {
 			"Filter Effects Properties", "Image Values and Replaced Content", "Masking Properties",
 			"Speech Properties" };
 
-	String[] colorProperties = { "color", "opacity" };
-	String[] backgroundAndBorderProperties = { "background", "background-attachment", "background-blend-mode",
-			"background-color", "background-image", "background-position", "background-repeat", "background-clip",
-			"background-origin", "background-size", "border", "border-bottom", "border-bottom-color",
-			"border-bottom-left-radius", "border-bottom-right-radius", "border-bottom-style", "border-bottom-width",
-			"border-color", "border-image", "border-image-outset", "border-image-repeat", "border-image-slice",
-			"border-image-source", "border-image-width", "border-left", "border-left-color", "border-left-style",
-			"border-left-width", "border-radius", "border-right", "border-right-color", "border-right-style",
-			"border-right-width", "border-style", "border-top", "border-top-color", "border-top-left-radius",
-			"border-top-right-radius", "border-top-style", "border-top-width", "border-width", "box-decoration-break",
-			"box-shadow" };
-	String[] basicBoxProperties = { "bottom", "clear", "clip", "display", "float", "height", "left", "margin",
-			"margin-bottom", "margin-left", "margin-right", "margin-top", "max-height", "max-width", "min-height",
-			"min-width", "overflow", "overflow-x", "overflow-y", "padding", "padding-bottom", "padding-left",
-			"padding-right", "padding-top", "position", "right", "top", "visibility", "width", "vertical-align",
-			"z-index" };
-	String[] flexibleBoxLayout = { "align-content", "align-items", "align-self", "flex", "flex-basis", "flex-direction",
-			"flex-flow", "flex-grow", "flex-shrink", "flex-wrap", "justify-content", "order" };
-	String[] textproperties = { "hanging-punctuation", "hyphens", "letter-spacing", "line-break", "line-height",
-			"overflow-wrap", "tab-size", "text-align", "text-align-last", "text-combine-upright", "text-indent",
-			"text-justify", "text-transform", "white-space", "word-break", "word-spacing", "word-wrap" };
-	String[] textdecorationProperties = { "text-decoration", "text-decoration-color", "text-decoration-line",
-			"text-decoration-style", "text-shadow", "text-underline-position" };
-	String[] fontproperties = { "@font-face", "@font-feature-values", "font", "font-family", "font-feature-settings",
-			"font-kerning", "font-language-override", "font-size", "font-size-adjust", "font-stretch", "font-style",
-			"font-synthesis", "font-variant", "font-variant-alternates", "font-variant-caps", "font-variant-east-asian",
-			"font-variant-ligatures", "font-variant-numeric", "font-variant-position", "font-weight" };
-	String[] writingModesProperties = { "direction", "text-orientation", "text-combine-upright", "unicode-bidi",
-			"user-select", "writing-mode" };
-	String[] tableProperties = { "border-collapse", "border-spacing", "caption-side", "empty-cells", "table-layout" };
-	String[] listsAndCountersProperties = { "counter-increment", "counter-reset", "list-style", "list-style-image",
-			"list-style-position", "list-style-type" };
-	String[] animationProperties = { "@keyframes", "animation", "animation-delay", "animation-direction",
-			"animation-duration", "animation-fill-mode", "animation-iteration-count", "animation-name",
-			"animation-play-state", "animation-timing-function" };
-	String[] transformProperties = { "backface-visibility", "perspective", "perspective-origin", "transform",
-			"transform-origin", "transform-style" };
-	String[] transitionsProperties = { "transition", "transition-property", "transition-duration",
-			"transition-timing-function", "transition-delay" };
-	String[] basicUserInterfaceProperties = { "box-sizing", "content", "cursor", "ime-mode", "outline", "outline-color",
-			"outline-offset", "outline-style", "outline-width", "resize", "text-overflow" };
-	String[] multiColumnLayoutProperties = { "break-after", "break-before", "break-inside", "column-count",
-			"column-fill", "column-gap", "column-rule", "column-rule-color", "column-rule-style", "column-rule-width",
-			"column-span", "column-width", "columns", "widows" };
-	String[] pagedMedia = { "orphans", "page-break-after", "page-break-before", "page-break-inside" };
-	String[] generatedContentForPagedMedia = { "marks", "quotes" };
-	String[] filterEffectsProperties = { "filter" };
-	String[] imageValuesAndReplacedContent = { "image-orientation", "image-rendering", "image-resolution", "object-fit",
-			"object-position" };
-	String[] maskingProperties = { "mask", "mask-type" };
-	String[] speechProperties = { "mark", "mark-after", "mark-before", "phonemes", "rest", "rest-after", "rest-before",
-			"voice-balance", "voice-duration", "voice-pitch", "voice-pitch-range", "voice-rate", "voice-stress",
-			"voice-volume" };
-
 	private ArrayList<JLabel> attributeNameList = new ArrayList<JLabel>();
 	private ArrayList<JTextField> attributeValueList = new ArrayList<JTextField>();
-	CSSStyleSheetImpl stylesheet;
+	ArrayList<CSSStyleSheetImpl> stylesheets = new ArrayList<CSSStyleSheetImpl>();
+	String selectedCSSFile = "";
+	String tempCSSFilePath = "";
+	File tempCSSFile;
+	static CSSStyleSheetImpl stylesheet;
+	CSSStyleRuleImpl cssRule;
 	MongoClient mongoClient;
 	HTMLDocReader reader;
 
 	public EditNewElementDialog(String html, MongoClient mongoClient, MongoDatabase db,
-			MongoCollection<Document> elementsCollection, HTMLDocReader reader) {
+			MongoCollection<Document> elementsCollection, HTMLDocReader reader) throws IOException {
 
 		EditNewElementDialog.html = html;
 		this.reader = reader;
@@ -244,14 +217,13 @@ public class EditNewElementDialog {
 			public void itemStateChanged(ItemEvent e) {
 				// TODO Auto-generated method stub
 				// el = getJsoupElement();
-				System.out.println(hiddenCheck.isSelected());
 				if (hiddenCheck.isSelected()) {
 					el.attr(hiddenCheck.getText(), "");
 				} else if (!hiddenCheck.isSelected()) {
 					el.removeAttr(hiddenCheck.getText());
 				}
 				fullHTML = element.toString();
-				updateDoc();
+				// updateDoc();
 
 				// SET HIDDEN
 			}
@@ -356,7 +328,6 @@ public class EditNewElementDialog {
 									public void itemStateChanged(ItemEvent e) {
 										// TODO Auto-generated method stub
 										// el = getJsoupElement();
-										System.out.println(checkBox.isSelected());
 										if (checkBox.isSelected()) {
 											el.attr(checkBox.getText(), "");
 										} else if (!checkBox.isSelected()) {
@@ -427,7 +398,6 @@ public class EditNewElementDialog {
 										@Override
 										public void removeUpdate(DocumentEvent e) {
 											// TODO Auto-generated method stub
-											System.out.println(numberTextField);
 											updateElement();
 										}
 
@@ -502,53 +472,478 @@ public class EditNewElementDialog {
 
 			tabPanels[1].add(valuePanel);
 		} catch (Exception e1) {
-			tabPanels[1].add(new JLabel("Element does not have attributes that are specific to it."));
+			e1.printStackTrace();
+			// tabPanels[1].add(new JLabel("Element does not have attributes that are
+			// specific to it."));
 		}
 
 		// Tab 3
 		JLabel cssLabel = new JLabel("Style Properties");
+		elementNoTags = html.substring(1, html.length() - 1);
 		cssLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		cssLabel.setFont(new Font("Arial", Font.BOLD, 15));
 		tabPanels[2].add(cssLabel);
-		
-		//http://www.csscompiler.com/wp-content/uploads/2013/04/css_wizard.jpg
+		ArrayList<String> cssFiles = new ArrayList<String>();
+		// https://developerlife.com/2008/01/28/swingx-tutorial-task-pane/
+		// http://www.csscompiler.com/wp-content/uploads/2013/04/css_wizard.jpg
 		Elements links = HTMLDocReader.tempDoc.head().select("link[href]");
-		for (int i=0; i<links.size(); i++) {
+		for (int i = 0; i < links.size(); i++) {
 			Element e = links.get(i);
-			if(e.attr("href").equals("webViewCSS/webViewHighlighter.css")) {
-				continue;
+			if (e.attr("href").equals("webViewCSS/webViewHighlighter.css")) {
+				// System.out.println("Ignoring webViewHighlighter CSS");
+			} else {
+				String linkHref = Main.tempDir + "/" + e.attr("href");
+				cssFiles.add(e.attr("href"));
 			}
-			String linkHref = Main.tempDir+"/"+e.attr("href");
-			System.out.println(linkHref);
-			try {
-				InputSource inputSource = new InputSource(
-						new StringReader(FileUtils.readFileToString(new File(linkHref), "UTF-8")));
-				CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
-				stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
-				System.out.println(getRule("h1"));
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+
+		}
+
+		String[] cssFilesString = cssFiles.toArray(new String[0]);
+		selectedCSSFile = cssFilesString[0];
+
+		tempCSSFile = new File(Main.tempDir + "\\HTMLTempCSS.css");
+		tempCSSFile.deleteOnExit();
+		tempCSSFilePath = tempCSSFile.getAbsolutePath();
+
+		try {
+			String tempCSS = FileUtils.readFileToString(new File(Main.tempDir + "\\" + selectedCSSFile), "UTF-8");
+			FileUtils.write(tempCSSFile, tempCSS, "UTF-8");
+			InputSource inputSource = new InputSource(
+					new StringReader(FileUtils.readFileToString(tempCSSFile, "UTF-8")));
+			CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+			stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
+		} catch (IOException e1) {
+
+		}
+
+		JComboBox<String> cssFilesComboBox = new JComboBox<String>(cssFilesString);
+		cssFilesComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				selectedCSSFile = (String) cssFilesComboBox.getSelectedItem();
+				try {
+					tempCSSFile.delete();
+					tempCSSFile = new File(Main.tempDir + "\\HTMLTempCSS.css");
+					tempCSSFile.deleteOnExit();
+					tempCSSFilePath = tempCSSFile.getAbsolutePath();
+					String tempCSS = FileUtils.readFileToString(new File(Main.tempDir + "\\" + selectedCSSFile),
+							"UTF-8");
+					FileUtils.write(tempCSSFile, tempCSS, "UTF-8");
+					InputSource inputSource = new InputSource(new StringReader(
+							FileUtils.readFileToString(new File(Main.tempDir + "\\" + selectedCSSFile), "UTF-8")));
+					CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+					stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
+					textArea.setText(getRule(elementNoTags).toString());
+				} catch (IOException e) {
+
+				}
+
 			}
+		});
+
+		// System.out.println("Rules for :" + elementNoTags + " = " +
+		// getRule(elementNoTags));
+		if (getRule(elementNoTags) == null || getRule(elementNoTags).toString().equals("")) {
+			// System.out.println("NO CSS RULES FOR ELEMENT " + elementNoTags + " WERE
+			// FOUND");
+			String cssStr = FileUtils.readFileToString(tempCSSFile, "UTF-8");
+			cssStr += "\n" + elementNoTags + "{\n\n}";
+			FileUtils.write(tempCSSFile, cssStr, "UTF-8");
+			InputSource inputSource = new InputSource(
+					new StringReader(FileUtils.readFileToString(tempCSSFile, "UTF-8")));
+			CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+			stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
+		}
+
+		tabPanels[2].add(cssFilesComboBox);
+
+		changeUIdefaults();
+
+		JXTaskPaneContainer container = new JXTaskPaneContainer();
+
+		ArrayList<JXTaskPane> taskPanes = new ArrayList<JXTaskPane>();
+
+		JXTaskPane textPropertiesTaskPane = new JXTaskPane();
+
+		JTextField colorValue = new JTextField("");
+		textPropertiesTaskPane.setTitle("Text Properties");
+		taskPanes.add(textPropertiesTaskPane);
+		JPanel textColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		textColorPanel.add(new JLabel("Text Color"));
+		JCheckBox colorCheck = new JCheckBox("");
+		colorCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (colorCheck.isSelected() && !colorValue.getText().equals("")) {
+					writeCssProperty(elementNoTags, "color", colorValue.getText());
+				}
+				if (!colorCheck.isSelected()) {
+					removeCSSProperty(elementNoTags, "color");
+				}
+			}
+		});
+		textColorPanel.add(colorCheck);
+		colorValue.setPreferredSize(d);
+		textColorPanel.add(colorValue);
+		JButton textColorButton = new JButton("Choose Color");
+		textColorButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				if (c != null) {
+					colorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
+					if (colorCheck.isSelected()) {
+						writeCssProperty(elementNoTags, "color", colorValue.getText());
+					}
+				}
+			}
+		});
+		textColorPanel.add(textColorButton);
+
+		JPanel textAlignPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		String[] textAlignOptions = { "left", "right", "center", "justify", "initial", "inherit" };
+
+		textAlignPanel.add(new JLabel("Text-align"));
+
+		JCheckBox textAlignCheck = new JCheckBox("");
+		JComboBox<String> alignComboBox = new JComboBox<String>(textAlignOptions);
+
+		alignComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (textAlignCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "text-align", alignComboBox.getSelectedItem().toString());
+				}
+				if (!textAlignCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		textAlignCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (textAlignCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "text-align", alignComboBox.getSelectedItem().toString());
+				}
+				if (!textAlignCheck.isSelected()) {
+					removeCSSProperty(elementNoTags, "text-align");
+				}
+			}
+		});
+
+		textAlignPanel.add(textAlignCheck);
+		textAlignPanel.add(alignComboBox);
+
+		JPanel textTransformPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		String[] textTransformOptions = { "none", "capitalize", "uppercase", "lowercase", "initial", "inherit" };
+
+		textTransformPanel.add(new JLabel("Text-transform"));
+
+		JCheckBox transformCheck = new JCheckBox("");
+		JComboBox<String> transformComboBox = new JComboBox<String>(textTransformOptions);
+
+		transformComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (transformCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "text-transform", transformComboBox.getSelectedItem().toString());
+				}
+				if (!transformCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		transformCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (transformCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "text-transform", transformComboBox.getSelectedItem().toString());
+				}
+				if (!transformCheck.isSelected()) {
+					removeCSSProperty(elementNoTags, "text-transform");
+				}
+			}
+		});
+
+		textTransformPanel.add(transformCheck);
+		textTransformPanel.add(transformComboBox);
+
+		textPropertiesTaskPane.add(textColorPanel);
+		textPropertiesTaskPane.add(textAlignPanel);
+		textPropertiesTaskPane.add(textTransformPanel);
+
+		JXTaskPane fontPropertiesTaskPane = new JXTaskPane();
+		fontPropertiesTaskPane.setTitle("Font Properties");
+		taskPanes.add(fontPropertiesTaskPane);
+
+		JPanel fontFamilyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+
+		JPanel fontSizePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		String[] fontSizes = { "px", "em", "%" };
+		fontSizePanel.add(new JLabel("Font-size"));
+
+		JCheckBox fontSizeCheck = new JCheckBox("");
+		JComboBox<String> fontSizeComboBox = new JComboBox<String>(fontSizes);
+		JTextField fontSizeTextField = new JTextField("");
+		fontSizeTextField.setPreferredSize(d);
+
+		fontSizeCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (fontSizeCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "font-size",
+							fontSizeTextField.getText() + fontSizeComboBox.getSelectedItem().toString());
+				}
+				if (!fontSizeCheck.isSelected()) {
+					removeCSSProperty(elementNoTags, "font-size");
+				}
+			}
+		});
+
+		fontSizeTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (fontSizeCheck.isSelected()) {
+					if (fontSizeTextField.getText().equals("") || fontSizeTextField.getText() == null) {
+						removeCSSProperty(elementNoTags, "font-size");
+					} else {
+						writeCssProperty(elementNoTags, "font-size",
+								fontSizeTextField.getText() + fontSizeComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		fontSizeComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (fontSizeCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "font-size",
+							fontSizeTextField.getText() + fontSizeComboBox.getSelectedItem().toString());
+				}
+				if (!fontSizeCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		fontSizePanel.add(fontSizeCheck);
+		fontSizePanel.add(fontSizeTextField);
+		fontSizePanel.add(fontSizeComboBox);
+
+		JPanel fontStylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		String[] fontStyles = { "normal", "italic", "oblique", "initial", "inherit" };
+
+		fontStylePanel.add(new JLabel("Font Style"));
+		JCheckBox fontStyleCheck = new JCheckBox("");
+		JComboBox<String> fontStyleComboBox = new JComboBox<String>(fontStyles);
+
+		fontStyleCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (fontStyleCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "font-style", fontStyleComboBox.getSelectedItem().toString());
+				}
+				if (!fontStyleCheck.isSelected()) {
+					removeCSSProperty(elementNoTags, "font-style");
+				}
+			}
+		});
+		fontStyleComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (fontStyleCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "font-style", fontStyleComboBox.getSelectedItem().toString());
+				}
+				if (!fontStyleCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		fontStylePanel.add(fontStyleCheck);
+		fontStylePanel.add(fontStyleComboBox);
+
+		JPanel fontWeightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		String[] fontWeights = { "normal", "bold", "bolder", "lighter", "100", "200", "300", "400", "500", "600", "700",
+				"800", "900", "initial", "inherit" };
+
+		fontWeightPanel.add(new JLabel("Font Style"));
+		JCheckBox fontWeightCheck = new JCheckBox("");
+		JComboBox<String> fontWeightComboBox = new JComboBox<String>(fontWeights);
+
+		fontWeightCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (fontWeightCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "font-weight", fontWeightComboBox.getSelectedItem().toString());
+				}
+				if (!fontWeightCheck.isSelected()) {
+					removeCSSProperty(elementNoTags, "font-weight");
+				}
+			}
+		});
+		fontWeightComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (fontWeightCheck.isSelected()) {
+					writeCssProperty(elementNoTags, "font-weight", fontWeightComboBox.getSelectedItem().toString());
+				}
+				if (!fontWeightCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		fontStylePanel.add(fontWeightCheck);
+		fontStylePanel.add(fontWeightComboBox);
+
+		fontPropertiesTaskPane.add(fontFamilyPanel);
+		fontPropertiesTaskPane.add(fontSizePanel);
+		fontPropertiesTaskPane.add(fontStylePanel);
+		fontPropertiesTaskPane.add(fontWeightPanel);
+
+		JXTaskPane texTDecorationropertiesTaskPane = new JXTaskPane();
+		texTDecorationropertiesTaskPane.setTitle("Text Decoration Properties");
+		taskPanes.add(texTDecorationropertiesTaskPane);
+
+		JXTaskPane backgroundandBorderPropertiesTaskPane = new JXTaskPane();
+		backgroundandBorderPropertiesTaskPane.setTitle("Background and Border Properties");
+		taskPanes.add(backgroundandBorderPropertiesTaskPane);
+
+		JXTaskPane basicBoxPropertiesTaskPane = new JXTaskPane();
+		basicBoxPropertiesTaskPane.setTitle("Basic Box Properties");
+		taskPanes.add(basicBoxPropertiesTaskPane);
+
+		JXTaskPane flexibleBoxLayoutTaskPane = new JXTaskPane();
+		flexibleBoxLayoutTaskPane.setTitle("Flexible Box Layout");
+		taskPanes.add(flexibleBoxLayoutTaskPane);
+
+		JXTaskPane writingModesPropertiesTaskPane = new JXTaskPane();
+		writingModesPropertiesTaskPane.setTitle("Writing Modes Properties");
+		taskPanes.add(writingModesPropertiesTaskPane);
+
+		JXTaskPane tablePropertiesTaskPane = new JXTaskPane();
+		tablePropertiesTaskPane.setTitle("Table Properties");
+		taskPanes.add(tablePropertiesTaskPane);
+
+		JXTaskPane listsandCountersPropertiesTaskPane = new JXTaskPane();
+		listsandCountersPropertiesTaskPane.setTitle("Lists And Counters Properties");
+		taskPanes.add(listsandCountersPropertiesTaskPane);
+
+		JXTaskPane animationPropertiesTaskPane = new JXTaskPane();
+		animationPropertiesTaskPane.setTitle("Animation Properties");
+		taskPanes.add(animationPropertiesTaskPane);
+
+		JXTaskPane transformPropertiesTaskPane = new JXTaskPane();
+		transformPropertiesTaskPane.setTitle("Transform Properties");
+		taskPanes.add(transformPropertiesTaskPane);
+
+		JXTaskPane transitionsPropertiesTaskPane = new JXTaskPane();
+		transitionsPropertiesTaskPane.setTitle("Transition Properties");
+		taskPanes.add(transitionsPropertiesTaskPane);
+
+		JXTaskPane basicUserInterfacePropertiesTaskPane = new JXTaskPane();
+		basicUserInterfacePropertiesTaskPane.setTitle("Basic User Interface Properties");
+		taskPanes.add(basicUserInterfacePropertiesTaskPane);
+
+		JXTaskPane multicolumnLayoutPropertiesTaskPane = new JXTaskPane();
+		multicolumnLayoutPropertiesTaskPane.setTitle("Multicolumn Layout Properties");
+		taskPanes.add(multicolumnLayoutPropertiesTaskPane);
+
+		JXTaskPane pagedMediaTaskPane = new JXTaskPane();
+		pagedMediaTaskPane.setTitle("Paged Media Task Pane");
+		taskPanes.add(pagedMediaTaskPane);
+
+		JXTaskPane generatedContentforPagedMediaTaskPane = new JXTaskPane();
+		generatedContentforPagedMediaTaskPane.setTitle("Generated Content For Paged Media");
+		taskPanes.add(generatedContentforPagedMediaTaskPane);
+
+		JXTaskPane filterEffectsPropertiesTaskPane = new JXTaskPane();
+		filterEffectsPropertiesTaskPane.setTitle("Filter Effects");
+		taskPanes.add(filterEffectsPropertiesTaskPane);
+
+		JXTaskPane imageValuesandReplacedContentTaskPane = new JXTaskPane();
+		imageValuesandReplacedContentTaskPane.setTitle("Image values and Replaced Content");
+		taskPanes.add(imageValuesandReplacedContentTaskPane);
+
+		JXTaskPane maskingPropertiesTaskPane = new JXTaskPane();
+		maskingPropertiesTaskPane.setTitle("MAskin Properties");
+		taskPanes.add(maskingPropertiesTaskPane);
+
+		JXTaskPane speechPropertiesTaskPane = new JXTaskPane();
+		speechPropertiesTaskPane.setTitle("Speech Properties");
+		taskPanes.add(speechPropertiesTaskPane);
+
+		for (JXTaskPane tp : taskPanes) {
+			tp.setCollapsed(true);
+			container.add(tp);
+		}
+		taskPanes.get(0).setCollapsed(false);
+		tabPanels[2].add(container);
+
+		// taskpane.add(new AbstractAction() {
+		// {
+		// putValue(Action.NAME, "task pane item 2 : an action");
+		// putValue(Action.SHORT_DESCRIPTION, "perform an action");
+		//// putValue(Action.SMALL_ICON, Images.NetworkConnected.getIcon(32, 32));
+		// }
+		//
+		// public void actionPerformed(ActionEvent e) {
+		// label.setText("an action performed");
+		// }
+		// });
+		// add the task pane to the taskpanecontainer
+
+		Elements styles = HTMLDocReader.tempDoc.select("link[href]");
+		org.jsoup.nodes.Document sdoc = Jsoup.parse(fullHTML);
+		for (Element e : styles) {
+
+			sdoc.head().append(e.toString());
 		}
 
 		try {
-			tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
+			// System.out.println(tempFile);
+			tempFile = new File(Main.tempDir + "\\" + "HTMLEditAttributeTemp.html");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
-			bw.write(fullHTML);
+			bw.write(sdoc.toString());
 			bw.close();
 			tempFile.deleteOnExit();
-			tempElementURL = tempFile.getAbsolutePath();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return;
 		}
 
 		textArea = new JTextArea(fullHTML);
 		textArea.setFont(new Font("Arial", Font.BOLD, 15));
 		tabbedPane = new JTabbedPane();
 		previewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, fxPanel, textArea);
-		previewPane.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().height) / 6);
+		previewPane.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().height) / 8);
 		JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, previewPane, tabbedPane);
 
 		// creat the tabs
@@ -570,7 +965,6 @@ public class EditNewElementDialog {
 		confirmButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				System.out.println("Confirm Button pressed");
 				try {
 					HTMLDocReader.tempDoc.body().append(textArea.getText());
 					reader.updateTempDoc();
@@ -602,7 +996,7 @@ public class EditNewElementDialog {
 		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
 			@Override
 			public void run() {
-				initFX(fxPanel, tempElementURL);
+				initFX(fxPanel, tempFile);
 			}
 		});
 
@@ -622,6 +1016,21 @@ public class EditNewElementDialog {
 				dialog.dispose();
 			}
 		});
+
+		tabbedPane.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				// TODO Auto-generated method stub
+				if (tabbedPane.getSelectedIndex() == 2) {
+					// File input = new File(Main.tempDir+"\\"+selectedCSSFile);
+					textArea.setText(getRule(elementNoTags).toString());
+				}
+				if (tabbedPane.getSelectedIndex() != 2) {
+					updateDoc();
+				}
+			}
+		});
+
 		dialog.pack();
 		mainSplit.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 4);
 		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 2,
@@ -638,6 +1047,34 @@ public class EditNewElementDialog {
 
 	}
 
+	private void changeUIdefaults() {
+		// JXTaskPaneContainer settings (developer defaults)
+		/*
+		 * These are all the properties that can be set (may change with new version of
+		 * SwingX) "TaskPaneContainer.useGradient", "TaskPaneContainer.background",
+		 * "TaskPaneContainer.backgroundGradientStart",
+		 * "TaskPaneContainer.backgroundGradientEnd", etc.
+		 */
+		// setting taskpanecontainer defaults
+		UIManager.put("TaskPaneContainer.useGradient", Boolean.FALSE);
+		UIManager.put("TaskPaneContainer.background", Color.WHITE);
+		// setting taskpane defaults
+		UIManager.put("TaskPane.font", new FontUIResource(new Font("Verdana", Font.BOLD, 16)));
+		UIManager.put("TaskPane.titleBackgroundGradientStart", Color.WHITE);
+		UIManager.put("TaskPane.titleBackgroundGradientEnd", Color.LIGHT_GRAY);
+	}
+
+	public Painter getPainter() {
+		int width = 100;
+		int height = 100;
+		Color color1 = Color.WHITE;
+		Color color2 = Color.WHITE;
+		LinearGradientPaint gradientPaint = new LinearGradientPaint(0.0f, 0.0f, width, height,
+				new float[] { 0.0f, 1.0f }, new Color[] { color1, color2 });
+		MattePainter mattePainter = new MattePainter(gradientPaint);
+		return mattePainter;
+	}
+
 	// private static String getFullHTML() {
 	// return fullHTML;
 	// }
@@ -648,8 +1085,7 @@ public class EditNewElementDialog {
 	 * 
 	 * 
 	 */
-	public CSSStyleRuleImpl getRule(String selector) {
-		/* I have set stylesheet to the class so that it is only parsed once */
+	public static CSSStyleRuleImpl getRule(String selector) {
 		CSSStyleSheetImpl ss = stylesheet;
 		CSSRuleListImpl rules = (CSSRuleListImpl) ss.getCssRules();
 		CSSStyleRuleImpl rule;
@@ -662,32 +1098,97 @@ public class EditNewElementDialog {
 		}
 		return null;
 	}
-//	a method to read a property of a specific rule:
-	public Property getProperty(String selector, String property){
-        Property retProp = null;
-        CSSStyleRuleImpl rule = getRule(selector);
-        if(rule != null){
-            CSSStyleDeclarationImpl style = (CSSStyleDeclarationImpl) rule.getStyle();
-            List<Property> props = style.getProperties();
-            for(Property prop : props){
-                if(prop.getName().equals(property)){
-                    return prop;
-                }
-            }
-        }
-        return retProp;
-    }
-	
-	public void writeCssProperty(String selector, String property, String newValue){
-        Property prop = getProperty(selector, property);
-        if(prop != null){
-            CSSValueImpl val = new CSSValueImpl();
-            val.setCssText(newValue);
-            prop.setValue(val);
-        }
-    }
 
-	private static void initFX(final JFXPanel fxPanel, String url) {
+	// a method to read a property of a specific rule:
+	public Property getProperty(String selector, String property) {
+		Property retProp = null;
+		CSSStyleRuleImpl rule = getRule(selector);
+		if (rule != null) {
+			CSSStyleDeclarationImpl style = (CSSStyleDeclarationImpl) rule.getStyle();
+			List<Property> props = style.getProperties();
+			for (Property prop : props) {
+				if (prop.getName().equals(property)) {
+					return prop;
+				}
+			}
+		}
+		return retProp;
+	}
+
+	public void writeCssProperty(String selector, String property, String newValue) {
+		Property prop = getProperty(selector, property);
+		if (prop != null) {
+			CSSValueImpl val = new CSSValueImpl();
+			val.setCssText(newValue);
+			prop.setValue(val);
+
+			CSSFormat format = new CSSFormat();
+			format.setRgbAsHex(true);
+			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			try {
+				// FileUtils.writeStringToFile(file, data, encoding);
+				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						updateFX(tempFile.getAbsolutePath());
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			CSSStyleRuleImpl r = getRule(elementNoTags);
+			r.setCssText(elementNoTags + "{" + r.getStyle() + ";" + property + ":" + newValue + "}");
+			CSSFormat format = new CSSFormat();
+			format.setRgbAsHex(true);
+			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			try {
+				// FileUtils.writeStringToFile(file, data, encoding);
+				System.out.println(stylesheet.getCssText(format));
+				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						updateFX(tempFile.getAbsolutePath());
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+	}
+
+	public void removeCSSProperty(String selector, String property) {
+		Property prop = getProperty(selector, property);
+		System.out.println("Removing property:" + prop);
+		if (prop != null) {
+			// CSSValueImpl val = new CSSValueImpl();
+			// val.setCssText(null);
+			prop.setValue(null);
+			CSSFormat format = new CSSFormat();
+			format.setRgbAsHex(true);
+			File output = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
+			try {
+				// FileUtils.writeStringToFile(file, data, encoding);
+				FileUtils.writeStringToFile(output, (String) stylesheet.getCssText(format), "UTF-8");
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						updateFX(tempFile.getAbsolutePath());
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void initFX(final JFXPanel fxPanel, File f) {
 		Group group = new Group();
 		Scene scene = new Scene(group);
 		fxPanel.setScene(scene);
@@ -698,7 +1199,6 @@ public class EditNewElementDialog {
 		// Obtain the webEngine to navigate
 		webEngine = webView.getEngine();
 		try {
-			File f = new File(url);
 			webEngine.load(f.toURI().toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -714,10 +1214,15 @@ public class EditNewElementDialog {
 		} else {
 			f = new File(url);
 			try {
-				System.out.println("Updating frame");
 				webEngine.load(f.toURI().toString());
+				webEngine.reload();
+				if (tabbedPane.getSelectedIndex() == 2) {
+					textArea.setText(getRule(elementNoTags).toString());
+				}
 			} catch (NullPointerException e) {
 				// TODO Auto-generated catch block
+				return;
+			} catch (Exception e) {
 				return;
 			}
 		}
@@ -726,28 +1231,33 @@ public class EditNewElementDialog {
 
 	public static void updateDoc() {
 
-		Elements styles = HTMLDocReader.tempDoc.select("link[href]");
+		// Elements styles = HTMLDocReader.tempDoc.select("link[href]");
+		// org.jsoup.nodes.Document doc = Jsoup.parse(fullHTML);
+		// for (Element s : styles) {
+		// doc.head().append(s.outerHtml());
+		// }
 		org.jsoup.nodes.Document doc = Jsoup.parse(fullHTML);
-		for (Element e : styles) {
-			doc.head().append(e.toString());
-		}
+		doc.head().append("<link rel=\"stylesheet\" href=\"HTMLTempCSS.css\">");
 		try {
-			tempFile.delete();
-			tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
-			tempFile.deleteOnExit();
+			// tempFile.delete();
+			// tempFile = File.createTempFile("HTMLEditAttributeTemp", ".html");
+			// tempFile.deleteOnExit();
 		} catch (Exception e) {
 
 		}
 		try {
-			System.out.println(tempFile);
+			// System.out.println(tempFile);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
 			bw.write(doc.toString());
 			bw.close();
 			textArea.setText(doc.select(html.substring(1, html.length() - 1)).toString());
+			// textArea.setText(doc.toString());
 		} catch (IOException e) {
 			return;
+		} catch (NullPointerException e) {
+			return;
 		}
-		Platform.runLater(new Runnable() { // this will run initFX as JavaFX-Thread
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				updateFX(tempFile.getAbsolutePath());
@@ -760,7 +1270,6 @@ public class EditNewElementDialog {
 		String elementNoTags = html.substring(1, html.length() - 1);
 		Elements elementSelector = element.select(elementNoTags);
 		Element el = elementSelector.first();
-		System.out.println(el);
 		updateDoc();
 		return el;
 	}
