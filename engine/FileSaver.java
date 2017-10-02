@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.StandardCopyOption;
 
+import org.apache.commons.io.FileUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -73,6 +74,7 @@ public class FileSaver extends Thread {
 																							// webView highlighter
 					// DELETE TEMP FOLDER
 					FileHandler.deleteFolder(new File(Main.tempDir));
+					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

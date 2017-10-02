@@ -124,7 +124,12 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public static JTextArea textArea;
 
+	String asd;
 	public static void main(String[] args) {
+		
+//		Runtime.getRuntime().addShutdownHook(new DeletionHook());
+		
+		
 		loadWorkDirectories();
 		// System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
 		// System.out.println("READING PAGE URL: " + pageURL);
@@ -709,11 +714,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 							JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
 					if (result == JOptionPane.YES_OPTION) {
 						tempFileSaver.save();
-						try {
-							FileHandler.deleteFolder(new File(Main.tempDir));
-						} catch (Exception e) {
-							System.out.println("Cannot delete temp files: Temp files do not exist");
-						}
+//						try {
+//							FileHandler.deleteFolder(new File(Main.tempDir));
+//						} catch (Exception e) {
+//							System.out.println("Cannot delete temp files: Temp files do not exist");
+//						}
 						System.exit(0);
 					}
 					if (result == JOptionPane.NO_OPTION) {
@@ -1040,11 +1045,29 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
 						// TODO Auto-generated method stub
-						File htmlFile = new File(tempPageURL);
+						File htmlFile = new File(pageURL);
+
 						try {
-							Desktop.getDesktop().browse(htmlFile.toURI());
+							if (FileSaver.unsavedChanges) {
+								String[] options = { "Save & View", "Cancel" };
+								int n = JOptionPane.showOptionDialog(frame,
+										"You have unsaved changes.\nPlease save chnages before opening in a browser window",
+										"Unsaved changes", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+										null, options, options[1]);
+								if (n == JOptionPane.YES_OPTION) {
+									tempFileSaver.save();
+									Desktop.getDesktop().browse(htmlFile.toURI());
+								} else {
+
+								}
+							} else {
+								tempFileSaver.save();
+								Desktop.getDesktop().browse(htmlFile.toURI());
+							}
+
 						} catch (IOException e) {
-							JOptionPane.showMessageDialog(frame, "Web Browser not found.", "Web Browser not found", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(frame, "Web Browser not found.", "Web Browser not found",
+									JOptionPane.ERROR_MESSAGE);
 						}
 					}
 				});

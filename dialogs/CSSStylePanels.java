@@ -76,7 +76,10 @@ public class CSSStylePanels {
 		values = new ArrayList<String>();
 
 		System.out.println("CSSSTyle constructor");
-		
+
+		int flowLayoutWidth = 5;
+		int flowLayoutHeight = 5;
+
 		changeUIdefaults();
 		container = new JXTaskPaneContainer();
 
@@ -87,7 +90,7 @@ public class CSSStylePanels {
 		JTextField colorValue = new JTextField("");
 		textPropertiesTaskPane.setTitle("Text Properties");
 		taskPanes.add(textPropertiesTaskPane);
-		JPanel textColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JPanel textColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		textColorPanel.add(new JLabel("Text Color"));
 		JCheckBox colorCheck = new JCheckBox("");
 		colorCheck.addItemListener(new ItemListener() {
@@ -149,10 +152,10 @@ public class CSSStylePanels {
 			colorValue.setText(getProperty(getCssSelector(), "color").getValue().toString());
 		}
 
-		JPanel textAlignPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JPanel textAlignPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		String[] textAlignOptions = { "left", "right", "center", "justify", "initial", "inherit" };
 
-		textAlignPanel.add(new JLabel("Text-align"));
+		textAlignPanel.add(new JLabel("Text Align"));
 
 		JCheckBox textAlignCheck = new JCheckBox("");
 		JComboBox<String> alignComboBox = new JComboBox<String>(textAlignOptions);
@@ -192,10 +195,10 @@ public class CSSStylePanels {
 			alignComboBox.setSelectedItem(getProperty(getCssSelector(), "text-align").getValue().toString());
 		}
 
-		JPanel textTransformPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JPanel textTransformPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		String[] textTransformOptions = { "none", "capitalize", "uppercase", "lowercase", "initial", "inherit" };
 
-		textTransformPanel.add(new JLabel("Text-transform"));
+		textTransformPanel.add(new JLabel("Text	Transform"));
 
 		JCheckBox transformCheck = new JCheckBox("");
 		JComboBox<String> transformComboBox = new JComboBox<String>(textTransformOptions);
@@ -232,7 +235,7 @@ public class CSSStylePanels {
 		textTransformPanel.add(transformComboBox);
 
 		// CHECKS
-		if (getProperty(cssSelector, "text-align") != null) {
+		if (getProperty(cssSelector, "text-transform") != null) {
 			transformCheck.setSelected(true);
 			transformComboBox.setSelectedItem(getProperty(getCssSelector(), "text-align").getValue().toString());
 		}
@@ -246,11 +249,50 @@ public class CSSStylePanels {
 		fontPropertiesTaskPane.setTitle("Font Properties");
 		taskPanes.add(fontPropertiesTaskPane);
 
-		JPanel fontFamilyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JPanel fontFamilyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] fontFamilies = { "Arial Black", "Book Antiqua", "Comic Sans MS", "Courier New", "Courier New",
+				"Lucida Grande", "Lucida Sans Unicode", "Palatino Linotype", "Times New Roman", "Trebuchet MS" };
+		fontFamilyPanel.add(new JLabel("Font Family"));
 
-		JPanel fontSizePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JCheckBox fontFamilyCheck = new JCheckBox("");
+		JComboBox<String> fontFamilyCComboBox = new JComboBox<String>(fontFamilies);
+
+		fontFamilyCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (fontFamilyCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "font-family",
+							fontFamilyCComboBox.getSelectedItem().toString());
+				}
+				if (!fontFamilyCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "font-family");
+				}
+			}
+		});
+		fontFamilyCComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (fontFamilyCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "font-family",
+							fontFamilyCComboBox.getSelectedItem().toString());
+				}
+				if (!fontFamilyCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		fontFamilyPanel.add(fontFamilyCheck);
+		fontFamilyPanel.add(fontFamilyCComboBox);
+		if (getProperty(cssSelector, "font-weight") != null) {
+			fontFamilyCheck.setSelected(true);
+			fontFamilyCComboBox.setSelectedItem(getProperty(getCssSelector(), "font-family").getValue().toString());
+		}
+
+		JPanel fontSizePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		String[] fontSizes = { "px", "em", "%" };
-		fontSizePanel.add(new JLabel("Font-size"));
+		fontSizePanel.add(new JLabel("Font Size"));
 
 		JCheckBox fontSizeCheck = new JCheckBox("");
 		JComboBox<String> fontSizeComboBox = new JComboBox<String>(fontSizes);
@@ -313,7 +355,7 @@ public class CSSStylePanels {
 			}
 
 		});
-
+		
 		fontSizePanel.add(fontSizeCheck);
 		fontSizePanel.add(fontSizeTextField);
 		fontSizePanel.add(fontSizeComboBox);
@@ -327,8 +369,8 @@ public class CSSStylePanels {
 			fontSizeTextField.setText(numVal);
 			fontSizeComboBox.setSelectedItem(unit);
 		}
-		
-		JPanel fontStylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+
+		JPanel fontStylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		String[] fontStyles = { "normal", "italic", "oblique", "initial", "inherit" };
 
 		fontStylePanel.add(new JLabel("Font Style"));
@@ -367,8 +409,7 @@ public class CSSStylePanels {
 			fontStyleComboBox.setSelectedItem(getProperty(getCssSelector(), "font-style").getValue().toString());
 		}
 
-
-		JPanel fontWeightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JPanel fontWeightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		String[] fontWeights = { "normal", "bold", "bolder", "lighter", "100", "200", "300", "400", "500", "600", "700",
 				"800", "900", "initial", "inherit" };
 
@@ -408,7 +449,7 @@ public class CSSStylePanels {
 			fontWeightComboBox.setSelectedItem(getProperty(getCssSelector(), "font-weight").getValue().toString());
 		}
 
-		//MASTERS
+		// MASTERS
 		fontPropertiesTaskPane.add(fontFamilyPanel);
 		fontPropertiesTaskPane.add(fontSizePanel);
 		fontPropertiesTaskPane.add(fontStylePanel);
@@ -416,11 +457,293 @@ public class CSSStylePanels {
 
 		JXTaskPane texTDecorationropertiesTaskPane = new JXTaskPane();
 		texTDecorationropertiesTaskPane.setTitle("Text Decoration Properties");
+
+		JPanel textDecorationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] textDecorations = { "none", "underline", "overline", "line-through", "initial", "inherit" };
+
+		textDecorationPanel.add(new JLabel("Text-decoration"));
+		JCheckBox textDecorationCheck = new JCheckBox("");
+		JComboBox<String> textDecorationComboBox = new JComboBox<String>(textDecorations);
+
+		textDecorationCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (textDecorationCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "text-decoration",
+							textDecorationComboBox.getSelectedItem().toString());
+				}
+				if (!textDecorationCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "font-weight");
+				}
+			}
+		});
+		textDecorationComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (textDecorationCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "text-decoration",
+							textDecorationComboBox.getSelectedItem().toString());
+				}
+				if (!textDecorationCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		textDecorationPanel.add(textDecorationCheck);
+		textDecorationPanel.add(textDecorationComboBox);
+
+		JPanel textDecorationColorPanel = new JPanel(
+				new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		JTextField textDecorationColorValue = new JTextField("");
+
+		textDecorationColorPanel.add(new JLabel("Text Decoration Color"));
+		JCheckBox textDecorationColorCheck = new JCheckBox("");
+		textDecorationColorCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (textDecorationColorCheck.isSelected() && !textDecorationColorCheck.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "text-decoration-color", textDecorationColorValue.getText());
+				}
+				if (!textDecorationColorCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "text-decoration-color");
+				}
+			}
+		});
+		textDecorationColorPanel.add(textDecorationColorCheck);
+		textDecorationColorValue.setPreferredSize(d);
+		textDecorationColorPanel.add(textDecorationColorValue);
+		JButton textDecorationColorButton = new JButton("Choose Color");
+		textDecorationColorButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				Color d = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				if (d != null) {
+					textDecorationColorValue.setText(String.format("#%06x", d.getRGB() & 0x00FFFFFF));
+					if (textDecorationColorCheck.isSelected()) {
+						writeCssProperty(getCssSelector(), "text-decoration-color", textDecorationColorValue.getText());
+					}
+				}
+			}
+		});
+		textDecorationColorValue.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			private void update() {
+				if (textDecorationColorCheck.isSelected() && !textDecorationColorValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "text-decoration-color", textDecorationColorValue.getText());
+				}
+			}
+
+		});
+
+		textDecorationColorPanel.add(textDecorationColorButton);
+
+		// CHECKS
+		if (getProperty(cssSelector, "text-decoration") != null) {
+			textDecorationColorCheck.setSelected(true);
+			textDecorationColorValue
+					.setText(getProperty(getCssSelector(), "text-decoration-color").getValue().toString());
+		}
+
+		JPanel textDecorationStylePanel = new JPanel(
+				new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] textDecorationStyles = { "solid", "double", "dotted", "dashed", "wavy", "initial", "inherit" };
+
+		textDecorationStylePanel.add(new JLabel("Text Decoration Style"));
+		JCheckBox textDecorationStylesCheck = new JCheckBox("");
+		JComboBox<String> textDecoratioStylesComboBox = new JComboBox<String>(textDecorationStyles);
+
+		textDecorationStylesCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (textDecorationStylesCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "text-decoration-style",
+							textDecoratioStylesComboBox.getSelectedItem().toString());
+				}
+				if (!textDecorationStylesCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "font-weight");
+				}
+			}
+		});
+		textDecoratioStylesComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (textDecorationStylesCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "text-decoration-style",
+							textDecoratioStylesComboBox.getSelectedItem().toString());
+				}
+				if (!textDecorationStylesCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		textDecorationStylePanel.add(textDecorationStylesCheck);
+		textDecorationStylePanel.add(textDecoratioStylesComboBox);
+		// CHECKS
+		if (getProperty(cssSelector, "ttext-decoration-style") != null) {
+			textDecorationStylesCheck.setSelected(true);
+			textDecoratioStylesComboBox
+					.setSelectedItem(getProperty(getCssSelector(), "font-weight").getValue().toString());
+		}
+
+		// MASTERS
+		texTDecorationropertiesTaskPane.add(textDecorationPanel);
+		texTDecorationropertiesTaskPane.add(textDecorationColorPanel);
+		texTDecorationropertiesTaskPane.add(textDecorationStylePanel);
+
 		taskPanes.add(texTDecorationropertiesTaskPane);
 
-		JXTaskPane backgroundandBorderPropertiesTaskPane = new JXTaskPane();
-		backgroundandBorderPropertiesTaskPane.setTitle("Background and Border Properties");
-		taskPanes.add(backgroundandBorderPropertiesTaskPane);
+		JXTaskPane backgroundPropertiesTaskPane = new JXTaskPane();
+		backgroundPropertiesTaskPane.setTitle("Background Properties");
+		taskPanes.add(backgroundPropertiesTaskPane);
+		
+		JPanel backgroundColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		JTextField backgroundColorValue = new JTextField("");
+		backgroundColorPanel.add(new JLabel("Background Color"));
+		JCheckBox backgroundColorCheck = new JCheckBox("");
+		backgroundColorCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (backgroundColorCheck.isSelected() && !backgroundColorValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "background-color", backgroundColorValue.getText());
+				}
+				if (!backgroundColorCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "color");
+				}
+			}
+		});
+		backgroundColorPanel.add(backgroundColorCheck);
+		backgroundColorValue.setPreferredSize(d);
+		backgroundColorPanel.add(backgroundColorValue);
+		JButton backgroundColorButton = new JButton("Choose Color");
+		backgroundColorButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				if (c != null) {
+					backgroundColorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
+					if (backgroundColorCheck.isSelected()) {
+						writeCssProperty(getCssSelector(), "background-color", backgroundColorValue.getText());
+					}
+				}
+			}
+		});
+		backgroundColorValue.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			private void update() {
+				if (backgroundColorCheck.isSelected() && !backgroundColorValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "background-color", backgroundColorValue.getText());
+				}
+			}
+
+		});
+		backgroundColorPanel.add(backgroundColorButton);
+
+		// CHECKS
+		if (getProperty(cssSelector, "background-color") != null) {
+			backgroundColorCheck.setSelected(true);
+			backgroundColorValue.setText(getProperty(getCssSelector(), "background-color").getValue().toString());
+		}
+		
+		
+		JPanel backgroundImagePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		JTextField backgroundImageValue = new JTextField("");
+		backgroundImagePanel.add(new JLabel("Background Image"));
+		JCheckBox backgroundImageCheck = new JCheckBox("");
+		
+		backgroundImageCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (backgroundImageCheck.isSelected() && !backgroundImageValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "background-image", backgroundImageValue.getText());
+				}
+				if (!backgroundImageCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "background-image");
+				}
+			}
+		});
+		backgroundImagePanel.add(backgroundImageCheck);
+		backgroundImageValue.setPreferredSize(d);
+		backgroundImagePanel.add(backgroundImageValue);
+		
+		//UPLOAD URL
+		JButton backgroundImageButton = new JButton("Upload Image");
+		backgroundImageButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//UPLOAD CODE HERE
+			}
+		});
+		backgroundImageValue.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			private void update() {
+				if (backgroundImageCheck.isSelected() && !backgroundImageValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "background-image", backgroundImageValue.getText());
+				}
+			}
+
+		});
+		backgroundImagePanel.add(backgroundImageButton);
+		// CHECKS
+		if (getProperty(cssSelector, "background-image") != null) {
+			backgroundImageCheck.setSelected(true);
+			backgroundImageValue.setText(getProperty(getCssSelector(),"background-image").getValue().toString());
+		}
+		
+		//MASTERS
+		backgroundPropertiesTaskPane.add(backgroundColorPanel);
+		backgroundPropertiesTaskPane.add(backgroundImagePanel);
+		
+		JXTaskPane borderPropertiesTaskPane = new JXTaskPane();
+		borderPropertiesTaskPane.setTitle("Border Properties");
+		taskPanes.add(borderPropertiesTaskPane);
 
 		JXTaskPane basicBoxPropertiesTaskPane = new JXTaskPane();
 		basicBoxPropertiesTaskPane.setTitle("Basic Box Properties");
