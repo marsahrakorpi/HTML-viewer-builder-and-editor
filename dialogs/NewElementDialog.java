@@ -103,7 +103,7 @@ public class NewElementDialog implements TreeSelectionListener {
 				} else {
 					dialog.dispose();
 					System.out.println("Opening EditNewElementDialog");
-					new EditNewElementDialog(currentTagSelection, mongoClient, db, elementsCollection, reader);
+					new EditElementDialog(currentTagSelection, mongoClient, db, elementsCollection, reader, true, null);
 
 				}
 			}

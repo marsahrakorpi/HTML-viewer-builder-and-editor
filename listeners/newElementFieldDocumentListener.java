@@ -7,8 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import dialogs.EditNewElementDialog;
-import dialogs.EditNewElementDialogDeprecated;
+import dialogs.EditElementDialog;
 
 public class newElementFieldDocumentListener implements DocumentListener {
 
@@ -39,17 +38,17 @@ public class newElementFieldDocumentListener implements DocumentListener {
 	}
 
 	public void updateElement() {
-		Element element = EditNewElementDialog.el;
+		Element element = EditElementDialog.el;
 		System.out.println(element);
-		String attributeKey = EditNewElementDialog.label.get(index).getText();
-		if(EditNewElementDialog.field.get(index).getText().equals("") || EditNewElementDialog.field.get(index).getText()==null) {
+		String attributeKey = EditElementDialog.label.get(index).getText();
+		if(EditElementDialog.field.get(index).getText().equals("") || EditElementDialog.field.get(index).getText()==null) {
 			element.removeAttr(attributeKey);
 		} else {
-			element.attr(attributeKey, EditNewElementDialog.field.get(index).getText());
+			element.attr(attributeKey, EditElementDialog.field.get(index).getText());
 		}
 		Document fullHTMLDoc = Jsoup.parseBodyFragment(element.toString());
-		EditNewElementDialog.fullHTML = fullHTMLDoc.toString();
-		EditNewElementDialog.updateDoc();
+		EditElementDialog.fullHTML = fullHTMLDoc.toString();
+		EditElementDialog.updateDoc();
 	}
 
 }
