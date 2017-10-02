@@ -2,6 +2,7 @@ package engine;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
@@ -21,6 +22,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,6 +130,12 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		// System.out.println("READING PAGE URL: " + pageURL);
 	}
 
+	private static boolean isDirEmpty(final Path directory) throws IOException {
+		try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
+			return !dirStream.iterator().hasNext();
+		}
+	}
+
 	public static void loadWorkDirectories() {
 		// LOAD PROGRAM PROPERTIES.
 		Properties prop = new Properties();
@@ -143,9 +151,15 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			// if config finds a root folder but for some reason it does not exist, create a
 			// new one
 			// ie if the project folder has been manually deleted by the user
+
 			if (rootFolder == null || rootFolder.equals("") || !new File(rootFolder).exists()) {
 				createProjectfolder();
 			}
+			Path p = Paths.get(rootFolder);
+			if (isDirEmpty(p)) {
+				createProjectfolder();
+			}
+
 		} catch (IOException ex) {
 			// IF NO PROPERTIES FOUND, MAKE USER SELECT A HOME FOLDER
 			// THEN WRITES A PROPERTIES FILE TO SAVE PROPERTIES
@@ -400,7 +414,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		dialog.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
-				System.exit(0);
+				dialog.dispose();
 			}
 		});
 
@@ -613,19 +627,19 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		mainPane.add(tabbedPane, BorderLayout.CENTER);
 		mainPane.add(elementTreePane, BorderLayout.LINE_END);
 
-		Color topColor = new Color(50, 50, 50);
-		Color sideColor = new Color(50, 55, 65);
-		buttonPanelLeft.setBackground(topColor);
-		buttonPanelMiddle.setBackground(topColor);
-		buttonPanelRight.setBackground(topColor);
-		mainPane.setBackground(topColor);
-		tabbedPane.setBackground(Color.WHITE);
-		scrollPane.setBackground(Color.LIGHT_GRAY);
-		tree.setBackground(sideColor);
-		elementTree.setBackground(sideColor);
+		// Color topColor = new Color(50, 50, 50);
+		// Color sideColor = new Color(50, 55, 65);
+		// buttonPanelLeft.setBackground(topColor);
+		// buttonPanelMiddle.setBackground(topColor);
+		// buttonPanelRight.setBackground(topColor);
+		// mainPane.setBackground(topColor);
+		// tabbedPane.setBackground(Color.WHITE);
+		// scrollPane.setBackground(Color.LIGHT_GRAY);
+		// tree.setBackground(sideColor);
+		// elementTree.setBackground(sideColor);
 		tree.setCellRenderer(new TreeCellRenderer());
 		elementTree.setCellRenderer(new TreeCellRenderer());
-		frame.getContentPane().setBackground(topColor);
+		// frame.getContentPane().setBackground(topColor);
 
 		textArea.setCaretPosition(0);
 
@@ -796,7 +810,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		}
 
 	}
-	
+
 	public static void reloadWebEngine() {
 		Main.webEngine.reload();
 	}
@@ -806,31 +820,30 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	// BodyElementInfo.
 	private static void createNodes(DefaultMutableTreeNode top) {
 
-				parent = new DefaultMutableTreeNode("Head");
-				top.add(parent);
+		parent = new DefaultMutableTreeNode("Head");
+		top.add(parent);
 
-				for (int i = 1; i < HTMLDocReader.tempDoc.head().select("*").size(); i++) {
-					child = new DefaultMutableTreeNode(
-							new HeadElementInfo(HTMLDocReader.tempDoc.head().select("*").get(i).nodeName(), i));
-					parent.add(child);
-				}
+		for (int i = 1; i < HTMLDocReader.tempDoc.head().select("*").size(); i++) {
+			child = new DefaultMutableTreeNode(
+					new HeadElementInfo(HTMLDocReader.tempDoc.head().select("*").get(i).nodeName(), i));
+			parent.add(child);
+		}
 
-				parent = new DefaultMutableTreeNode("Body");
-				for (int i = 1; i < HTMLDocReader.tempDoc.body().select("*").size(); i++) {
+		parent = new DefaultMutableTreeNode("Body");
+		for (int i = 1; i < HTMLDocReader.tempDoc.body().select("*").size(); i++) {
 
-					if (HTMLDocReader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
-						Element element = HTMLDocReader.tempDoc.body().select("*").get(i);
-						i += createDivTree(parent, child, i, element);
-					} else {
-						child = new DefaultMutableTreeNode(
-								new BodyElementInfo(HTMLDocReader.tempDoc.body().select("*").get(i).nodeName() + " "
-										+ HTMLDocReader.tempDoc.body().select("*").get(i).id(), i, reader));
-						parent.add(child);
-					}
+			if (HTMLDocReader.tempDoc.body().select("*").get(i).nodeName().equals("div")) {
+				Element element = HTMLDocReader.tempDoc.body().select("*").get(i);
+				i += createDivTree(parent, child, i, element);
+			} else {
+				child = new DefaultMutableTreeNode(
+						new BodyElementInfo(HTMLDocReader.tempDoc.body().select("*").get(i).nodeName() + " "
+								+ HTMLDocReader.tempDoc.body().select("*").get(i).id(), i, reader));
+				parent.add(child);
+			}
 
-				}
-				top.add(parent);
-			
+		}
+		top.add(parent);
 
 	}
 
@@ -895,10 +908,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				JButton newFolderButton = new JButton();
 
 				// RIGHT
+				JButton openInBrowserButton = new JButton("View in browser");
 				JButton newElementButton = new JButton("New HTML Element");
 
-				int smolIconWidth = 22;
-				int smolIconHeight = 22;
+				int smolIconWidth = 28;
+				int smolIconHeight = 28;
 
 				/*
 				 * TO DO:: Currently if one resource is not found, anything following it will
@@ -913,10 +927,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					Image saveButtonIcon = ImageIO.read(getClass().getResource("/res/saveButtonIcon.png"));
 
 					// MIDDLE
-					Image newFolderIcon = ImageIO.read(getClass().getResource("/res/newFolderIcon.jpg"));
-					Image newFileIcon = ImageIO.read(getClass().getResource("/res/newFileIcon.jpg"));
+					Image newFolderIcon = ImageIO.read(getClass().getResource("/res/newFolderIcon.png"));
+					Image newFileIcon = ImageIO.read(getClass().getResource("/res/newFileIcon.png"));
 
 					// RIGHT
+					Image openInBrowserIcon = ImageIO.read(getClass().getResource("/res/openInBrowserIcon.png"));
 					Image newElementIcon = ImageIO.read(getClass().getResource("/res/newElementIcon.png"));
 
 					// LEFT
@@ -958,6 +973,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					newFileButton.setToolTipText("New Folder (Ctrl+N)");
 
 					// RIGHT
+					smolIcon = openInBrowserIcon.getScaledInstance(smolIconWidth, smolIconHeight,
+							java.awt.Image.SCALE_SMOOTH);
+					openInBrowserButton.setIcon(new ImageIcon(smolIcon));
+					openInBrowserButton.setToolTipText("Open this page in a web browser");
+
 					smolIcon = newElementIcon.getScaledInstance(smolIconWidth, smolIconHeight,
 							java.awt.Image.SCALE_SMOOTH);
 					newElementButton.setIcon(new ImageIcon(smolIcon));
@@ -982,6 +1002,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				newFileButton.revalidate();
 
 				// RIGHT
+				buttonPanelRight.add(openInBrowserButton);
 				buttonPanelRight.add(newElementButton);
 				buttonPanelRight.revalidate();
 				// LEFT LISTENERS
@@ -1015,6 +1036,18 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				});
 
 				// RIGHT LISTENERS
+				openInBrowserButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						// TODO Auto-generated method stub
+						File htmlFile = new File(tempPageURL);
+						try {
+							Desktop.getDesktop().browse(htmlFile.toURI());
+						} catch (IOException e) {
+							JOptionPane.showMessageDialog(frame, "Web Browser not found.", "Web Browser not found", JOptionPane.ERROR_MESSAGE);
+						}
+					}
+				});
 				newElementButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
@@ -1177,7 +1210,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				updateFX(tempPageURL);
 			}
 		});
-		
+
 		// RESET ELEMENTS TREE
 		DefaultTreeModel model = (DefaultTreeModel) elementTree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();

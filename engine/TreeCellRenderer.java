@@ -16,7 +16,7 @@ public class TreeCellRenderer extends DefaultTreeCellRenderer{
 
     @Override
     public Color getBackgroundSelectionColor() {
-        return new Color(125,125,125);
+        return new Color(200,200,200);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class TreeCellRenderer extends DefaultTreeCellRenderer{
         final Component ret = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
         final DefaultMutableTreeNode node = ((DefaultMutableTreeNode) (value));
-        setForeground(new Color(255,255,255));
+        setForeground(new Color(0,0,0));
         this.setText(value.toString());
         return ret;
     }

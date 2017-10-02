@@ -11,8 +11,15 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import org.bson.Document;
 import org.jsoup.nodes.Element;
 
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+
+import dialogs.EditElementDialog;
 import dialogs.EditElementDialog;
 import engine.BodyElementInfo;
 import engine.FileSaver;
@@ -52,7 +59,13 @@ public class ElementTreeMouseListener extends Thread implements MouseListener {
 
 	private void editBodyElement(BodyElementInfo bElement) {
 		Element element = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
-		new EditElementDialog(element, reader);
+		MongoClient mongoClient = new MongoClient(
+				new MongoClientURI("mongodb://user:password@ds151024.mlab.com:51024/htmlelements"));
+		MongoDatabase db = mongoClient.getDatabase("htmlelements");
+		MongoCollection<Document> elementsCollection = db.getCollection("elements");
+		System.out.println(element.nodeName());
+		String currentTagSelection = "<"+element.nodeName()+">";
+		new EditElementDialog(currentTagSelection, mongoClient, db, elementsCollection, reader, false, bElement);
 	}
 
 	private void removeBodyElement(BodyElementInfo bElement) {
