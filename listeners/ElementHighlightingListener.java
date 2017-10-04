@@ -54,7 +54,7 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 				}
 				Object nodeInfo = node.getUserObject();
 				BodyElementInfo bElement = (BodyElementInfo) nodeInfo;
-
+				
 				// System.out.println(HTMLDocReader.bodyElements.get(bElement.index));
 				try {
 					highlightElement(HTMLDocReader.tempDoc.body().select("*").get(bElement.index));

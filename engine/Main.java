@@ -1,12 +1,12 @@
 package engine;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.dnd.DnDConstants;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -124,12 +124,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public static JTextArea textArea;
 
-	String asd;
+
 	public static void main(String[] args) {
-		
-//		Runtime.getRuntime().addShutdownHook(new DeletionHook());
-		
-		
+
+		// Runtime.getRuntime().addShutdownHook(new DeletionHook());
+
 		loadWorkDirectories();
 		// System.out.println("ROOT DIRECTORY: " + System.getProperty("user.dir"));
 		// System.out.println("READING PAGE URL: " + pageURL);
@@ -714,11 +713,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 							JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
 					if (result == JOptionPane.YES_OPTION) {
 						tempFileSaver.save();
-//						try {
-//							FileHandler.deleteFolder(new File(Main.tempDir));
-//						} catch (Exception e) {
-//							System.out.println("Cannot delete temp files: Temp files do not exist");
-//						}
+						// try {
+						// FileHandler.deleteFolder(new File(Main.tempDir));
+						// } catch (Exception e) {
+						// System.out.println("Cannot delete temp files: Temp files do not exist");
+						// }
 						System.exit(0);
 					}
 					if (result == JOptionPane.NO_OPTION) {
@@ -1264,4 +1263,5 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		createNodes(top);
 		model.reload();
 	}
+
 }

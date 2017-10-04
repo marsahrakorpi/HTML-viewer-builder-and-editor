@@ -60,8 +60,9 @@ public class HTMLDocReader extends Thread {
 	public void updateTempDoc() {
 		// Threading here greatly reduces update lag on the JavaFX webview
 //		System.out.println("Updating temp doc with doc of: "+tempDoc.toString());
-		Thread t = new Thread() {
-			public void run() {
+//		Thread t = new Thread() {
+//			public void run() {
+				
 				File file = new File(Main.tempPageURL);
 				try {
 					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -75,16 +76,16 @@ public class HTMLDocReader extends Thread {
 				input = new File(Main.tempPageURL);
 				try {
 					tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
-
+//					System.out.println("NEWWWWW"+tempDoc.toString());
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 
-			}		
-
-		};
-		t.start();
+//			}		
+//
+//		};
+//		t.start();
 
 		Platform.runLater(new Runnable() {
 			public void run() {

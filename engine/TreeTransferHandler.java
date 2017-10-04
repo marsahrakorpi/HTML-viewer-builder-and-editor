@@ -1,5 +1,6 @@
 package engine;
 
+import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -11,6 +12,7 @@ import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -28,10 +30,13 @@ class TreeTransferHandler extends TransferHandler {
 	DataFlavor[] flavors = new DataFlavor[1];
 	DefaultMutableTreeNode[] nodesToRemove;
 	HTMLDocReader reader;
-
-	BodyElementInfo movingElement;
+	DefaultMutableTreeNode[] nodes;
+	DefaultMutableTreeNode target;
+	DefaultMutableTreeNode firstNode;
+	DefaultTreeModel modelM;
+	DefaultMutableTreeNode parent;
+	BodyElementInfo bElement;
 	int movingFromIndex, movingToIndex;
-	BodyElementInfo destinationElement;
 
 	public TreeTransferHandler(HTMLDocReader reader) {
 		try {
@@ -72,9 +77,9 @@ class TreeTransferHandler extends TransferHandler {
 		// Do not allow a non-leaf node to be copied to a level
 		// which is less than its source level.
 		TreePath dest = dl.getPath();
-		DefaultMutableTreeNode target = (DefaultMutableTreeNode) dest.getLastPathComponent();
+		target = (DefaultMutableTreeNode) dest.getLastPathComponent();
 		TreePath path = tree.getPathForRow(selRows[0]);
-		DefaultMutableTreeNode firstNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+		firstNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 		if (firstNode.getChildCount() > 0 && target.getLevel() < firstNode.getLevel()) {
 			return false;
 		}
@@ -115,11 +120,10 @@ class TreeTransferHandler extends TransferHandler {
 			List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();
 			DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[0].getLastPathComponent();
 			DefaultMutableTreeNode copy = copy(node);
-			System.out.println(paths[0].getPathComponent(1));
 
 			if (paths[0].getPathComponent(1).toString().equals("Body")) {
-				Object nodeInfo = node.getUserObject();
-				BodyElementInfo bElement = (BodyElementInfo) nodeInfo;
+				Object nodeInfo = (Object) node.getUserObject();
+				bElement = (BodyElementInfo) nodeInfo;
 				movingFromIndex = bElement.index;
 			}
 
@@ -138,7 +142,7 @@ class TreeTransferHandler extends TransferHandler {
 					toRemove.add(next);
 				}
 			}
-			DefaultMutableTreeNode[] nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
+			nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
 			nodesToRemove = toRemove.toArray(new DefaultMutableTreeNode[toRemove.size()]);
 
 			return new NodesTransferable(nodes);
@@ -151,18 +155,96 @@ class TreeTransferHandler extends TransferHandler {
 		return (DefaultMutableTreeNode) n.clone();
 	}
 
-	/** Defensive copy used in createTransferable. */
+	/**
+	 * Defensive copy used in createTransferable.
+	 * 
+	 * @param n
+	 */
 	// private DefaultMutableTreeNode copy(TreeNode node) {
 	//
 	// return new DefaultMutableTreeNode(node);
 	// }
 
+	private TreeNode getParents(TreeNode n) {
+		TreeNode node = n.getParent();
+		if (node.toString().equals("Body")) {
+			node = getParents(node);
+		}
+
+		return node;
+	}
+
 	protected void exportDone(JComponent source, Transferable data, int action) {
+		JTree tree = (JTree) source;
+		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
 
-		if ((action & MOVE) == MOVE) {
+		if (action == 0) {
+			System.out.println("CREATING DIV");
 
-			JTree tree = (JTree) source;
-			DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+			Element addToDiv = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
+			String toDivHTML = addToDiv.outerHtml();
+			// System.out.println(parent);
+
+			BodyElementInfo nodeElement;
+			// System.out.println(parent.getUserObject());
+			try {
+				Object nodeInfo = parent.getUserObject();
+				nodeElement = (BodyElementInfo) nodeInfo;
+				if (nodeElement.elementName.equals("div")) {
+
+				}
+			} catch (Exception e1) {
+
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getChildAt(movingToIndex + 1);
+				Object nodeInfo = node.getUserObject();
+				nodeElement = (BodyElementInfo) nodeInfo;
+			}
+
+			System.out.println(bElement.index + "__" + nodeElement.index);
+
+			Element secondElement = HTMLDocReader.tempDoc.body().select("*").get(nodeElement.index);
+
+			if (secondElement.nodeName().equals("div")) {
+				System.out.println("EQUALS DIV");
+				secondElement.prepend(toDivHTML);
+				addToDiv.remove();
+			} else {
+				String newDivHTML = toDivHTML + secondElement.outerHtml();
+				Element nd = new Element("div");
+				nd.append(addToDiv.outerHtml());
+				nd.append(secondElement.outerHtml());
+				addToDiv.after(nd);
+				addToDiv.remove();
+				secondElement.remove();
+			}
+
+			try {
+				reader.updateTempDoc();
+				Main.updateFrame();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				for (int i = 0; i < nodesToRemove.length; i++) {
+					model.removeNodeFromParent(nodesToRemove[i]);
+				}
+				return;
+			}
+
+		}
+
+		else if ((action & MOVE) == MOVE) {
+			System.out.println(movingFromIndex + "::" + movingToIndex);
+			if (parent.toString().equals("Root")) {
+				try {
+					for (int i = 0; i < nodesToRemove.length; i++) {
+						model.removeNodeFromParent(nodesToRemove[i]);
+					}
+					Main.updateFrame();
+				} catch (Exception e) {
+					return;
+				}
+				return;
+			}
 			// IF MOVING FROM A PLACE TO THE SAME PLACE, DO NOT DO ANYTHING
 			if ((movingFromIndex == movingToIndex) && movingToIndex != 0) {
 				// Remove nodes saved in nodesToRemove in createTransferable.
@@ -175,53 +257,78 @@ class TreeTransferHandler extends TransferHandler {
 				}
 				return;
 			}
-			Elements elements = HTMLDocReader.tempDoc.body().select("*");
-			Element el = elements.get(movingFromIndex);
 
-			Element copyElement = el.clone();
-			// System.out.println(copyElement);
-			el.attr("id", "MarkedForDeletionByTreeTransferHanndler");
-			try {
-
-				elements.add(movingToIndex + 1, copyElement);
-				elements.remove(el);
-
-				String newBody = "";
-				for (int i = 1; i < elements.size(); i++) {
-					newBody += (elements.get(i).outerHtml());
-				}
-				
-				Document newBodyDocument = Jsoup.parse(newBody);
-				Element newBodyElement = newBodyDocument.body();
-
-				HTMLDocReader.tempDoc.body().remove();
-				HTMLDocReader.tempDoc.head().after(newBodyElement);
-
-				reader.updateTempDoc();
-				Main.updateFrame();
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-				for (int i = 0; i < nodesToRemove.length; i++) {
-					model.removeNodeFromParent(nodesToRemove[i]);
-				}
-				return;
+			if (movingToIndex == 0) {
+				movingToIndex++;
 			}
 
-			// Remove nodes saved in nodesToRemove in createTransferable.
-			 for (int i = 0; i < nodesToRemove.length; i++) {
-				 try {
-					model.removeNodeFromParent(nodesToRemove[i]);
-				} catch (Exception e) {
+			Element fromElement = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
+
+			// System.out.println(parent);
+
+			BodyElementInfo nodeElement;
+			// System.out.println(parent.getUserObject());
+			try {
+				Object nodeInfo = parent.getUserObject();
+				nodeElement = (BodyElementInfo) nodeInfo;
+				if (nodeElement.elementName.equals("div")) {
 
 				}
-			 }
+			} catch (Exception e1) {
+				DefaultMutableTreeNode node;
+				if (movingFromIndex < movingToIndex) {
+					node = (DefaultMutableTreeNode) parent.getChildAt(movingToIndex+1);
+				} else {
+					node = (DefaultMutableTreeNode) parent.getChildAt(movingToIndex-1);
+				}
+				Object nodeInfo = node.getUserObject();
+				nodeElement = (BodyElementInfo) nodeInfo;
+			}
+			System.out.println(nodeElement.elementName);
+			// System.out.println(fromElement);
+			// System.out.println(nodeElement.getOuterHTML());
+
+			Element toElement = HTMLDocReader.tempDoc.body().select("*").get(nodeElement.index);
+
+			System.out.println(toElement.nodeName());
+			if (toElement.nodeName().equals("div") && !fromElement.nodeName().equals("div")) {
+				toElement.prepend(fromElement.outerHtml());
+				fromElement.remove();
+			} else {
+				if (movingFromIndex < movingToIndex) {
+					toElement.before(fromElement);
+				} else {
+					toElement.after(fromElement);
+				}
+				
+			}
 
 		}
+		try {
+			reader.updateTempDoc();
+			Main.updateFrame();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			for (int i = 0; i < nodesToRemove.length; i++) {
+				model.removeNodeFromParent(nodesToRemove[i]);
+			}
+			return;
+		}
+
+		// Remove nodes saved in nodesToRemove in createTransferable.
+		for (int i = 0; i < nodesToRemove.length; i++) {
+			try {
+				model.removeNodeFromParent(nodesToRemove[i]);
+			} catch (Exception e) {
+
+			}
+		}
+
 	}
 
 	public int getSourceActions(JComponent c) {
-		return COPY_OR_MOVE;
+		return MOVE;
 	}
 
 	public boolean importData(TransferHandler.TransferSupport support) {
@@ -242,19 +349,23 @@ class TreeTransferHandler extends TransferHandler {
 		JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
 		int childIndex = dl.getChildIndex();
 		TreePath dest = dl.getPath();
-		DefaultMutableTreeNode parent = (DefaultMutableTreeNode) dest.getLastPathComponent();
+
+		parent = (DefaultMutableTreeNode) dest.getLastPathComponent();
 		JTree tree = (JTree) support.getComponent();
-		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+		modelM = (DefaultTreeModel) tree.getModel();
+
 		// Configure for drop mode.
 		int index = childIndex; // DropMode.INSERT
-		if (childIndex == -1) { // DropMode.ON
-			index = parent.getChildCount();
-		}
+		// if (childIndex == -1) { // DropMode.ON
+		// index = parent.getChildCount();
+		// }
+		System.out.println(childIndex);
 		movingToIndex = index;
 		// Add data to model.
 		for (int i = 0; i < nodes.length; i++) {
-			model.insertNodeInto(nodes[i], parent, index++);
+			modelM.insertNodeInto(nodes[i], parent, index++);
 		}
+
 		return true;
 	}
 
@@ -282,5 +393,18 @@ class TreeTransferHandler extends TransferHandler {
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
 			return nodesFlavor.equals(flavor);
 		}
+	}
+
+	public int getNumberOfNodes(TreeModel model) {
+		return getNumberOfNodes(model, model.getRoot());
+	}
+
+	private int getNumberOfNodes(TreeModel model, Object node) {
+		int count = 1;
+		int nChildren = model.getChildCount(node);
+		for (int i = 0; i < nChildren; i++) {
+			count += getNumberOfNodes(model, model.getChild(node, i));
+		}
+		return count;
 	}
 }
