@@ -16,13 +16,13 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,12 +43,10 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.RootPaneContainer;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.FontUIResource;
 
 import org.apache.commons.io.FileUtils;
 import org.bson.Document;
@@ -117,6 +115,7 @@ public class EditElementDialog {
 	public static WebEngine webEngine;
 
 	// UI
+	final JDialog dialog;
 	private String[] tabTitles = { "Global Attributes", "Element Attributes", "Style properties", "Events" };
 	private JPanel[] tabPanels = new JPanel[tabTitles.length];
 	private static CSSStylePanels cssPanels;
@@ -135,7 +134,8 @@ public class EditElementDialog {
 	boolean isNewElement = true;
 
 	public EditElementDialog(String html, MongoClient mongoClient, MongoDatabase db,
-			MongoCollection<Document> elementsCollection, HTMLDocReader reader, boolean newElement, BodyElementInfo bElement) {
+			MongoCollection<Document> elementsCollection, HTMLDocReader reader, boolean newElement,
+			BodyElementInfo bElement) {
 
 		this.html = html;
 		this.reader = reader;
@@ -145,23 +145,21 @@ public class EditElementDialog {
 		final JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
 
-		final JDialog dialog = new JDialog(Main.frame, "New Element", true);
+		dialog = new JDialog(Main.frame, "New Element", true);
 		RootPaneContainer root = (RootPaneContainer) Main.frame.getRootPane().getTopLevelAncestor();
 		root.getGlassPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		root.getGlassPane().setVisible(true);
 
-		Dimension d = new Dimension(150, 20);
+		Dimension d = new Dimension(150, 23);
 
 		Document doc = elementsCollection.find(eq("name", html)).first();
 
 		JSONArray attrObj;
 		JSONObject object = new JSONObject(doc.toJson());
-		
-		
-		if(isNewElement) {
+
+		if (isNewElement) {
 			fullHTML = object.get("tag").toString();
-		}
-		else {
+		} else {
 			fullHTML = bElement.getOuterHTML();
 		}
 
@@ -169,7 +167,7 @@ public class EditElementDialog {
 		// parsing to jsoup elements and then back to string will fix the tags to be
 		// appropriate
 		el = createJsoupElement();
-//		fullHTML = element.toString();
+		// fullHTML = element.toString();
 
 		// file handling
 
@@ -249,14 +247,12 @@ public class EditElementDialog {
 		field = new ArrayList<JTextField>();
 		for (int i = 0; i < globalHTMLAttributes.length; i++) {
 			label.add(new JLabel(globalHTMLAttributes[i]));
-			if(el.hasAttr(globalHTMLAttributes[i])) {
+			if (el.hasAttr(globalHTMLAttributes[i])) {
 				field.add(new JTextField(el.attr(globalHTMLAttributes[i])));
 			} else {
 				field.add(new JTextField(""));
 			}
-				
 
-			
 		}
 		for (int i = 0; i < label.size(); i++) {
 
@@ -579,6 +575,8 @@ public class EditElementDialog {
 		classSelectLabel.setVisible(false);
 		classComboBox.setVisible(false);
 
+		JButton newClassButton = new JButton("New Class");
+		newClassButton.setVisible(false);
 		JPanel referPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JLabel referLabel = new JLabel("Refer to this element by: ");
 		JLabel warningLabel = new JLabel("Will change the style of all " + elementNoTags + " elements.");
@@ -590,6 +588,7 @@ public class EditElementDialog {
 			public void actionPerformed(ActionEvent s) {
 				classSelectLabel.setVisible(false);
 				classComboBox.setVisible(false);
+				newClassButton.setVisible(false);
 				classComboBox.removeAllItems();
 				switch (cssSelectorComboBox.getSelectedItem().toString()) {
 
@@ -722,6 +721,7 @@ public class EditElementDialog {
 					warningLabel.setText("");
 					classSelectLabel.setVisible(true);
 					classComboBox.setVisible(true);
+					newClassButton.setVisible(true);
 					try {
 						css = FileUtils.readFileToString(
 								new File(Main.tempDir + "\\" + cssFilesComboBox.getSelectedItem()), "UTF-8");
@@ -785,7 +785,7 @@ public class EditElementDialog {
 					try {
 						el.addClass(cssSelector.substring(1, cssSelector.length()));
 					} catch (Exception e) {
-						//no class exists
+						// no class exists
 					}
 					tabPanels[2].remove(cssPanels.getContainer());
 					cssPanels = new CSSStylePanels(cssSelector, stylesheet, tempHTMLFile, tempCSSFile, elementNoTags, d,
@@ -801,12 +801,94 @@ public class EditElementDialog {
 				}
 			}
 		});
+
 		referPanel.add(referLabel);
 		referPanel.add(cssSelectorComboBox);
 		referPanel.add(warningLabel);
 		referPanel.add(classSelectLabel);
 		referPanel.add(classComboBox);
+		referPanel.add(newClassButton);
 		tabPanels[2].add(referPanel);
+
+		newClassButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				final JDialog newClassDialog = new JDialog(dialog, "Enter a Class Name", true);
+				JPanel mPanel = new JPanel();
+				mPanel.setLayout(new BoxLayout(mPanel, BoxLayout.PAGE_AXIS));
+				JLabel titleLabel = new JLabel("Class Name");
+				titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+				mPanel.add(titleLabel);
+				JTextField nameField = new JTextField("");
+				nameField.setMaximumSize(d);
+				mPanel.add(nameField);
+				JPanel bPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+				JButton confButton = new JButton("Confirm");
+				JButton cancButton = new JButton("Cancel");
+				bPanel.add(confButton);
+				bPanel.add(cancButton);
+
+				confButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						try {
+							System.out.println("conf");
+							String css = FileUtils.readFileToString(
+									new File(Main.tempDir + "\\" + cssFilesComboBox.getSelectedItem()), "UTF-8");
+							css += "\n" + "." + nameField.getText() + "{\n}";
+							// textArea.setText(css);
+							FileUtils.write(tempCSSFile, css, "UTF-8");
+							// update stylesheet
+							InputSource inputSource = new InputSource(
+									new StringReader(FileUtils.readFileToString(tempCSSFile, "UTF-8")));
+							CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+							stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
+							el.addClass(nameField.getText());
+							cssSelector = "."+nameField.getText();
+							System.out.println(cssSelector);
+							classComboBox.addItem(cssSelector);
+							classComboBox.setSelectedItem(cssSelector);
+							tabPanels[2].remove(cssPanels.getContainer());
+							cssPanels = new CSSStylePanels(cssSelector, stylesheet, tempHTMLFile, tempCSSFile,
+									elementNoTags, d, textArea, tabbedPane, "EditNewElementDialog");
+							tabPanels[2].add(cssPanels.getContainer());
+							cssPanels.setCssSelector(cssSelector);
+							textArea.setText(cssPanels.getCSSText(cssSelector));
+							fullHTML = element.toString();
+							updateDoc();
+							newClassDialog.dispose();
+						} catch (IOException e) {
+							e.printStackTrace();
+							newClassDialog.dispose();
+						}
+					}
+				});
+
+				cancButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						dialog.dispose();
+					}
+				});
+				mPanel.add(bPanel);
+				newClassDialog.add(mPanel);
+				newClassDialog.addWindowListener(new WindowAdapter() {
+					public void windowClosing(WindowEvent we) {
+						newClassDialog.dispose();
+					}
+				});
+
+				newClassDialog.pack();
+
+				newClassDialog.setLocation(dialog.getX() + dialog.getWidth() / 2 - newClassDialog.getWidth() / 2,
+						dialog.getY() + dialog.getHeight() / 2 - newClassDialog.getHeight() / 2);
+				newClassDialog.setMinimumSize(new Dimension(300,100));
+				newClassDialog.setVisible(true);
+			}
+
+		});
 
 		tabPanels[2].add(cssPanels.getContainer());
 
@@ -873,10 +955,10 @@ public class EditElementDialog {
 
 					if (isNewElement) {
 						HTMLDocReader.tempDoc.body().append(fullHTML);
-					} else if(!isNewElement) {
+					} else if (!isNewElement) {
 						Element oldElementInDoc = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
-						System.out.println("EL"+el);
-						System.out.println("Old"+oldElementInDoc);
+						System.out.println("EL" + el);
+						System.out.println("Old" + oldElementInDoc);
 						oldElementInDoc.replaceWith(el);
 					}
 
