@@ -360,7 +360,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				JFileChooser fc = new JFileChooser();
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
-				int returnVal = fc.showOpenDialog(fc);
+				int returnVal = fc.showOpenDialog(dialog);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					String gotFile = fc.getSelectedFile().toString();
 					System.out.println(gotFile);
@@ -429,8 +429,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 		dialog.setSize(700, 150);
 		// center the dialog on screen
-		dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 - dialog.getWidth() / 2,
-				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2 - dialog.getHeight() / 2);
+		dialog.setLocation(frame.getX()+(Toolkit.getDefaultToolkit().getScreenSize().width) / 2 - dialog.getWidth() / 2,
+				frame.getY()+(Toolkit.getDefaultToolkit().getScreenSize().height) / 2 - dialog.getHeight() / 2);
 		dialog.setVisible(true);
 
 	}

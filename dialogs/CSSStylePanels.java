@@ -112,7 +112,7 @@ public class CSSStylePanels {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				Color c = JColorChooser.showDialog(Main.frame, "Choose a Color", Color.BLACK);
 				if (c != null) {
 					colorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
 					if (colorCheck.isSelected()) {
@@ -517,7 +517,7 @@ public class CSSStylePanels {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				Color d = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				Color d = JColorChooser.showDialog(Main.frame, "Choose a Color", Color.BLACK);
 				if (d != null) {
 					textDecorationColorValue.setText(String.format("#%06x", d.getRGB() & 0x00FFFFFF));
 					if (textDecorationColorCheck.isSelected()) {
@@ -636,7 +636,7 @@ public class CSSStylePanels {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				Color c = JColorChooser.showDialog(Main.frame, "Choose a Color", Color.BLACK);
 				if (c != null) {
 					backgroundColorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
 					if (backgroundColorCheck.isSelected()) {
@@ -906,7 +906,7 @@ public class CSSStylePanels {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				Color c = JColorChooser.showDialog(Main.frame, "Choose a Color", Color.BLACK);
 				if (c != null) {
 					borderColorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
 					if (borderColorCheck.isSelected()) {
