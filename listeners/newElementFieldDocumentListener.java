@@ -48,7 +48,7 @@ public class newElementFieldDocumentListener implements DocumentListener {
 		}
 		Document fullHTMLDoc = Jsoup.parseBodyFragment(element.toString());
 		EditElementDialog.fullHTML = fullHTMLDoc.toString();
-		EditElementDialog.updateDoc();
+//		EditElementDialog.updateDoc();
 	}
 
 }

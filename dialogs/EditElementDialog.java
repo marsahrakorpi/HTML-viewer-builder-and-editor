@@ -16,12 +16,13 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URL;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +35,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -73,6 +75,7 @@ import com.steadystate.css.parser.CSSOMParser;
 import com.steadystate.css.parser.SACParserCSS3;
 
 import engine.BodyElementInfo;
+import engine.FileHandler;
 import engine.FileSaver;
 import engine.HTMLDocReader;
 import engine.Main;
@@ -310,14 +313,13 @@ public class EditElementDialog {
 					// THIS IS THE KEY THAT IS USED TO MAKE THE ATTRIBUTE NAMES JLABEL
 
 					JPanel optionsPanel = new JPanel();
-
 					String key = iterator.next();
 					JLabel keyLabel = new JLabel(key);
 					keyLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 					optionsPanel.add(keyLabel);
 					// KEY ARRAY
 					JSONArray keyArray = objectFromArray.getJSONArray(key);
-
+					JTextField uploadTextField = new JTextField();
 					optionsPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
 					optionsPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 20));
 					optionsPanel.setMaximumSize(new Dimension(500, 75));
@@ -388,6 +390,9 @@ public class EditElementDialog {
 								optionsPanel.add(checkBox);
 							} else {
 								JComboBox<String> valueComboBox = new JComboBox<String>(valueStringList);
+								if (el.hasAttr(key)) {
+									valueComboBox.setSelectedItem(el.attr(key));
+								}
 								valueComboBox.setMaximumSize(d);
 								valueComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 								valueComboBox.addItemListener(new ItemListener() {
@@ -428,6 +433,9 @@ public class EditElementDialog {
 									//
 									// JFormattedTextField numberTextField = new JFormattedTextField(formatter);
 									JTextField numberTextField = new JTextField();
+									if (el.hasAttr(key)) {
+										numberTextField.setText(el.attr(key));
+									}
 									numberTextField.setPreferredSize(d);
 									numberTextField.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -463,9 +471,8 @@ public class EditElementDialog {
 									});
 									optionsPanel.add(numberTextField);
 								} else {
-									JTextField textField = new JTextField();
-									textField.setPreferredSize(d);
-									textField.getDocument().addDocumentListener(new DocumentListener() {
+									uploadTextField.setPreferredSize(d);
+									uploadTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 										@Override
 										public void changedUpdate(DocumentEvent e) {
@@ -486,17 +493,18 @@ public class EditElementDialog {
 										}
 
 										public void updateElement() {
-											if (textField.getText().equals("") || textField.getText() == null) {
+											if (uploadTextField.getText().equals("")
+													|| uploadTextField.getText() == null) {
 												el.removeAttr(key);
 											} else {
-												el.attr(key, textField.getText());
+												el.attr(key, uploadTextField.getText());
 											}
 											fullHTML = element.toString();
 											updateDoc();
 										}
 
 									});
-									optionsPanel.add(textField);
+									optionsPanel.add(uploadTextField);
 								}
 
 								JLabel unitLabel = new JLabel(" - " + unitArray.getString(0));
@@ -507,10 +515,232 @@ public class EditElementDialog {
 						}
 
 						if (type.equals("action")) {
+							valuePanel.add(optionsPanel);
+							optionsPanel = new JPanel();
+							optionsPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+							optionsPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 20));
+							optionsPanel.setMaximumSize(new Dimension(500, 75));
+							optionsPanel.add(new JLabel("src"));
+							final JComboBox<String> imgComboBox = new JComboBox<String>();
 							JSONArray actionArray = lastObject.getJSONArray("action");
 							if (actionArray.get(0).toString().equals("upload")) {
+
+								if (elementNoTags.equals("img")) {
+									File imFile = new File(Main.tempDir + "\\res");
+									File[] list = imFile.listFiles();
+									imgComboBox.addItem("");
+									for (int f = 0; f < list.length; f++) {
+										imgComboBox.addItem(list[f].getName());
+									}
+									imgComboBox.setSize(d);
+									imgComboBox.addActionListener(new ActionListener() {
+										@Override
+										public void actionPerformed(ActionEvent e) {
+											if (imgComboBox.getSelectedIndex() != 0) {
+												uploadTextField
+														.setText("res\\" + imgComboBox.getSelectedItem().toString());
+											} else {
+												uploadTextField.setText("");
+											}
+
+										}
+									});
+									if (el.hasAttr("src")) {
+										uploadTextField.setText(el.attr("src"));
+									}
+
+									optionsPanel.add(imgComboBox);
+
+								}
+
 								JButton uploadButton = new JButton("Upload");
 								optionsPanel.add(uploadButton);
+
+								uploadButton.addActionListener(new ActionListener() {
+									@Override
+									public void actionPerformed(ActionEvent e) {
+
+										JPanel mainPanel = new JPanel(new BorderLayout());
+										final JDialog urlTypeDialog = new JDialog(dialog, "File Upload", true);
+
+										JPanel infoTypePanel = new JPanel();
+										JPanel typeButtonPanel = new JPanel();
+										FlowLayout layout = new FlowLayout(FlowLayout.CENTER, 20, 10);
+										typeButtonPanel.setLayout(layout);
+
+										JLabel typeLabel = new JLabel("Upload from local file or URL?");
+
+										infoTypePanel.add(typeLabel);
+
+										JButton localButton = new JButton("Local file");
+										JButton urlButton = new JButton("URL");
+										JButton cancelButton = new JButton("Cancel");
+
+										typeButtonPanel.add(localButton);
+										typeButtonPanel.add(urlButton);
+										typeButtonPanel.add(cancelButton);
+
+										localButton.addActionListener(new ActionListener() {
+											@Override
+											public void actionPerformed(ActionEvent arg0) {
+												JFileChooser fc = new JFileChooser();
+												fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+												fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
+												int returnVal = fc.showOpenDialog(urlTypeDialog);
+												if (returnVal == JFileChooser.APPROVE_OPTION) {
+													System.out.println(fc.getSelectedFile().getName());
+													File sourceFile = new File(fc.getSelectedFile().getAbsolutePath());
+													File destFile = new File(
+															Main.tempDir + "\\res\\" + fc.getSelectedFile().getName());
+													if (destFile.exists()) {
+														uploadTextField
+																.setText("res\\" + fc.getSelectedFile().getName());
+														urlTypeDialog.dispose();
+													} else {
+														try {
+															FileHandler.copyFile(sourceFile, destFile,
+																	StandardCopyOption.REPLACE_EXISTING);
+															uploadTextField
+																	.setText("res\\" + fc.getSelectedFile().getName());
+															imgComboBox.addItem(fc.getSelectedFile().getName());
+															imgComboBox.setSelectedItem(fc.getSelectedFile().getName());
+															urlTypeDialog.dispose();
+														} catch (IOException e1) {
+														}
+													}
+												} else {
+
+												}
+											}
+										});
+										urlButton.addActionListener(new ActionListener() {
+											@Override
+											public void actionPerformed(ActionEvent arg0) {
+												urlTypeDialog.setVisible(false);
+												JPanel mPanel = new JPanel(new BorderLayout());
+												final JDialog urlUploadDialog = new JDialog(dialog, "File Upload",
+														true);
+
+												JPanel namePanel = new JPanel();
+												JPanel textPanel = new JPanel();
+												JPanel buttonPanel = new JPanel();
+
+												JLabel urlTL = new JLabel("URL: ");
+												JTextField urlTextField = new JTextField();
+												urlTextField.setPreferredSize(d);
+												namePanel.add(urlTL);
+												namePanel.add(urlTextField);
+
+												JLabel urlFN = new JLabel("File name: ");
+												JTextField fileNameField = new JTextField();
+												fileNameField.setPreferredSize(d);
+												textPanel.add(urlFN);
+												textPanel.add(fileNameField);
+
+												JButton confirmButton = new JButton("Confirm");
+												JButton cancelButton = new JButton("Cancel");
+												FlowLayout layout = new FlowLayout(FlowLayout.CENTER, 20, 10);
+												buttonPanel.setLayout(layout);
+
+												buttonPanel.add(confirmButton);
+												buttonPanel.add(cancelButton);
+
+												mPanel.add(namePanel, BorderLayout.NORTH);
+												mPanel.add(textPanel, BorderLayout.CENTER);
+												mPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+												confirmButton.addActionListener(new ActionListener() {
+													@Override
+													public void actionPerformed(ActionEvent arg0) {
+
+														if (fileNameField.getText() == null
+																|| fileNameField.getText().equals("")
+																|| fileNameField.getText().equals(" ")) {
+															JOptionPane.showMessageDialog(urlUploadDialog,
+																	"Please enter a file name.", "No File Name",
+																	JOptionPane.ERROR_MESSAGE);
+															return;
+														} else {
+
+															try {
+																URL sourceURL = new URL(urlTextField.getText());
+																File destFile = new File(Main.tempDir + "\\res\\"
+																		+ fileNameField.getText() + ".jpg");
+																FileUtils.copyURLToFile(sourceURL, destFile);
+																imgComboBox.addItem(fileNameField.getText() + ".jpg");
+																imgComboBox.setSelectedItem(
+																		fileNameField.getText() + ".jpg");
+																uploadTextField.setText(
+																		"res\\" + fileNameField.getText() + ".jpg");
+															} catch (IOException e) {
+																// TODO Auto-generated catch block
+																e.printStackTrace();
+															}
+															urlUploadDialog.dispose();
+															urlTypeDialog.dispose();
+														}
+
+													}
+												});
+												cancelButton.addActionListener(new ActionListener() {
+													@Override
+													public void actionPerformed(ActionEvent arg0) {
+														urlUploadDialog.dispose();
+														urlTypeDialog.setVisible(true);
+													}
+												});
+
+												urlUploadDialog.setContentPane(mPanel);
+												urlUploadDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+												urlUploadDialog.addWindowListener(new WindowAdapter() {
+													public void windowClosing(WindowEvent we) {
+														urlUploadDialog.dispose();
+													}
+												});
+												// center the dialog on screen
+												urlUploadDialog.setSize(400, 150);
+												urlUploadDialog.setLocation(
+														dialog.getX() + (dialog.getWidth() / 2)
+																- (urlUploadDialog.getWidth() / 3),
+														dialog.getY() + dialog.getHeight() / 3);
+												urlUploadDialog.setVisible(true);
+											}
+										});
+
+										cancelButton.addActionListener(new ActionListener() {
+											@Override
+											public void actionPerformed(ActionEvent e) {
+												urlTypeDialog.dispose();
+											}
+										});
+
+										mainPanel.add(typeLabel, BorderLayout.CENTER);
+										mainPanel.add(typeButtonPanel, BorderLayout.SOUTH);
+
+										urlTypeDialog.setContentPane(mainPanel);
+										urlTypeDialog.setSize(400, 150);
+										urlTypeDialog.setLocation(
+												dialog.getX() + (dialog.getWidth() / 2)
+														- (urlTypeDialog.getWidth() / 3),
+												dialog.getY() + dialog.getHeight() / 3);
+										urlTypeDialog.setVisible(true);
+
+										// Object[] options = { "Local File", "URL" };
+										// int opRes = JOptionPane.showOptionDialog(dialog,
+										// "Upload a local file or download from a URL?\n\nThis will save a copy of the
+										// selected \nresource in the project folder.", "File upload",
+										// JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options,
+										// null);
+										// if (opRes == JOptionPane.YES_OPTION) {
+
+										// } else if (opRes == JOptionPane.NO_OPTION) {
+
+										// } else {
+										//
+										// }
+
+									}
+								});
 							}
 						}
 					}
@@ -778,11 +1008,11 @@ public class EditElementDialog {
 					cssSelector = classComboBox.getItemAt(0);
 					Attributes classElements = el.attributes();
 					try {
-					for (Attribute a : classElements) {
-						if (a.getKey().equals("class")) {
-							classElements.remove(a.getKey());
+						for (Attribute a : classElements) {
+							if (a.getKey().equals("class")) {
+								classElements.remove(a.getKey());
+							}
 						}
-					}
 
 						el.addClass(cssSelector.substring(1, cssSelector.length()));
 					} catch (Exception e) {
@@ -847,7 +1077,7 @@ public class EditElementDialog {
 							CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
 							stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
 							el.addClass(nameField.getText());
-							cssSelector = "."+nameField.getText();
+							cssSelector = "." + nameField.getText();
 							System.out.println(cssSelector);
 							classComboBox.addItem(cssSelector);
 							classComboBox.setSelectedItem(cssSelector);
@@ -885,7 +1115,7 @@ public class EditElementDialog {
 
 				newClassDialog.setLocation(dialog.getX() + dialog.getWidth() / 2 - newClassDialog.getWidth() / 2,
 						dialog.getY() + dialog.getHeight() / 2 - newClassDialog.getHeight() / 2);
-				newClassDialog.setMinimumSize(new Dimension(300,100));
+				newClassDialog.setMinimumSize(new Dimension(300, 100));
 				newClassDialog.setVisible(true);
 			}
 
@@ -920,9 +1150,9 @@ public class EditElementDialog {
 						textArea.setText(elementNoTags + "{\t}");
 					}
 				}
-				if (tabbedPane.getSelectedIndex() != 2) {
-					updateDoc();
-				}
+				// if (tabbedPane.getSelectedIndex() != 2) {
+				// updateDoc();
+				// }
 			}
 		});
 
@@ -1045,23 +1275,40 @@ public class EditElementDialog {
 
 		dialog.pack();
 
-		mainSplit.setDividerLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 3 - 100);
-		previewPane.setDividerLocation(dialog.getHeight() / 4);
-		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 2,
+		previewPane.setDividerLocation(0.65);
+		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 + 200,
 				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2);
 		// center the dialog on screen
 		dialog.setLocation(
 				(Toolkit.getDefaultToolkit().getScreenSize().width) / 2 + Main.frame.getX() - dialog.getWidth() / 2,
 				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2 + Main.frame.getY() - dialog.getHeight() / 2);
+
 		// dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 -
 		// dialog.getWidth() / 2,
 		// (Toolkit.getDefaultToolkit().getScreenSize().height) / 2 - dialog.getHeight()
 		// / 2);
-
+		// webView.setMinSize(previewPane.getSize().width,
+		// previewPane.getSize().height);
 		root.getGlassPane().setCursor(Cursor.getDefaultCursor());
-		System.out.println(el);
-		textArea.setMaximumSize(new Dimension(previewPane.getWidth(), previewPane.getHeight()));
-		textArea.setLineWrap(true);
+		mainSplit.setDividerLocation(dialog.getWidth() / 2 + dialog.getWidth() / 24);
+		mainSplit.setDividerSize(5);
+
+		// textArea.setMaximumSize(new Dimension(previewPane.getWidth(),
+		// previewPane.getHeight()));
+		// textArea.setPreferredSize(new Dimension(previewPane.getWidth(), 100));
+		// textArea.setMinimumSize(new Dimension(1, 50));
+		// textArea.setLineWrap(true);
+		// tabbedPane.setMaximumSize(new Dimension(dialog.getWidth(),
+		// dialog.getHeight()));
+		// tabbedPane.setPreferredSize(new Dimension(dialog.getWidth() / 2,
+		// dialog.getHeight()));
+		// webView.setMaxSize(previewPane.getWidth(), previewPane.getSize().height);
+		// previewPane.setSize(new Dimension(previewPane.getWidth()+220,
+		// previewPane.getHeight()));
+		// webView.setMinSize(previewPane.getWidth(), previewPane.getHeight());
+		// webView.setPrefSize(previewPane.getWidth(), previewPane.getSize().height -
+		// textArea.getHeight() - 15);
+
 		updateDoc();
 		Platform.runLater(new Runnable() {
 			@Override
@@ -1092,13 +1339,12 @@ public class EditElementDialog {
 	}
 
 	public static void updateFX(String url) {
-		File f = new File(url);
-		webView.setPrefSize(previewPane.getSize().width, previewPane.getSize().height);
+		webView.setMinSize(previewPane.getSize().width, previewPane.getSize().height);
+		System.out.println(webView.heightProperty());
 		if (url == null || url.equals("") || url.equals(null)) {
 			webEngine.load("htt://www.google.com");
 		} else {
 			try {
-				webEngine.load(f.toURI().toString());
 				webEngine.reload();
 				if (tabbedPane.getSelectedIndex() == 2) {
 					textArea.setText(cssPanels.getCSSText(cssSelector));

@@ -624,7 +624,7 @@ public class CSSStylePanels {
 					writeCssProperty(getCssSelector(), "background-color", backgroundColorValue.getText());
 				}
 				if (!backgroundColorCheck.isSelected()) {
-					removeCSSProperty(getCssSelector(), "color");
+					removeCSSProperty(getCssSelector(), "background-color");
 				}
 			}
 		});
@@ -1666,7 +1666,7 @@ public class CSSStylePanels {
 
 		JXTaskPane marginAndPaddingTaskPane = new JXTaskPane();
 		marginAndPaddingTaskPane.setTitle("Margins and Padding");
-		
+
 		// TOP
 
 		JPanel marginTopPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
@@ -2049,73 +2049,116 @@ public class CSSStylePanels {
 				marginRightComboBox.setSelectedItem(unit);
 			}
 		}
-		
+
 		marginAndPaddingTaskPane.add(marginTopPanel);
 		marginAndPaddingTaskPane.add(marginBottomPanel);
 		marginAndPaddingTaskPane.add(marginLeftPanel);
 		marginAndPaddingTaskPane.add(marginRightPanel);
-		
+
 		taskPanes.add(marginAndPaddingTaskPane);
 
 		JXTaskPane flexibleBoxLayoutTaskPane = new JXTaskPane();
 		flexibleBoxLayoutTaskPane.setTitle("Flexible Box Layout");
+
+		JPanel alignContentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] alignOptions = { "stretch", "center", "flex-start", "flex-end", "space-between", "space-around" };
+
+		alignContentPanel.add(new JLabel("Align Content"));
+		JCheckBox alignContentCheck = new JCheckBox("");
+		JComboBox<String> alignContentComboBox = new JComboBox<String>(alignOptions);
+
+		alignContentCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (alignContentCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "align-content", alignContentComboBox.getSelectedItem().toString());
+				}
+				if (!alignContentCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "align-content");
+				}
+			}
+		});
+		alignContentComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (alignContentCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "align-content", alignContentComboBox.getSelectedItem().toString());
+				}
+				if (!alignContentCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		alignContentPanel.add(alignContentCheck);
+		alignContentPanel.add(alignContentComboBox);
+		if (getProperty(cssSelector, "align-content") != null) {
+			alignContentCheck.setSelected(true);
+			alignContentComboBox.setSelectedItem(getProperty(getCssSelector(), "align-content").getValue().toString());
+		}
+		
+		
+
+		flexibleBoxLayoutTaskPane.add(alignContentPanel);
+
 		taskPanes.add(flexibleBoxLayoutTaskPane);
 
-		JXTaskPane writingModesPropertiesTaskPane = new JXTaskPane();
-		writingModesPropertiesTaskPane.setTitle("Writing Modes Properties");
-		taskPanes.add(writingModesPropertiesTaskPane);
-
-		JXTaskPane tablePropertiesTaskPane = new JXTaskPane();
-		tablePropertiesTaskPane.setTitle("Table Properties");
-		taskPanes.add(tablePropertiesTaskPane);
-
-		JXTaskPane listsandCountersPropertiesTaskPane = new JXTaskPane();
-		listsandCountersPropertiesTaskPane.setTitle("Lists And Counters Properties");
-		taskPanes.add(listsandCountersPropertiesTaskPane);
-
-		JXTaskPane animationPropertiesTaskPane = new JXTaskPane();
-		animationPropertiesTaskPane.setTitle("Animation Properties");
-		taskPanes.add(animationPropertiesTaskPane);
-
-		JXTaskPane transformPropertiesTaskPane = new JXTaskPane();
-		transformPropertiesTaskPane.setTitle("Transform Properties");
-		taskPanes.add(transformPropertiesTaskPane);
-
-		JXTaskPane transitionsPropertiesTaskPane = new JXTaskPane();
-		transitionsPropertiesTaskPane.setTitle("Transition Properties");
-		taskPanes.add(transitionsPropertiesTaskPane);
-
-		JXTaskPane basicUserInterfacePropertiesTaskPane = new JXTaskPane();
-		basicUserInterfacePropertiesTaskPane.setTitle("Basic User Interface Properties");
-		taskPanes.add(basicUserInterfacePropertiesTaskPane);
-
-		JXTaskPane multicolumnLayoutPropertiesTaskPane = new JXTaskPane();
-		multicolumnLayoutPropertiesTaskPane.setTitle("Multicolumn Layout Properties");
-		taskPanes.add(multicolumnLayoutPropertiesTaskPane);
-
-		JXTaskPane pagedMediaTaskPane = new JXTaskPane();
-		pagedMediaTaskPane.setTitle("Paged Media Task Pane");
-		taskPanes.add(pagedMediaTaskPane);
-
-		JXTaskPane generatedContentforPagedMediaTaskPane = new JXTaskPane();
-		generatedContentforPagedMediaTaskPane.setTitle("Generated Content For Paged Media");
-		taskPanes.add(generatedContentforPagedMediaTaskPane);
-
-		JXTaskPane filterEffectsPropertiesTaskPane = new JXTaskPane();
-		filterEffectsPropertiesTaskPane.setTitle("Filter Effects");
-		taskPanes.add(filterEffectsPropertiesTaskPane);
-
-		JXTaskPane imageValuesandReplacedContentTaskPane = new JXTaskPane();
-		imageValuesandReplacedContentTaskPane.setTitle("Image values and Replaced Content");
-		taskPanes.add(imageValuesandReplacedContentTaskPane);
-
-		JXTaskPane maskingPropertiesTaskPane = new JXTaskPane();
-		maskingPropertiesTaskPane.setTitle("Masking Properties");
-		taskPanes.add(maskingPropertiesTaskPane);
-
-		JXTaskPane speechPropertiesTaskPane = new JXTaskPane();
-		speechPropertiesTaskPane.setTitle("Speech Properties");
-		taskPanes.add(speechPropertiesTaskPane);
+//		JXTaskPane writingModesPropertiesTaskPane = new JXTaskPane();
+//		writingModesPropertiesTaskPane.setTitle("Writing Modes Properties");
+//		taskPanes.add(writingModesPropertiesTaskPane);
+//
+//		JXTaskPane tablePropertiesTaskPane = new JXTaskPane();
+//		tablePropertiesTaskPane.setTitle("Table Properties");
+//		taskPanes.add(tablePropertiesTaskPane);
+//
+//		JXTaskPane listsandCountersPropertiesTaskPane = new JXTaskPane();
+//		listsandCountersPropertiesTaskPane.setTitle("Lists And Counters Properties");
+//		taskPanes.add(listsandCountersPropertiesTaskPane);
+//
+//		JXTaskPane animationPropertiesTaskPane = new JXTaskPane();
+//		animationPropertiesTaskPane.setTitle("Animation Properties");
+//		taskPanes.add(animationPropertiesTaskPane);
+//
+//		JXTaskPane transformPropertiesTaskPane = new JXTaskPane();
+//		transformPropertiesTaskPane.setTitle("Transform Properties");
+//		taskPanes.add(transformPropertiesTaskPane);
+//
+//		JXTaskPane transitionsPropertiesTaskPane = new JXTaskPane();
+//		transitionsPropertiesTaskPane.setTitle("Transition Properties");
+//		taskPanes.add(transitionsPropertiesTaskPane);
+//
+//		JXTaskPane basicUserInterfacePropertiesTaskPane = new JXTaskPane();
+//		basicUserInterfacePropertiesTaskPane.setTitle("Basic User Interface Properties");
+//		taskPanes.add(basicUserInterfacePropertiesTaskPane);
+//
+//		JXTaskPane multicolumnLayoutPropertiesTaskPane = new JXTaskPane();
+//		multicolumnLayoutPropertiesTaskPane.setTitle("Multicolumn Layout Properties");
+//		taskPanes.add(multicolumnLayoutPropertiesTaskPane);
+//
+//		JXTaskPane pagedMediaTaskPane = new JXTaskPane();
+//		pagedMediaTaskPane.setTitle("Paged Media Task Pane");
+//		taskPanes.add(pagedMediaTaskPane);
+//
+//		JXTaskPane generatedContentforPagedMediaTaskPane = new JXTaskPane();
+//		generatedContentforPagedMediaTaskPane.setTitle("Generated Content For Paged Media");
+//		taskPanes.add(generatedContentforPagedMediaTaskPane);
+//
+//		JXTaskPane filterEffectsPropertiesTaskPane = new JXTaskPane();
+//		filterEffectsPropertiesTaskPane.setTitle("Filter Effects");
+//		taskPanes.add(filterEffectsPropertiesTaskPane);
+//
+//		JXTaskPane imageValuesandReplacedContentTaskPane = new JXTaskPane();
+//		imageValuesandReplacedContentTaskPane.setTitle("Image values and Replaced Content");
+//		taskPanes.add(imageValuesandReplacedContentTaskPane);
+//
+//		JXTaskPane maskingPropertiesTaskPane = new JXTaskPane();
+//		maskingPropertiesTaskPane.setTitle("Masking Properties");
+//		taskPanes.add(maskingPropertiesTaskPane);
+//
+//		JXTaskPane speechPropertiesTaskPane = new JXTaskPane();
+//		speechPropertiesTaskPane.setTitle("Speech Properties");
+//		taskPanes.add(speechPropertiesTaskPane);
 
 		for (JXTaskPane tp : taskPanes) {
 			tp.setCollapsed(true);
