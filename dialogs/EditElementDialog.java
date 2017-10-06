@@ -777,12 +777,13 @@ public class EditElementDialog {
 
 					cssSelector = classComboBox.getItemAt(0);
 					Attributes classElements = el.attributes();
+					try {
 					for (Attribute a : classElements) {
 						if (a.getKey().equals("class")) {
 							classElements.remove(a.getKey());
 						}
 					}
-					try {
+
 						el.addClass(cssSelector.substring(1, cssSelector.length()));
 					} catch (Exception e) {
 						// no class exists

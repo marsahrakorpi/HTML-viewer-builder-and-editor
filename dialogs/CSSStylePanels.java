@@ -261,8 +261,7 @@ public class CSSStylePanels {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if (fontFamilyCheck.isSelected()) {
-					writeCssProperty(getCssSelector(), "font-family",
-							fontFamilyCComboBox.getSelectedItem().toString());
+					writeCssProperty(getCssSelector(), "font-family", fontFamilyCComboBox.getSelectedItem().toString());
 				}
 				if (!fontFamilyCheck.isSelected()) {
 					removeCSSProperty(getCssSelector(), "font-family");
@@ -274,8 +273,7 @@ public class CSSStylePanels {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				if (fontFamilyCheck.isSelected()) {
-					writeCssProperty(getCssSelector(), "font-family",
-							fontFamilyCComboBox.getSelectedItem().toString());
+					writeCssProperty(getCssSelector(), "font-family", fontFamilyCComboBox.getSelectedItem().toString());
 				}
 				if (!fontFamilyCheck.isSelected()) {
 					return;
@@ -355,7 +353,7 @@ public class CSSStylePanels {
 			}
 
 		});
-		
+
 		fontSizePanel.add(fontSizeCheck);
 		fontSizePanel.add(fontSizeTextField);
 		fontSizePanel.add(fontSizeComboBox);
@@ -614,7 +612,7 @@ public class CSSStylePanels {
 		JXTaskPane backgroundPropertiesTaskPane = new JXTaskPane();
 		backgroundPropertiesTaskPane.setTitle("Background Properties");
 		taskPanes.add(backgroundPropertiesTaskPane);
-		
+
 		JPanel backgroundColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		JTextField backgroundColorValue = new JTextField("");
 		backgroundColorPanel.add(new JLabel("Background Color"));
@@ -677,13 +675,12 @@ public class CSSStylePanels {
 			backgroundColorCheck.setSelected(true);
 			backgroundColorValue.setText(getProperty(getCssSelector(), "background-color").getValue().toString());
 		}
-		
-		
+
 		JPanel backgroundImagePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		JTextField backgroundImageValue = new JTextField("");
 		backgroundImagePanel.add(new JLabel("Background Image"));
 		JCheckBox backgroundImageCheck = new JCheckBox("");
-		
+
 		backgroundImageCheck.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
@@ -698,13 +695,13 @@ public class CSSStylePanels {
 		backgroundImagePanel.add(backgroundImageCheck);
 		backgroundImageValue.setPreferredSize(d);
 		backgroundImagePanel.add(backgroundImageValue);
-		
-		//UPLOAD URL
+
+		// UPLOAD URL
 		JButton backgroundImageButton = new JButton("Upload Image");
 		backgroundImageButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//UPLOAD CODE HERE
+				// UPLOAD CODE HERE
 			}
 		});
 		backgroundImageValue.getDocument().addDocumentListener(new DocumentListener() {
@@ -734,20 +731,1331 @@ public class CSSStylePanels {
 		// CHECKS
 		if (getProperty(cssSelector, "background-image") != null) {
 			backgroundImageCheck.setSelected(true);
-			backgroundImageValue.setText(getProperty(getCssSelector(),"background-image").getValue().toString());
+			backgroundImageValue.setText(getProperty(getCssSelector(), "background-image").getValue().toString());
 		}
-		
-		//MASTERS
+
+		// MASTERS
 		backgroundPropertiesTaskPane.add(backgroundColorPanel);
 		backgroundPropertiesTaskPane.add(backgroundImagePanel);
-		
+
 		JXTaskPane borderPropertiesTaskPane = new JXTaskPane();
 		borderPropertiesTaskPane.setTitle("Border Properties");
+
+		JPanel borderStylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] borderStyles = { "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset",
+				"initial", "inherit" };
+
+		borderStylePanel.add(new JLabel("Border Style"));
+		JCheckBox borderStyleCheck = new JCheckBox("");
+		JComboBox<String> borderStyleComboBox = new JComboBox<String>(borderStyles);
+
+		borderStyleCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (borderStyleCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "border-style",
+							borderStyleComboBox.getSelectedItem().toString());
+				}
+				if (!borderStyleCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "border-style");
+				}
+			}
+		});
+		borderStyleComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (borderStyleCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "border-style",
+							borderStyleComboBox.getSelectedItem().toString());
+				}
+				if (!borderStyleCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		borderStylePanel.add(borderStyleCheck);
+		borderStylePanel.add(borderStyleComboBox);
+
+		if (getProperty(cssSelector, "border-style") != null) {
+			borderStyleCheck.setSelected(true);
+			borderStyleComboBox.setSelectedItem(getProperty(getCssSelector(), "border-style").getValue().toString());
+		}
+
+		JPanel borderWidthPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] borderWidths = { "medium", "thin", "thick", "px", "em", "%" };
+		borderWidthPanel.add(new JLabel("Border Width"));
+
+		JCheckBox borderWidthCheck = new JCheckBox("");
+		JComboBox<String> borderWidthComboBox = new JComboBox<String>(borderWidths);
+		JTextField borderWidthTextField = new JTextField("");
+		borderWidthTextField.setPreferredSize(d);
+		borderWidthTextField.setVisible(false);
+
+		borderWidthCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (borderWidthCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "border-width",
+							borderWidthTextField.getText() + borderWidthComboBox.getSelectedItem().toString());
+				}
+				if (!borderWidthCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "border-width");
+				}
+			}
+		});
+
+		borderWidthTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (borderWidthCheck.isSelected()) {
+					if (borderWidthTextField.getText().equals("") || borderWidthTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "border-width");
+					} else {
+						writeCssProperty(getCssSelector(), "border-width",
+								borderWidthTextField.getText() + borderWidthComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		borderWidthComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (borderWidthCheck.isSelected()) {
+					System.out.println(borderWidthComboBox.getSelectedItem());
+					if (borderWidthComboBox.getSelectedItem().toString().equals("medium")
+							|| borderWidthComboBox.getSelectedItem().toString().equals("thin")
+							|| borderWidthComboBox.getSelectedItem().toString().equals("thick")) {
+						borderWidthTextField.setText("");
+						borderWidthTextField.setVisible(false);
+					} else {
+						System.out.println("Setting visible");
+						borderWidthTextField.setVisible(true);
+						borderWidthPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "border-width",
+							borderWidthTextField.getText() + borderWidthComboBox.getSelectedItem().toString());
+				}
+				if (!borderWidthCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		borderWidthPanel.add(borderWidthCheck);
+		borderWidthPanel.add(borderWidthTextField);
+		borderWidthPanel.add(borderWidthComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "border-width") != null) {
+			borderWidthCheck.setSelected(true);
+			String borderWidthValue = getProperty(getCssSelector(), "border-width").getValue().toString();
+			if (borderWidthValue.equals("medium") || borderWidthValue.equals("thin")
+					|| borderWidthValue.equals("thick")) {
+				borderWidthTextField.setVisible(false);
+				borderWidthComboBox.setSelectedItem(borderWidthValue);
+			} else {
+				String numVal = borderWidthValue.replaceAll("[^0-9]", "");
+				String unit = borderWidthValue.replaceAll("[0-9]", "");
+				borderWidthTextField.setVisible(true);
+				borderWidthTextField.setText(numVal);
+				borderWidthComboBox.setSelectedItem(unit);
+			}
+		}
+
+		JPanel borderColorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+		JTextField borderColorValue = new JTextField("");
+		borderColorPanel.add(new JLabel("Border Color"));
+		JCheckBox borderColorCheck = new JCheckBox("");
+		borderColorCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (borderColorCheck.isSelected() && !borderColorValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "border-color", borderColorValue.getText());
+				}
+				if (!borderColorCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "color");
+				}
+			}
+		});
+		borderColorPanel.add(borderColorCheck);
+		borderColorValue.setPreferredSize(d);
+		borderColorPanel.add(borderColorValue);
+		JButton borderColorButton = new JButton("Choose Color");
+		borderColorButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				Color c = JColorChooser.showDialog(null, "Choose a Color", Color.BLACK);
+				if (c != null) {
+					borderColorValue.setText(String.format("#%06x", c.getRGB() & 0x00FFFFFF));
+					if (borderColorCheck.isSelected()) {
+						writeCssProperty(getCssSelector(), "border-color", borderColorValue.getText());
+					}
+				}
+			}
+		});
+		borderColorValue.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+				update();
+			}
+
+			private void update() {
+				if (borderColorCheck.isSelected() && !borderColorValue.getText().equals("")) {
+					writeCssProperty(getCssSelector(), "border-color", borderColorValue.getText());
+				}
+			}
+
+		});
+		borderColorPanel.add(borderColorButton);
+
+		// CHECKS
+		if (getProperty(cssSelector, "border-color") != null) {
+			borderColorCheck.setSelected(true);
+			borderColorValue.setText(getProperty(getCssSelector(), "border-color").getValue().toString());
+		}
+
+		// MASTERS
+		borderPropertiesTaskPane.add(borderStylePanel);
+		borderPropertiesTaskPane.add(borderWidthPanel);
+		borderPropertiesTaskPane.add(borderColorPanel);
+
 		taskPanes.add(borderPropertiesTaskPane);
 
-		JXTaskPane basicBoxPropertiesTaskPane = new JXTaskPane();
-		basicBoxPropertiesTaskPane.setTitle("Basic Box Properties");
-		taskPanes.add(basicBoxPropertiesTaskPane);
+		JXTaskPane posAndDimenTaskPane = new JXTaskPane();
+		posAndDimenTaskPane.setTitle("Position and Dimensions");
+
+		// Display
+		JPanel displayPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] display = { "inline", "block", "flex", "inline-block", "inline-flex", "run-in" };
+
+		displayPanel.add(new JLabel("Display"));
+		JCheckBox displayCheck = new JCheckBox("");
+		JComboBox<String> displayComboBox = new JComboBox<String>(display);
+
+		displayCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (displayCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "display", displayComboBox.getSelectedItem().toString());
+				}
+				if (!displayCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "display");
+				}
+			}
+		});
+		displayComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (displayCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "display", displayComboBox.getSelectedItem().toString());
+				}
+				if (!displayCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		displayPanel.add(displayCheck);
+		displayPanel.add(displayComboBox);
+		if (getProperty(cssSelector, "display") != null) {
+			displayCheck.setSelected(true);
+			displayComboBox.setSelectedItem(getProperty(getCssSelector(), "display").getValue().toString());
+		}
+
+		// Position
+		JPanel positionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] positions = { "static", "absolute", "fixed", "relative", "sticky" };
+
+		positionPanel.add(new JLabel("Position"));
+		JCheckBox positionCheck = new JCheckBox("");
+		JComboBox<String> positionComboBox = new JComboBox<String>(positions);
+
+		positionCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (positionCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "position", positionComboBox.getSelectedItem().toString());
+				}
+				if (!positionCheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "position");
+				}
+			}
+		});
+		positionComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (positionCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "position", positionComboBox.getSelectedItem().toString());
+				}
+				if (!positionCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		positionPanel.add(positionCheck);
+		positionPanel.add(positionComboBox);
+		if (getProperty(cssSelector, "position") != null) {
+			positionCheck.setSelected(true);
+			positionComboBox.setSelectedItem(getProperty(getCssSelector(), "position").getValue().toString());
+		}
+
+		// FLOAT
+		JPanel floatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		String[] floatOptions = { "left", "right" };
+
+		floatPanel.add(new JLabel("Float"));
+		JCheckBox floatcheck = new JCheckBox("");
+		JComboBox<String> floatComboBox = new JComboBox<String>(floatOptions);
+
+		floatcheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (floatcheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "float", floatComboBox.getSelectedItem().toString());
+				}
+				if (!floatcheck.isSelected()) {
+					removeCSSProperty(getCssSelector(), "float");
+				}
+			}
+		});
+		floatComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (floatcheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "float", floatComboBox.getSelectedItem().toString());
+				}
+				if (!floatcheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+		floatPanel.add(floatcheck);
+		floatPanel.add(floatComboBox);
+		if (getProperty(cssSelector, "float") != null) {
+			floatcheck.setSelected(true);
+			floatComboBox.setSelectedItem(getProperty(getCssSelector(), "float").getValue().toString());
+		}
+
+		String[] posOptions = { "auto", "px", "em", "%" };
+		// WIDTH
+
+		JPanel widthPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		widthPanel.add(new JLabel("Width"));
+
+		JCheckBox widthCheck = new JCheckBox("");
+		JComboBox<String> widthComboBox = new JComboBox<String>(posOptions);
+		JTextField widthTextField = new JTextField("");
+		widthTextField.setPreferredSize(d);
+		widthTextField.setVisible(false);
+
+		widthCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (widthCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "width",
+							widthTextField.getText() + widthComboBox.getSelectedItem().toString());
+				}
+				if (!widthCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "width");
+				}
+			}
+		});
+
+		widthTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (widthCheck.isSelected()) {
+					if (widthTextField.getText().equals("") || widthTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "width");
+					} else {
+						writeCssProperty(getCssSelector(), "width",
+								widthTextField.getText() + widthComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		widthComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (widthCheck.isSelected()) {
+					System.out.println(widthComboBox.getSelectedItem());
+					if (widthComboBox.getSelectedItem().toString().equals("auto")) {
+						widthTextField.setText("");
+						widthTextField.setVisible(false);
+					} else {
+						widthTextField.setVisible(true);
+						widthPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "width",
+							widthTextField.getText() + widthComboBox.getSelectedItem().toString());
+				}
+				if (!widthCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		widthPanel.add(widthCheck);
+		widthPanel.add(widthTextField);
+		widthPanel.add(widthComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "width") != null) {
+			widthCheck.setSelected(true);
+			String widthValue = getProperty(getCssSelector(), "width").getValue().toString();
+			if (widthValue.equals("auto")) {
+				widthTextField.setVisible(false);
+				widthComboBox.setSelectedItem(widthValue);
+			} else {
+				String numVal = widthValue.replaceAll("[^0-9]", "");
+				String unit = widthValue.replaceAll("[0-9]", "");
+				widthTextField.setVisible(true);
+				widthTextField.setText(numVal);
+				widthComboBox.setSelectedItem(unit);
+			}
+		}
+
+		// HEIGHT
+
+		JPanel heightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		heightPanel.add(new JLabel("height"));
+
+		JCheckBox heightCheck = new JCheckBox("");
+		JComboBox<String> heightComboBox = new JComboBox<String>(posOptions);
+		JTextField heightTextField = new JTextField("");
+		heightTextField.setPreferredSize(d);
+		heightTextField.setVisible(false);
+
+		heightCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (heightCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "height",
+							heightTextField.getText() + heightComboBox.getSelectedItem().toString());
+				}
+				if (!heightCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "height");
+				}
+			}
+		});
+
+		heightTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (heightCheck.isSelected()) {
+					if (heightTextField.getText().equals("") || heightTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "height");
+					} else {
+						writeCssProperty(getCssSelector(), "height",
+								heightTextField.getText() + heightComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		heightComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (heightCheck.isSelected()) {
+					System.out.println(heightComboBox.getSelectedItem());
+					if (heightComboBox.getSelectedItem().toString().equals("auto")) {
+						heightTextField.setText("");
+						heightTextField.setVisible(false);
+					} else {
+						heightTextField.setVisible(true);
+						heightPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "height",
+							heightTextField.getText() + heightComboBox.getSelectedItem().toString());
+				}
+				if (!heightCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		heightPanel.add(heightCheck);
+		heightPanel.add(heightTextField);
+		heightPanel.add(heightComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "height") != null) {
+			heightCheck.setSelected(true);
+			String heightValue = getProperty(getCssSelector(), "height").getValue().toString();
+			if (heightValue.equals("auto")) {
+				heightTextField.setVisible(false);
+				heightComboBox.setSelectedItem(heightValue);
+			} else {
+				String numVal = heightValue.replaceAll("[^0-9]", "");
+				String unit = heightValue.replaceAll("[0-9]", "");
+				heightTextField.setVisible(true);
+				heightTextField.setText(numVal);
+				heightComboBox.setSelectedItem(unit);
+			}
+		}
+
+		// TOP
+
+		JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		topPanel.add(new JLabel("Top"));
+
+		JCheckBox topCheck = new JCheckBox("");
+		JComboBox<String> topComboBox = new JComboBox<String>(posOptions);
+		JTextField topTextField = new JTextField("");
+		topTextField.setPreferredSize(d);
+		topTextField.setVisible(false);
+
+		topCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (topCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "top",
+							topTextField.getText() + topComboBox.getSelectedItem().toString());
+				}
+				if (!topCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "top");
+				}
+			}
+		});
+
+		topTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (topCheck.isSelected()) {
+					if (topTextField.getText().equals("") || topTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "top");
+					} else {
+						writeCssProperty(getCssSelector(), "top",
+								topTextField.getText() + topComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		topComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (topCheck.isSelected()) {
+					System.out.println(topComboBox.getSelectedItem());
+					if (topComboBox.getSelectedItem().toString().equals("auto")) {
+						topTextField.setText("");
+						topTextField.setVisible(false);
+					} else {
+						topTextField.setVisible(true);
+						topPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "top",
+							topTextField.getText() + topComboBox.getSelectedItem().toString());
+				}
+				if (!topCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		topPanel.add(topCheck);
+		topPanel.add(topTextField);
+		topPanel.add(topComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "top") != null) {
+			topCheck.setSelected(true);
+			String topValue = getProperty(getCssSelector(), "top").getValue().toString();
+			if (topValue.equals("auto")) {
+				topTextField.setVisible(false);
+				topComboBox.setSelectedItem(topValue);
+			} else {
+				String numVal = topValue.replaceAll("[^0-9]", "");
+				String unit = topValue.replaceAll("[0-9]", "");
+				topTextField.setVisible(true);
+				topTextField.setText(numVal);
+				topComboBox.setSelectedItem(unit);
+			}
+		}
+		// BOTTOM
+
+		JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		bottomPanel.add(new JLabel("Bottom"));
+
+		JCheckBox bottomCheck = new JCheckBox("");
+		JComboBox<String> bottomComboBox = new JComboBox<String>(posOptions);
+		JTextField bottomTextField = new JTextField("");
+		bottomTextField.setPreferredSize(d);
+		bottomTextField.setVisible(false);
+
+		bottomCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (bottomCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "bottom",
+							bottomTextField.getText() + bottomComboBox.getSelectedItem().toString());
+				}
+				if (!bottomCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "bottom");
+				}
+			}
+		});
+
+		bottomTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (bottomCheck.isSelected()) {
+					if (bottomTextField.getText().equals("") || bottomTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "bottom");
+					} else {
+						writeCssProperty(getCssSelector(), "bottom",
+								bottomTextField.getText() + bottomComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		bottomComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (bottomCheck.isSelected()) {
+					System.out.println(bottomComboBox.getSelectedItem());
+					if (bottomComboBox.getSelectedItem().toString().equals("auto")) {
+						bottomTextField.setText("");
+						bottomTextField.setVisible(false);
+					} else {
+						bottomTextField.setVisible(true);
+						bottomPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "bottom",
+							bottomTextField.getText() + bottomComboBox.getSelectedItem().toString());
+				}
+				if (!bottomCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		bottomPanel.add(bottomCheck);
+		bottomPanel.add(bottomTextField);
+		bottomPanel.add(bottomComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "bottom") != null) {
+			bottomCheck.setSelected(true);
+			String bottomValue = getProperty(getCssSelector(), "bottom").getValue().toString();
+			if (bottomValue.equals("auto")) {
+				bottomTextField.setVisible(false);
+				bottomComboBox.setSelectedItem(bottomValue);
+			} else {
+				String numVal = bottomValue.replaceAll("[^0-9]", "");
+				String unit = bottomValue.replaceAll("[0-9]", "");
+				bottomTextField.setVisible(true);
+				bottomTextField.setText(numVal);
+				bottomComboBox.setSelectedItem(unit);
+			}
+		}
+		// LEFT
+		JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		leftPanel.add(new JLabel("Left"));
+
+		JCheckBox leftCheck = new JCheckBox("");
+		JComboBox<String> leftComboBox = new JComboBox<String>(posOptions);
+		JTextField leftTextField = new JTextField("");
+		leftTextField.setPreferredSize(d);
+		leftTextField.setVisible(false);
+
+		leftCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (leftCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "left",
+							leftTextField.getText() + leftComboBox.getSelectedItem().toString());
+				}
+				if (!leftCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "left");
+				}
+			}
+		});
+
+		leftTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (leftCheck.isSelected()) {
+					if (leftTextField.getText().equals("") || leftTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "left");
+					} else {
+						writeCssProperty(getCssSelector(), "left",
+								leftTextField.getText() + leftComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		leftComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (leftCheck.isSelected()) {
+					System.out.println(leftComboBox.getSelectedItem());
+					if (leftComboBox.getSelectedItem().toString().equals("auto")) {
+						leftTextField.setText("");
+						leftTextField.setVisible(false);
+					} else {
+						leftTextField.setVisible(true);
+						leftPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "left",
+							leftTextField.getText() + leftComboBox.getSelectedItem().toString());
+				}
+				if (!leftCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		leftPanel.add(leftCheck);
+		leftPanel.add(leftTextField);
+		leftPanel.add(leftComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "left") != null) {
+			leftCheck.setSelected(true);
+			String leftValue = getProperty(getCssSelector(), "left").getValue().toString();
+			if (leftValue.equals("auto")) {
+				leftTextField.setVisible(false);
+				leftComboBox.setSelectedItem(leftValue);
+			} else {
+				String numVal = leftValue.replaceAll("[^0-9]", "");
+				String unit = leftValue.replaceAll("[0-9]", "");
+				leftTextField.setVisible(true);
+				leftTextField.setText(numVal);
+				leftComboBox.setSelectedItem(unit);
+			}
+		}
+		// RIGHT
+
+		JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		rightPanel.add(new JLabel("Right"));
+		JCheckBox rightCheck = new JCheckBox("");
+		JComboBox<String> rightComboBox = new JComboBox<String>(posOptions);
+		JTextField rightTextField = new JTextField("");
+		rightTextField.setPreferredSize(d);
+		rightTextField.setVisible(false);
+
+		rightCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (rightCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "right",
+							rightTextField.getText() + rightComboBox.getSelectedItem().toString());
+				}
+				if (!rightCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "right");
+				}
+			}
+		});
+
+		rightTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (rightCheck.isSelected()) {
+					if (rightTextField.getText().equals("") || rightTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "right");
+					} else {
+						writeCssProperty(getCssSelector(), "right",
+								rightTextField.getText() + rightComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		rightComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (rightCheck.isSelected()) {
+					System.out.println(rightComboBox.getSelectedItem());
+					if (rightComboBox.getSelectedItem().toString().equals("auto")) {
+						rightTextField.setText("");
+						rightTextField.setVisible(false);
+					} else {
+						rightTextField.setVisible(true);
+						rightPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "right",
+							rightTextField.getText() + rightComboBox.getSelectedItem().toString());
+				}
+				if (!rightCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		rightPanel.add(rightCheck);
+		rightPanel.add(rightTextField);
+		rightPanel.add(rightComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "left") != null) {
+			rightCheck.setSelected(true);
+			String rightValue = getProperty(getCssSelector(), "right").getValue().toString();
+			if (rightValue.equals("auto")) {
+				rightTextField.setVisible(false);
+				rightComboBox.setSelectedItem(rightValue);
+			} else {
+				String numVal = rightValue.replaceAll("[^0-9]", "");
+				String unit = rightValue.replaceAll("[0-9]", "");
+				rightTextField.setVisible(true);
+				rightTextField.setText(numVal);
+				rightComboBox.setSelectedItem(unit);
+			}
+		}
+
+		// MASTERS
+		posAndDimenTaskPane.add(displayPanel);
+		posAndDimenTaskPane.add(positionPanel);
+		posAndDimenTaskPane.add(floatPanel);
+		posAndDimenTaskPane.add(widthPanel);
+		posAndDimenTaskPane.add(heightPanel);
+		posAndDimenTaskPane.add(topPanel);
+		posAndDimenTaskPane.add(bottomPanel);
+		posAndDimenTaskPane.add(leftPanel);
+		posAndDimenTaskPane.add(rightPanel);
+
+		taskPanes.add(posAndDimenTaskPane);
+
+		JXTaskPane marginAndPaddingTaskPane = new JXTaskPane();
+		marginAndPaddingTaskPane.setTitle("Margins and Padding");
+		
+		// TOP
+
+		JPanel marginTopPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		marginTopPanel.add(new JLabel("margin-top"));
+
+		JCheckBox marginTopCheck = new JCheckBox("");
+		JComboBox<String> marginTopComboBox = new JComboBox<String>(posOptions);
+		JTextField marginTopTextField = new JTextField("");
+		marginTopTextField.setPreferredSize(d);
+		marginTopTextField.setVisible(false);
+
+		marginTopCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (marginTopCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "margin-top",
+							marginTopTextField.getText() + marginTopComboBox.getSelectedItem().toString());
+				}
+				if (!marginTopCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "margin-top");
+				}
+			}
+		});
+
+		marginTopTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (marginTopCheck.isSelected()) {
+					if (marginTopTextField.getText().equals("") || marginTopTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "margin-top");
+					} else {
+						writeCssProperty(getCssSelector(), "margin-top",
+								marginTopTextField.getText() + marginTopComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		marginTopComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (marginTopCheck.isSelected()) {
+					System.out.println(marginTopComboBox.getSelectedItem());
+					if (marginTopComboBox.getSelectedItem().toString().equals("auto")) {
+						marginTopTextField.setText("");
+						marginTopTextField.setVisible(false);
+					} else {
+						marginTopTextField.setVisible(true);
+						marginTopPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "margin-top",
+							marginTopTextField.getText() + marginTopComboBox.getSelectedItem().toString());
+				}
+				if (!marginTopCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		marginTopPanel.add(marginTopCheck);
+		marginTopPanel.add(marginTopTextField);
+		marginTopPanel.add(marginTopComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "margin-top") != null) {
+			marginTopCheck.setSelected(true);
+			String marginTopValue = getProperty(getCssSelector(), "margin-top").getValue().toString();
+			if (marginTopValue.equals("auto")) {
+				marginTopTextField.setVisible(false);
+				marginTopComboBox.setSelectedItem(marginTopValue);
+			} else {
+				String numVal = marginTopValue.replaceAll("[^0-9]", "");
+				String unit = marginTopValue.replaceAll("[0-9]", "");
+				marginTopTextField.setVisible(true);
+				marginTopTextField.setText(numVal);
+				marginTopComboBox.setSelectedItem(unit);
+			}
+		}
+		// margin-bottom
+
+		JPanel marginBottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		marginBottomPanel.add(new JLabel("margin-bottom"));
+
+		JCheckBox marginBottomCheck = new JCheckBox("");
+		JComboBox<String> marginBottomComboBox = new JComboBox<String>(posOptions);
+		JTextField marginBottomTextField = new JTextField("");
+		marginBottomTextField.setPreferredSize(d);
+		marginBottomTextField.setVisible(false);
+
+		marginBottomCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (marginBottomCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "margin-bottom",
+							marginBottomTextField.getText() + marginBottomComboBox.getSelectedItem().toString());
+				}
+				if (!marginBottomCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "margin-bottom");
+				}
+			}
+		});
+
+		marginBottomTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (marginBottomCheck.isSelected()) {
+					if (marginBottomTextField.getText().equals("") || marginBottomTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "margin-bottom");
+					} else {
+						writeCssProperty(getCssSelector(), "margin-bottom",
+								marginBottomTextField.getText() + marginBottomComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		marginBottomComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (marginBottomCheck.isSelected()) {
+					System.out.println(marginBottomComboBox.getSelectedItem());
+					if (marginBottomComboBox.getSelectedItem().toString().equals("auto")) {
+						marginBottomTextField.setText("");
+						marginBottomTextField.setVisible(false);
+					} else {
+						marginBottomTextField.setVisible(true);
+						marginBottomPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "margin-bottom",
+							marginBottomTextField.getText() + marginBottomComboBox.getSelectedItem().toString());
+				}
+				if (!marginBottomCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		marginBottomPanel.add(marginBottomCheck);
+		marginBottomPanel.add(marginBottomTextField);
+		marginBottomPanel.add(marginBottomComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "margin-bottom") != null) {
+			marginBottomCheck.setSelected(true);
+			String marginBottomValue = getProperty(getCssSelector(), "margin-bottom").getValue().toString();
+			if (marginBottomValue.equals("auto")) {
+				marginBottomTextField.setVisible(false);
+				marginBottomComboBox.setSelectedItem(marginBottomValue);
+			} else {
+				String numVal = marginBottomValue.replaceAll("[^0-9]", "");
+				String unit = marginBottomValue.replaceAll("[0-9]", "");
+				marginBottomTextField.setVisible(true);
+				marginBottomTextField.setText(numVal);
+				marginBottomComboBox.setSelectedItem(unit);
+			}
+		}
+		// margin-left
+		JPanel marginLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		marginLeftPanel.add(new JLabel("margin-left"));
+
+		JCheckBox marginLeftCheck = new JCheckBox("");
+		JComboBox<String> marginLeftComboBox = new JComboBox<String>(posOptions);
+		JTextField marginLeftTextField = new JTextField("");
+		marginLeftTextField.setPreferredSize(d);
+		marginLeftTextField.setVisible(false);
+
+		marginLeftCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (marginLeftCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "margin-left",
+							marginLeftTextField.getText() + marginLeftComboBox.getSelectedItem().toString());
+				}
+				if (!marginLeftCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "margin-left");
+				}
+			}
+		});
+
+		marginLeftTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (marginLeftCheck.isSelected()) {
+					if (marginLeftTextField.getText().equals("") || marginLeftTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "margin-left");
+					} else {
+						writeCssProperty(getCssSelector(), "margin-left",
+								marginLeftTextField.getText() + marginLeftComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		marginLeftComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (marginLeftCheck.isSelected()) {
+					System.out.println(marginLeftComboBox.getSelectedItem());
+					if (marginLeftComboBox.getSelectedItem().toString().equals("auto")) {
+						marginLeftTextField.setText("");
+						marginLeftTextField.setVisible(false);
+					} else {
+						marginLeftTextField.setVisible(true);
+						marginLeftPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "margin-left",
+							marginLeftTextField.getText() + marginLeftComboBox.getSelectedItem().toString());
+				}
+				if (!marginLeftCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		marginLeftPanel.add(marginLeftCheck);
+		marginLeftPanel.add(marginLeftTextField);
+		marginLeftPanel.add(marginLeftComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "margin-left") != null) {
+			marginLeftCheck.setSelected(true);
+			String marginLeftValue = getProperty(getCssSelector(), "margin-left").getValue().toString();
+			if (marginLeftValue.equals("auto")) {
+				marginLeftTextField.setVisible(false);
+				marginLeftComboBox.setSelectedItem(marginLeftValue);
+			} else {
+				String numVal = marginLeftValue.replaceAll("[^0-9]", "");
+				String unit = marginLeftValue.replaceAll("[0-9]", "");
+				marginLeftTextField.setVisible(true);
+				marginLeftTextField.setText(numVal);
+				marginLeftComboBox.setSelectedItem(unit);
+			}
+		}
+		// margin-right
+
+		JPanel marginRightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
+		marginRightPanel.add(new JLabel("margin-right"));
+		JCheckBox marginRightCheck = new JCheckBox("");
+		JComboBox<String> marginRightComboBox = new JComboBox<String>(posOptions);
+		JTextField marginRightTextField = new JTextField("");
+		marginRightTextField.setPreferredSize(d);
+		marginRightTextField.setVisible(false);
+
+		marginRightCheck.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (marginRightCheck.isSelected()) {
+					writeCssProperty(getCssSelector(), "margin-right",
+							marginRightTextField.getText() + marginRightComboBox.getSelectedItem().toString());
+				}
+				if (!marginRightCheck.isSelected()) {
+
+					removeCSSProperty(getCssSelector(), "margin-right");
+				}
+			}
+		});
+
+		marginRightTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			public void update() {
+				if (marginRightCheck.isSelected()) {
+					if (marginRightTextField.getText().equals("") || marginRightTextField.getText() == null) {
+						removeCSSProperty(getCssSelector(), "margin-right");
+					} else {
+						writeCssProperty(getCssSelector(), "margin-right",
+								marginRightTextField.getText() + marginRightComboBox.getSelectedItem().toString());
+					}
+				}
+			}
+
+		});
+
+		marginRightComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (marginRightCheck.isSelected()) {
+					System.out.println(marginRightComboBox.getSelectedItem());
+					if (marginRightComboBox.getSelectedItem().toString().equals("auto")) {
+						marginRightTextField.setText("");
+						marginRightTextField.setVisible(false);
+					} else {
+						marginRightTextField.setVisible(true);
+						marginRightPanel.revalidate();
+					}
+					writeCssProperty(getCssSelector(), "margin-right",
+							marginRightTextField.getText() + marginRightComboBox.getSelectedItem().toString());
+				}
+				if (!marginRightCheck.isSelected()) {
+					return;
+				}
+			}
+
+		});
+
+		marginRightPanel.add(marginRightCheck);
+		marginRightPanel.add(marginRightTextField);
+		marginRightPanel.add(marginRightComboBox);
+
+		// CHECKS
+		if (getProperty(cssSelector, "margin-left") != null) {
+			marginRightCheck.setSelected(true);
+			String marginRightValue = getProperty(getCssSelector(), "margin-right").getValue().toString();
+			if (marginRightValue.equals("auto")) {
+				marginRightTextField.setVisible(false);
+				marginRightComboBox.setSelectedItem(marginRightValue);
+			} else {
+				String numVal = marginRightValue.replaceAll("[^0-9]", "");
+				String unit = marginRightValue.replaceAll("[0-9]", "");
+				marginRightTextField.setVisible(true);
+				marginRightTextField.setText(numVal);
+				marginRightComboBox.setSelectedItem(unit);
+			}
+		}
+		
+		marginAndPaddingTaskPane.add(marginTopPanel);
+		marginAndPaddingTaskPane.add(marginBottomPanel);
+		marginAndPaddingTaskPane.add(marginLeftPanel);
+		marginAndPaddingTaskPane.add(marginRightPanel);
+		
+		taskPanes.add(marginAndPaddingTaskPane);
 
 		JXTaskPane flexibleBoxLayoutTaskPane = new JXTaskPane();
 		flexibleBoxLayoutTaskPane.setTitle("Flexible Box Layout");
