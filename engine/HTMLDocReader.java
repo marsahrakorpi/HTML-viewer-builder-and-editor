@@ -38,7 +38,7 @@ public class HTMLDocReader extends Thread {
 
 		super();
 		this.url = url;
-		
+
 		try {
 			readDoc(this.url);
 			copyToTempFile();
@@ -59,48 +59,68 @@ public class HTMLDocReader extends Thread {
 
 	public void updateTempDoc() {
 		// Threading here greatly reduces update lag on the JavaFX webview
-//		System.out.println("Updating temp doc with doc of: "+tempDoc.toString());
-//		Thread t = new Thread() {
-//			public void run() {
-				
-				File file = new File(Main.tempPageURL);
-				try {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-					bw.write(tempDoc.toString());
-					bw.close();
+		// System.out.println("Updating temp doc with doc of: "+tempDoc.toString());
+		// Thread t = new Thread() {
+		// public void run() {
 
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+		File file = new File(Main.tempPageURL);
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+			bw.write(tempDoc.toString());
+			bw.close();
 
-				input = new File(Main.tempPageURL);
-				try {
-					tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
-//					System.out.println("NEWWWWW"+tempDoc.toString());
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-//			}		
-//
-//		};
-//		t.start();
+		input = new File(Main.tempPageURL);
+		try {
+			tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
+			// System.out.println("NEWWWWW"+tempDoc.toString());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		// }
+		//
+		// };
+		// t.start();
 
 		Platform.runLater(new Runnable() {
 			public void run() {
-				Main.updateFX(Main.tempPageURL);
+				// Main.updateFX(Main.tempPageURL);
+				Main.reloadWebEngine();
 			}
 		});
-		
-		
+
 	}
-	
+
+	public void updateTempDocNoReload() {
+		File file = new File(Main.tempPageURL);
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+			bw.write(tempDoc.toString());
+			bw.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		input = new File(Main.tempPageURL);
+		try {
+			tempDoc = Jsoup.parse(input, "UTF-8", Main.tempPageURL);
+			// System.out.println("NEWWWWW"+tempDoc.toString());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
 
 	public String readLinkDoc(String url) throws IOException {
 		docStr = "";
 		this.url = url;
-		
+
 		Thread t = new Thread() {
 			public void start() {
 				try (BufferedReader br = new BufferedReader(new FileReader(url))) {
@@ -111,7 +131,7 @@ public class HTMLDocReader extends Thread {
 					br.close();
 				} catch (IOException e) {
 					String furl = Main.tempDir + "\\" + url;
-//					System.out.println(furl);
+					// System.out.println(furl);
 					try (BufferedReader br = new BufferedReader(new FileReader(furl))) {
 						String sCurrentLine;
 						while ((sCurrentLine = br.readLine()) != null) {
@@ -140,7 +160,7 @@ public class HTMLDocReader extends Thread {
 	}
 
 	public void copyToTempFile() {
-			
+
 		// copy to temp
 		File sDir = new File(Main.rootFolder);
 		try {
@@ -155,20 +175,20 @@ public class HTMLDocReader extends Thread {
 		// copy program css files to temp
 
 		try {
-			Path webViewDir = Paths.get(Main.tempDir+"\\webViewCSS");
-			Path webViewHighligherPath = Paths.get(webViewDir.toString()+"\\webViewHighlighter.css");
+			Path webViewDir = Paths.get(Main.tempDir + "\\webViewCSS");
+			Path webViewHighligherPath = Paths.get(webViewDir.toString() + "\\webViewHighlighter.css");
 			Files.createDirectory(webViewDir);
-			String webViewHighlighterString = ".java-highlighted-element{\r\n" + 
-					"			background-color: rgb(145, 184, 247);\r\n" + 
-					"			background-color: rgba(145, 184, 247, .5);\r\n" + 
-					"			border: 1px solid red;\r\n" + 
-					"		}	";
+			String webViewHighlighterString = ".java-highlighted-element{\r\n"
+					+ "			background-color: rgb(145, 184, 247);\r\n"
+					+ "			background-color: rgba(145, 184, 247, .5);\r\n" + "			border: 1px solid red;\r\n"
+					+ "		}	";
 			Files.createFile(webViewHighligherPath);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(webViewHighligherPath.toFile()));
 			bw.write(webViewHighlighterString);
 			bw.close();
-//			FileUtils.copyFileToDirectory(new File(System.getProperty("user.dir") + "\\webViewCSS"),
-//					new File(Main.tempDir));
+			// FileUtils.copyFileToDirectory(new File(System.getProperty("user.dir") +
+			// "\\webViewCSS"),
+			// new File(Main.tempDir));
 		} catch (IOException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
@@ -208,8 +228,8 @@ public class HTMLDocReader extends Thread {
 		}
 		try {
 			Main.textArea.setText(tempDoc.toString());
-		} catch (Exception e){
-			
+		} catch (Exception e) {
+
 		}
 		Elements webCSS = tempDoc.select("[href*=\"webViewCSS/webViewHighlighter.css\"]");
 		if (webCSS.size() == 0) {

@@ -298,6 +298,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 								+ "\t<body>\n" + "\t\t<h1>" + projectNameTextField.getText() + "</h1>\n"
 								+ "\t\t<h3>Hello World!</h3>\n" + "\t<body>\n" + "</html>");
 						bw3.close();
+						
+						//resources
+						Path resDir = Paths.get(directory + "\\resources");
+						Files.createDirectory(resDir);
+
 
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block

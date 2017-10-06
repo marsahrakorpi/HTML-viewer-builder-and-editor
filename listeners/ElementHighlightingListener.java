@@ -10,6 +10,7 @@ import org.jsoup.select.Elements;
 import engine.BodyElementInfo;
 import engine.HTMLDocReader;
 import engine.Main;
+import javafx.application.Platform;
 
 public class ElementHighlightingListener extends Thread implements TreeSelectionListener {
 
@@ -57,7 +58,7 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 				
 				// System.out.println(HTMLDocReader.bodyElements.get(bElement.index));
 				try {
-					highlightElement(HTMLDocReader.tempDoc.body().select("*").get(bElement.index));
+					highlightElement(HTMLDocReader.tempDoc.body().select("*").get(bElement.index), bElement.index);
 				} catch (IndexOutOfBoundsException e1) {
 					/*
 					 * 
@@ -71,12 +72,12 @@ public class ElementHighlightingListener extends Thread implements TreeSelection
 		}
 	}
 
-	private void highlightElement(Element element) {
+	private void highlightElement(Element element, int index) {
 		removeAllHighlights();
 		element.addClass("java-highlighted-element");
+
 		Main.textArea.setText(HTMLDocReader.tempDoc.toString());
 		reader.updateTempDoc();
-
 	}
 
 	private void removeAllHighlights() {
