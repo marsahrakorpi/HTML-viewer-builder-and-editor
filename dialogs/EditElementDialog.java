@@ -239,6 +239,8 @@ public class EditElementDialog {
 			tabPanels[i].revalidate();
 		}
 
+		textArea = new JTextArea(fullHTML);
+		textArea.setFont(new Font("Arial", Font.BOLD, 15));
 		// tab 1
 
 		JLabel l = new JLabel("Global HTML Attributes");
@@ -529,9 +531,12 @@ public class EditElementDialog {
 									File imFile = new File(Main.tempDir + "\\res");
 									File[] list = imFile.listFiles();
 									imgComboBox.addItem("");
-									for (int f = 0; f < list.length; f++) {
-										imgComboBox.addItem(list[f].getName());
+									if (list != null) {
+										for (int f = 0; f < list.length; f++) {
+											imgComboBox.addItem(list[f].getName());
+										}
 									}
+
 									imgComboBox.setSize(d);
 									imgComboBox.addActionListener(new ActionListener() {
 										@Override
@@ -725,20 +730,6 @@ public class EditElementDialog {
 												dialog.getY() + dialog.getHeight() / 3);
 										urlTypeDialog.setVisible(true);
 
-										// Object[] options = { "Local File", "URL" };
-										// int opRes = JOptionPane.showOptionDialog(dialog,
-										// "Upload a local file or download from a URL?\n\nThis will save a copy of the
-										// selected \nresource in the project folder.", "File upload",
-										// JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options,
-										// null);
-										// if (opRes == JOptionPane.YES_OPTION) {
-
-										// } else if (opRes == JOptionPane.NO_OPTION) {
-
-										// } else {
-										//
-										// }
-
 									}
 								});
 							}
@@ -813,6 +804,7 @@ public class EditElementDialog {
 		warningLabel.setForeground(Color.RED);
 		String[] selectors = { "tag", "id", "class" };
 		JComboBox<String> cssSelectorComboBox = new JComboBox<String>(selectors);
+
 		cssSelectorComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent s) {
@@ -824,6 +816,7 @@ public class EditElementDialog {
 
 				case "tag":
 					cssSelector = elementNoTags;
+					warningLabel.setVisible(true);
 					warningLabel.setText("Will affect the style of all " + elementNoTags + " elements.");
 					String css;
 					// update stylesheet
@@ -1016,7 +1009,12 @@ public class EditElementDialog {
 
 						el.addClass(cssSelector.substring(1, cssSelector.length()));
 					} catch (Exception e) {
-						// no class exists
+						// no class exists or editin existing element that has a class applied
+						try {
+							el.addClass(cssSelector.substring(1, cssSelector.length()));
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+						}
 					}
 					tabPanels[2].remove(cssPanels.getContainer());
 					cssPanels = new CSSStylePanels(cssSelector, stylesheet, tempHTMLFile, tempCSSFile, elementNoTags, d,
@@ -1123,8 +1121,6 @@ public class EditElementDialog {
 
 		tabPanels[2].add(cssPanels.getContainer());
 
-		textArea = new JTextArea(fullHTML);
-		textArea.setFont(new Font("Arial", Font.BOLD, 15));
 		tabbedPane = new JTabbedPane();
 		previewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, fxPanel, textArea);
 		JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, previewPane, tabbedPane);
@@ -1149,6 +1145,8 @@ public class EditElementDialog {
 					} catch (Exception e) {
 						textArea.setText(elementNoTags + "{\t}");
 					}
+				} else {
+					textArea.setText(el.outerHtml());
 				}
 				// if (tabbedPane.getSelectedIndex() != 2) {
 				// updateDoc();
@@ -1308,7 +1306,13 @@ public class EditElementDialog {
 		// webView.setMinSize(previewPane.getWidth(), previewPane.getHeight());
 		// webView.setPrefSize(previewPane.getWidth(), previewPane.getSize().height -
 		// textArea.getHeight() - 15);
-
+		if (el.hasAttr("class")) {
+			System.out.println(el.attr("class"));
+			cssSelectorComboBox.setSelectedItem("class");
+			warningLabel.setVisible(false);
+			// classComboBox.actionPerformed(new ActionEvent(this,
+			// ActionEvent.ACTION_PERFORMED, el.attr("class")));
+		}
 		updateDoc();
 		Platform.runLater(new Runnable() {
 			@Override
@@ -1499,6 +1503,7 @@ public class EditElementDialog {
 		cssSelector = elementNoTags;
 		Elements elementSelector = element.select(elementNoTags);
 		Element el = elementSelector.first();
+		el.removeClass("java-highlighted-element");
 		updateDoc();
 		return el;
 	}
