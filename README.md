@@ -21,4 +21,4 @@ Libraries used in this project:
 
 ---
 
-An Imgur album peviewing this project can be found <a href="https://imgur.com/a/GBjZM"> here </a>
+An Imgur album peviewing this project can be found <a href="https://imgur.com/a/GBjZM" target="_blank"> here </a>
