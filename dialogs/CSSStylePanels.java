@@ -75,8 +75,6 @@ public class CSSStylePanels {
 		properties = new ArrayList<String>();
 		values = new ArrayList<String>();
 
-		System.out.println("CSSSTyle constructor");
-
 		int flowLayoutWidth = 5;
 		int flowLayoutHeight = 5;
 
@@ -237,7 +235,7 @@ public class CSSStylePanels {
 		// CHECKS
 		if (getProperty(cssSelector, "text-transform") != null) {
 			transformCheck.setSelected(true);
-			transformComboBox.setSelectedItem(getProperty(getCssSelector(), "text-align").getValue().toString());
+			transformComboBox.setSelectedItem(getProperty(getCssSelector(), "text-transform").getValue().toString());
 		}
 
 		// MASTER
@@ -253,7 +251,7 @@ public class CSSStylePanels {
 		String[] fontFamilies = { "Arial Black", "Book Antiqua", "Comic Sans MS", "Courier New", "Courier New",
 				"Lucida Grande", "Lucida Sans Unicode", "Palatino Linotype", "Times New Roman", "Trebuchet MS" };
 		fontFamilyPanel.add(new JLabel("Font Family"));
-
+		
 		JCheckBox fontFamilyCheck = new JCheckBox("");
 		JComboBox<String> fontFamilyCComboBox = new JComboBox<String>(fontFamilies);
 
@@ -283,11 +281,11 @@ public class CSSStylePanels {
 		});
 		fontFamilyPanel.add(fontFamilyCheck);
 		fontFamilyPanel.add(fontFamilyCComboBox);
-		if (getProperty(cssSelector, "font-weight") != null) {
+		if (getProperty(cssSelector, "font-family") != null) {
 			fontFamilyCheck.setSelected(true);
 			fontFamilyCComboBox.setSelectedItem(getProperty(getCssSelector(), "font-family").getValue().toString());
 		}
-
+		
 		JPanel fontSizePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, flowLayoutWidth, flowLayoutHeight));
 		String[] fontSizes = { "px", "em", "%" };
 		fontSizePanel.add(new JLabel("Font Size"));
@@ -471,7 +469,7 @@ public class CSSStylePanels {
 							textDecorationComboBox.getSelectedItem().toString());
 				}
 				if (!textDecorationCheck.isSelected()) {
-					removeCSSProperty(getCssSelector(), "font-weight");
+					removeCSSProperty(getCssSelector(), "font-decoration");
 				}
 			}
 		});
@@ -575,7 +573,7 @@ public class CSSStylePanels {
 							textDecoratioStylesComboBox.getSelectedItem().toString());
 				}
 				if (!textDecorationStylesCheck.isSelected()) {
-					removeCSSProperty(getCssSelector(), "font-weight");
+					removeCSSProperty(getCssSelector(), "font-decoration-style");
 				}
 			}
 		});
@@ -599,7 +597,7 @@ public class CSSStylePanels {
 		if (getProperty(cssSelector, "ttext-decoration-style") != null) {
 			textDecorationStylesCheck.setSelected(true);
 			textDecoratioStylesComboBox
-					.setSelectedItem(getProperty(getCssSelector(), "font-weight").getValue().toString());
+					.setSelectedItem(getProperty(getCssSelector(), "font-decoration-style").getValue().toString());
 		}
 
 		// MASTERS

@@ -191,7 +191,6 @@ public class EditElementDialog {
 		// copy the first css doc found into the tempCSS.
 		// This will be used as the default
 		try {
-			// System.out.println(tempFile);
 			String firstFoundCss = FileUtils.readFileToString(new File(Main.tempDir + "\\" + cssFiles.get(0)), "UTF-8");
 			tempCSSFile = new File(Main.tempDir + "\\" + "HTMLTempCSS.css");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(tempCSSFile));
@@ -218,7 +217,6 @@ public class EditElementDialog {
 		}
 		sdoc.head().append("<link rel=\"stylesheet\" href=\"HTMLTempCSS.css\"");
 		try {
-			// System.out.println(tempFile);
 			tempHTMLFile = new File(Main.tempDir + "\\" + "HTMLEditAttributeTemp.html");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(tempHTMLFile));
 			bw.write(sdoc.toString());
@@ -593,7 +591,7 @@ public class EditElementDialog {
 												fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
 												int returnVal = fc.showOpenDialog(urlTypeDialog);
 												if (returnVal == JFileChooser.APPROVE_OPTION) {
-													System.out.println(fc.getSelectedFile().getName());
+//													System.out.println(fc.getSelectedFile().getName());
 													File sourceFile = new File(fc.getSelectedFile().getAbsolutePath());
 													File destFile = new File(
 															Main.tempDir + "\\res\\" + fc.getSelectedFile().getName());
@@ -997,8 +995,13 @@ public class EditElementDialog {
 							}
 						}
 					});
-
-					cssSelector = classComboBox.getItemAt(0);
+					System.out.println(el.attr("class"));
+					classComboBox.setSelectedItem("."+el.attr("class"));
+					try {
+						cssSelector = classComboBox.getSelectedItem().toString();
+					} catch (Exception e2) {
+						cssSelector = classComboBox.getItemAt(classComboBox.getSelectedIndex());
+					}
 					Attributes classElements = el.attributes();
 					try {
 						for (Attribute a : classElements) {
@@ -1017,8 +1020,10 @@ public class EditElementDialog {
 						}
 					}
 					tabPanels[2].remove(cssPanels.getContainer());
+					
 					cssPanels = new CSSStylePanels(cssSelector, stylesheet, tempHTMLFile, tempCSSFile, elementNoTags, d,
 							textArea, tabbedPane, "EditNewElementDialog");
+					
 					tabPanels[2].add(cssPanels.getContainer());
 					textArea.setText(cssPanels.getCSSText(cssSelector));
 					fullHTML = element.toString();
@@ -1063,7 +1068,6 @@ public class EditElementDialog {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
 						try {
-							System.out.println("conf");
 							String css = FileUtils.readFileToString(
 									new File(Main.tempDir + "\\" + cssFilesComboBox.getSelectedItem()), "UTF-8");
 							css += "\n" + "." + nameField.getText() + "{\n}";
@@ -1076,7 +1080,6 @@ public class EditElementDialog {
 							stylesheet = (CSSStyleSheetImpl) parser.parseStyleSheet(inputSource, null, null);
 							el.addClass(nameField.getText());
 							cssSelector = "." + nameField.getText();
-							System.out.println(cssSelector);
 							classComboBox.addItem(cssSelector);
 							classComboBox.setSelectedItem(cssSelector);
 							tabPanels[2].remove(cssPanels.getContainer());
@@ -1186,8 +1189,6 @@ public class EditElementDialog {
 						HTMLDocReader.tempDoc.body().append(fullHTML);
 					} else if (!isNewElement) {
 						Element oldElementInDoc = HTMLDocReader.tempDoc.body().select("*").get(bElement.index);
-						System.out.println("EL" + el);
-						System.out.println("Old" + oldElementInDoc);
 						oldElementInDoc.replaceWith(el);
 					}
 
@@ -1306,12 +1307,10 @@ public class EditElementDialog {
 		// webView.setMinSize(previewPane.getWidth(), previewPane.getHeight());
 		// webView.setPrefSize(previewPane.getWidth(), previewPane.getSize().height -
 		// textArea.getHeight() - 15);
-		if (el.hasAttr("class")) {
-			System.out.println(el.attr("class"));
+
+		if (el.hasAttr("class") && !el.attr("class").equals("")) {
 			cssSelectorComboBox.setSelectedItem("class");
 			warningLabel.setVisible(false);
-			// classComboBox.actionPerformed(new ActionEvent(this,
-			// ActionEvent.ACTION_PERFORMED, el.attr("class")));
 		}
 		updateDoc();
 		Platform.runLater(new Runnable() {
@@ -1344,7 +1343,6 @@ public class EditElementDialog {
 
 	public static void updateFX(String url) {
 		webView.setMinSize(previewPane.getSize().width, previewPane.getSize().height);
-		System.out.println(webView.heightProperty());
 		if (url == null || url.equals("") || url.equals(null)) {
 			webEngine.load("htt://www.google.com");
 		} else {

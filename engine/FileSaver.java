@@ -67,14 +67,14 @@ public class FileSaver extends Thread {
 				// Delete the webview CSS
 				// Delete temp files
 				try {
-//					FileHandler.deleteFolder(new File(Main.rootFolder));
+					// FileHandler.deleteFolder(new File(Main.rootFolder));
 					FileHandler.copyFolder(new File(Main.tempDir), new File(Main.rootFolder),
 							StandardCopyOption.REPLACE_EXISTING);
 					FileHandler.deleteFolder(new File(Main.rootFolder + "\\webViewCSS")); // delete the program's
 																							// webView highlighter
 					// DELETE TEMP FOLDER
 					FileHandler.deleteFolder(new File(Main.tempDir));
-					
+
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

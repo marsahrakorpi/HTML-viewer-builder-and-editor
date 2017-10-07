@@ -21,6 +21,7 @@ public class CreateChildNodes implements Runnable {
 	public void run() {
 		try {
 			createChildren(fileRoot, root);
+			
 		} catch (Exception e) {
 			return;
 		}
