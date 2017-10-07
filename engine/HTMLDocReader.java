@@ -34,6 +34,10 @@ public class HTMLDocReader extends Thread {
 	public static Elements bodyElements;
 	public static Elements footerElements;
 
+	public HTMLDocReader() {
+
+	}
+
 	public HTMLDocReader(String url) {
 
 		super();
