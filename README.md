@@ -19,6 +19,5 @@ Libraries used in this project:
 <li><a href="https://mvnrepository.com/artifact/org.swinglabs.swingx">Java SwingX</a></li>
 <ul>
 
----
 
 An album peviewing this project can be found <a href="https://imgur.com/a/GBjZM"> here </a>
