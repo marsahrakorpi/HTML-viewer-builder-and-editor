@@ -85,7 +85,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 	public final static JFrame frame = new JFrame("HTMLEdit");
 	static LoadingFrame loadingPanel;
 	private static boolean needToCreateProject = false;
-	private static boolean buttonsLoaded;
 	private static String projectName;
 	private static String createProjectFolder, createProjectStart;
 
@@ -101,7 +100,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public static File fileRoot;
 	public static DefaultMutableTreeNode root;
-	// private DefaultMutableTreeNode model;
 	private static DefaultTreeModel treeModel;
 
 	public static JTree tree;
@@ -127,8 +125,17 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	public static void main(String[] args) {
 
+		/*
+		 * 
+		 * Shutdown hook has a bug in which it deletes the temp files before saving them
+		 * back to the project folder. This results in either hard crashes or the
+		 * deletion of the user's project folder.
+		 * 
+		 * 
+		 */
 		// Runtime.getRuntime().addShutdownHook(new DeletionHook());
 
+		System.out.println("Loading");
 		frame.setVisible(false);
 		frame.setFocusable(true);
 		loadingPanel = new LoadingFrame();
@@ -142,7 +149,15 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					}
 				}
 				if (loadingPanel.progressValue == loadingPanel.maxProgress) {
-					System.out.println("All Loaded now");
+					try {
+						loadingPanel.loadingMessage.setText("Finalizing build...");
+						// this is really serves no purpose other than to show off the loading screen.
+						// Currently the program loads fast enough, but it may have some issues on old
+						// computers.
+						Thread.sleep(2000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 					loadingPanel.dispose();
 					frame.setVisible(true);
 					frame.requestFocus();
@@ -333,7 +348,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 								+ "\t<body>\n" + "\t\t<h1>" + projectNameTextField.getText() + "</h1>\n"
 								+ "\t\t<h3>Hello World!</h3>\n" + "\t<body>\n" + "</html>");
 						bw3.close();
-						
+
 						// resources
 						Path resDir = Paths.get(directory + "\\resources");
 						Files.createDirectory(resDir);
@@ -344,7 +359,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 						DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
 						model.reload();
 
-						
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -653,7 +667,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		tree.addTreeSelectionListener(this);
 		JScrollPane scrollPane = new JScrollPane(tree);
 		scrollPane.setPreferredSize(new Dimension(600, 0));
-		
+
 		// ELEMENTS TREE
 		top = new DefaultMutableTreeNode("Document");
 		try {
@@ -1352,9 +1366,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		for (int i = 1; i < elementTree.getRowCount(); i++) {
 			elementTree.expandRow(i);
 		}
-		
 
-		
 		frame.requestFocus();
 		// DefaultMutableTreeNode currentNode = root.getNextNode();
 		//
