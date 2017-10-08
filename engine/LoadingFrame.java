@@ -1,12 +1,10 @@
 package engine;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.image.BufferedImage;
+import java.awt.Image;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -17,8 +15,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 public class LoadingFrame {
 
@@ -42,8 +38,9 @@ public class LoadingFrame {
 
 				try {
 					// Load the background image
-					BufferedImage img = ImageIO.read(getClass().getResource("/res/bgImg.jpg"));
-
+					Image img = ImageIO.read(getClass().getResource("/res/bgImg.jpg"));
+					loadingFrame.setUndecorated(true);
+					loadingFrame.setVisible(true);
 					// Create the frame...
 					loadingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -59,9 +56,8 @@ public class LoadingFrame {
 					loadingMessage.add(Box.createHorizontalGlue());
 					loadingMessage.add(Box.createRigidArea(new Dimension(5, 5)));
 					loadingFrame.add(loadingMessage, BorderLayout.CENTER);
-					loadingFrame.add(progressBar, BorderLayout.SOUTH);
+					loadingFrame.add(progressBar, BorderLayout.SOUTH);		
 					progressBar.setValue(progressValue);
-					loadingFrame.setUndecorated(true);
 					loadingFrame.pack();
 					loadingFrame.setLocationRelativeTo(null);
 					loadingFrame.setVisible(true);
