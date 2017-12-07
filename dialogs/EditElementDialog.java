@@ -599,8 +599,11 @@ public class EditElementDialog {
 														uploadTextField
 																.setText("res\\" + fc.getSelectedFile().getName());
 														urlTypeDialog.dispose();
+														System.out.println("Exists");
 													} else {
 														try {
+															File createFolder = new File(Main.tempDir+"\\res");
+															FileUtils.forceMkdir(createFolder);
 															FileHandler.copyFile(sourceFile, destFile,
 																	StandardCopyOption.REPLACE_EXISTING);
 															uploadTextField
@@ -1275,7 +1278,7 @@ public class EditElementDialog {
 		dialog.pack();
 
 		previewPane.setDividerLocation(0.65);
-		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 2 + 200,
+		dialog.setSize((Toolkit.getDefaultToolkit().getScreenSize().width) / 2,
 				(Toolkit.getDefaultToolkit().getScreenSize().height) / 2);
 		// center the dialog on screen
 		dialog.setLocation(
