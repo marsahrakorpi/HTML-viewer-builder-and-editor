@@ -8,6 +8,8 @@ import javax.swing.border.Border;
 
 public class RoundedBorder implements Border {
 
+	//Creates a rounded border on a component.
+	
     private int radius;
 
 

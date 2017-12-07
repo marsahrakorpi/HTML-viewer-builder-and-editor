@@ -28,15 +28,13 @@ public class HTMLDocReader extends Thread {
 
 	private File input;
 	public Document doc;
+
 	public static Document tempDoc;
 	private String docStr;
 	public static Elements headElements;
 	public static Elements bodyElements;
 	public static Elements footerElements;
 
-	public HTMLDocReader() {
-
-	}
 
 	public HTMLDocReader(String url) {
 
@@ -49,6 +47,10 @@ public class HTMLDocReader extends Thread {
 		} catch (IOException e) {
 
 		}
+	}
+
+	public HTMLDocReader() {
+		//empty instantiation from error handling. Will pprevent program crashing.
 	}
 
 	public void readDoc(String url) throws IOException {
@@ -246,6 +248,22 @@ public class HTMLDocReader extends Thread {
 			}
 		});
 
+	}
+	
+	public Document getDoc() {
+		return doc;
+	}
+
+	public void setDoc(Document doc) {
+		this.doc = doc;
+	}
+
+	public static Document getTempDoc() {
+		return tempDoc;
+	}
+
+	public static void setTempDoc(Document tempDoc) {
+		HTMLDocReader.tempDoc = tempDoc;
 	}
 
 }

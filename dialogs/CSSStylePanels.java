@@ -45,6 +45,9 @@ import engine.Main;
 import javafx.application.Platform;
 
 public class CSSStylePanels {
+	
+	//Creates the css attributes selection ui.
+	
 	JXTaskPaneContainer container;
 	String cssSelector;
 	static CSSStyleSheetImpl stylesheet;
