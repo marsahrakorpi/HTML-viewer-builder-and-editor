@@ -63,6 +63,7 @@ Click on the button in the top right corner, "New HTML Element".
 ![](https://i.imgur.com/b9zbVK4.png)
 
 Select the element you wish to create.
+**NOTE that not all elements have an entry in the database. This means that their element specific attributes are not accessible, and they may have incorrect html tags. Most (all) "basic" elements have a database entry and will work.**
 
 ![](https://i.imgur.com/bIJrWlB.png)
 
@@ -104,3 +105,17 @@ Libraries used in this project:
 - [JUnit 4](http://junit.org/junit4/)
 - [Java Hamcrest](http://hamcrest.org/JavaHamcrest/)
 - [Java SwingX](https://mvnrepository.com/artifact/org.swinglabs.swingx)
+
+---
+
+# MongoDB Implementation
+
+## Cloud Hosting
+
+Hosted with [mLab](https://mlab.com/)
+
+## Why???
+
+Creating and Editing HTML Elements are handled through a MongoDB implementation, purely because I wanted to know how to implement MongoDB in a Java program. Opening a connection to a DB every time is horribly inefficient, and it means that **Element specific attributes are not available offline**. In a real production environment everything would be, for example, in local .json files to massively speed up the responsiveness of the program. It is also a simpler and easier solution. 
+
+**The MongoDB implementation was done purely for learning reasons. It makes no sense in a production envirnoment.**
