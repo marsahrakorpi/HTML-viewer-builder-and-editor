@@ -895,7 +895,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		}
 
 	}
-
+	
 	public static void reloadWebEngine() {
 		Main.webEngine.reload();
 	}
@@ -1128,14 +1128,14 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				newFolderButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						// new folder Creator method
+						JOptionPane.showMessageDialog(null, "Sorry, creating a new file has not been fully implmented yet!", "Not implemented", JOptionPane.ERROR_MESSAGE);
 					}
 				});
 
 				newFileButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						// new file Creator method
+						JOptionPane.showMessageDialog(null, "Sorry, creating a new folder has not been fully implmented yet!", "Not implemented", JOptionPane.ERROR_MESSAGE);
 					}
 				});
 
@@ -1185,7 +1185,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	}
 
-	// if the doc cotains a dic, this will start mapping it our and creating nodes
+	// if the doc cotains a div, this will start mapping it our and creating nodes
 	// for the element tree
 	private static int createDivTree(DefaultMutableTreeNode parent, DefaultMutableTreeNode child, int index,
 			Element element) {
@@ -1224,10 +1224,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 
 	}
 
+	//Gets div content in a single div. Will be called again if div is nested.
 	private static int getDivContent(DefaultMutableTreeNode child, DefaultMutableTreeNode nextChild, int index,
 			Element div) {
 		loadingPanel.loadingMessage.setText("Getting Div Content...");
-		System.out.println("getting Div Content buttons");
+//		System.out.println("getting Div Content buttons");
 		int skipAmount = 0;
 		int secondSkipAmount = 0;
 		Elements divElements = div.getAllElements();
@@ -1270,10 +1271,11 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		fileType = "." + fileName.substring(fileName.indexOf(".") + 1);
 
 		for (int i = 1; i < file.size(); i++) {
-			filePath += file.get(i);
+			filePath += file.get(i)+"\\";
 		}
-		// System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
-		// fileType);
+	
+//		 System.out.println(fileName + " PATH: " + filePath + " FILETYPE OF: " +
+//		 fileType);
 		updateFrame();
 	}
 
@@ -1286,7 +1288,6 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 			// May run into issues when creating a project folder and there are is no config
 			// file,
 			// just ignore that, the frame will refresh again to reload.
-			e3.printStackTrace();
 		}
 
 		if (reader == null) {
@@ -1302,7 +1303,8 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 					return;
 				}
 			} catch (IOException ioe) {
-
+				//Very rarely something goes wrong here and the reader cannot read the file.
+				//This doesn't really matter, so this catch just prevents program crashing
 			}
 		}
 
@@ -1354,7 +1356,7 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 				updateFX(tempPageURL);
 			}
 		});
-
+		System.out.println(tempPageURL);
 		// RESET ELEMENTS TREE
 		DefaultTreeModel model = (DefaultTreeModel) elementTree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();

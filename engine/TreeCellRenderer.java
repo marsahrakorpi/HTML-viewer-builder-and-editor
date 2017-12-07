@@ -9,7 +9,12 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 public class TreeCellRenderer extends DefaultTreeCellRenderer{
 
-    @Override
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6306243457368358152L;
+
+	@Override
     public Color getBackgroundNonSelectionColor() {
         return (null);
     }

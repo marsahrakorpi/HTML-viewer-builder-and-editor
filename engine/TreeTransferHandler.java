@@ -22,6 +22,14 @@ class TreeTransferHandler extends TransferHandler {
 	 * 
 	 */
 	private static final long serialVersionUID = 856995958486511107L;
+	
+	/*
+	 * 
+	 * Allows changing the order of elements in the tree by dragging and dropping.
+	 * Ridiculously buggy and a total mess.
+	 * 
+	 */
+	
 	DataFlavor nodesFlavor;
 	DataFlavor[] flavors = new DataFlavor[1];
 	DefaultMutableTreeNode[] nodesToRemove;

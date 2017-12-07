@@ -70,6 +70,7 @@ public class LoadingFrame {
 
 	public void dispose() {
 		// System.out.println("Disposing loading frame");
+		//is do not workandera
 		loadingFrame.dispose();
 		Main.frame.requestFocus();
 		Main.frame.requestFocus();
