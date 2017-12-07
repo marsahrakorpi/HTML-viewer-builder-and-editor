@@ -50,6 +50,7 @@ public class NewElementDialog implements TreeSelectionListener {
 		DefaultMutableTreeNode top = new DefaultMutableTreeNode("HTML Elements");
 		JTree tree = new JTree(top);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.setToggleClickCount(1);
 		createNodes(top);
 		JScrollPane treeView = new JScrollPane(tree);
 
