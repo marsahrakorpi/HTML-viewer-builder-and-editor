@@ -17,7 +17,7 @@ This is a Java program to build basic HTML websites with only pressing buttons a
 
 **For help on running a .jar file, see [This WikiHow Article](https://www.wikihow.com/Run-a-.Jar-Java-File)**
 
-Place the .jar file in your preferred directory, and run it like a regular program. If 
+Place the .jar file in your preferred directory, and run it like a regular program. 
 Alternatively, you may create a .bat file in the same directory as the .jar file, with the command
 
 ```
