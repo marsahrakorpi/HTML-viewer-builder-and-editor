@@ -10,12 +10,12 @@ This is a Java program to build basic HTML websites with only pressing buttons a
 
 ## Requires
 ### [Java SE Runtime Environment 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
-** Download and install JRE8 or the program will not run **. May work on older versions of java, but has not been tested.
+**Download and install JRE8 or the program will not run**. May work on older versions of java, but has not been tested.
 
 ## Download the .jar
 ### [Latest Version Here](https://github.com/Gizwiz/HTML-viewer-builder-and-editor/releases)
 
-**For help on running a .jar file, see [This WikiHow Article](https://www.wikihow.com/Run-a-.Jar-Java-File) **
+**For help on running a .jar file, see [This WikiHow Article](https://www.wikihow.com/Run-a-.Jar-Java-File)**
 
 Place the .jar file in your preferred directory, and run it like a regular program. If 
 Alternatively, you may create a .bat file in the same directory as the .jar file, with the command
@@ -52,7 +52,7 @@ Creating a new project will prompt you to name your project, and it will not all
 
 The save button will save any changes you have made to your project.
 
-The Create New Folder/File buttons ** HAVE NOT BEEN IMPLEMENTED ** due to time restrictions. There were a lot of bugs with creating temp files and sorting out configs, which were too much to iron out before the project deadline.
+The Create New Folder/File buttons **HAVE NOT BEEN IMPLEMENTED** due to time restrictions. There were a lot of bugs with creating temp files and sorting out configs, which were too much to iron out before the project deadline.
 
 ![](https://i.imgur.com/MD1vvW1.png)
 
