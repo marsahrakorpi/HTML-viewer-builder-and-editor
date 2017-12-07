@@ -50,7 +50,7 @@ public class FileSaver extends Thread {
 					e.remove();
 				}
 
-				System.out.println(HTMLDocReader.tempDoc);
+				//System.out.println(HTMLDocReader.tempDoc);
 				// Write tempDoc to the tempPage, which will then be copied over to original
 				// root folder
 				try {

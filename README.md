@@ -21,4 +21,5 @@ Libraries used in this project:
 
 ---
 
-An Imgur album peviewing this project can be found <a href="https://imgur.com/a/GBjZM" target="_blank"> here </a>
+An Imgur album peviewing this project can be found <a href="https://imgur.com/a/GBjZM" target="_blank"> here </a>.
+For more information, see the [Wiki](https://github.com/Gizwiz/HTML-viewer-builder-and-editor/wiki/About-HTML-Editor)
