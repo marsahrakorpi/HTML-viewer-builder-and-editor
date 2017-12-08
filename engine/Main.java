@@ -256,8 +256,10 @@ public class Main extends Thread implements TreeSelectionListener, Runnable {
 		String programLocation = System.getProperty("user.dir");
 		String defaultProjectFolder = "\\HTMLEdit";
 		projectName = "myProject";
+		
 		if (programLocation.substring(programLocation.length() - 1).equals("\\")) {
-			programLocation = programLocation.substring(programLocation.length() - 1);
+			programLocation = programLocation.substring(programLocation.length() );
+			
 		}
 		createProjectFolder = programLocation + defaultProjectFolder + "\\" + projectName;
 		createProjectStart = programLocation + defaultProjectFolder;

@@ -87,7 +87,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import listeners.newElementFieldDocumentListener;
 
-public class EditElementDialog {
+public final class EditElementDialog {
 
 	// Variables
 	private static String html; // short form HTML
