@@ -14,6 +14,21 @@ This is a Java program to build basic HTML websites with only pressing buttons a
 ### [Java SE Runtime Environment 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
 **Download and install JRE8 or the program will not run**. May work on older versions of java, but has not been tested.
 
+To check your java installation, type in your command prompt / terminal the following:
+
+```
+ java -version
+```
+
+It should output something along the following:
+
+```
+java version "1.8.0_151"
+Java(TM) SE Runtime Environment (build 1.8.0_151-b12)
+Java HotSpot(TM) 64-Bit Server VM (build 25.151-b12, mixed mode)
+```
+
+
 ## Download the .jar
 ### [Latest Version Here](https://github.com/Gizwiz/HTML-viewer-builder-and-editor/releases)
 
