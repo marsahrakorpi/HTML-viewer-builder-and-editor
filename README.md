@@ -121,3 +121,6 @@ Hosted with [mLab](https://mlab.com/)
 Creating and Editing HTML Elements are handled through a MongoDB implementation, purely because I wanted to know how to implement MongoDB in a Java program. Opening a connection to a DB every time is horribly inefficient, and it means that **Element specific attributes are not available offline**. In a real production environment everything would be, for example, in local .json files to massively speed up the responsiveness of the program. It is also a simpler and easier solution. 
 
 **The MongoDB implementation was done purely for learning reasons. It makes no sense in a production envirnoment.**
+
+**More about the MongoDB implementation in the [Wiki](https://github.com/Gizwiz/HTML-viewer-builder-and-editor/wiki/MongoDB)**
+
