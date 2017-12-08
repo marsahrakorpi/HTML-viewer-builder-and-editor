@@ -14,13 +14,13 @@ This is a Java program to build basic HTML websites with only pressing buttons a
 ### [Java SE Runtime Environment 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
 **Download and install JRE8 or the program will not run**. May work on older versions of java, but has not been tested.
 
-To check your java installation, type in your command prompt / terminal the following:
+To check your java installation, type in the following into your command prompt / terminal:
 
 ```
  java -version
 ```
 
-It should output something along the following:
+It should output something like this:
 
 ```
 java version "1.8.0_151"
